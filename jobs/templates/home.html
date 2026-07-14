@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moya Jobs | Premium Talent Marketplace</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed', 100: '#ffedd5', 500: '#f97316',
+                            600: '#ea580c', 900: '#7c2d12',
+                        },
+                        slate: { 850: '#151f32', 900: '#0f172a', }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(249, 115, 22, 0.4)',
+                        'card': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'card-hover': '0 20px 50px -12px rgba(0,0,0,0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ── Reset & Base ── */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+            background: #f97316; cursor: pointer; margin-top: -8px;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #e2e8f0; border-radius: 2px;
+        }
+
+        .card-gradient-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, #f97316, #fbbf24);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .group:hover .card-gradient-line { opacity: 1; }
+
+        .cart-drawer { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateX(100%); }
+        .cart-drawer.open { transform: translateX(0); }
+
+        .modal-overlay { transition: opacity 0.3s; pointer-events: none; opacity: 0; }
+        .modal-overlay.active { pointer-events: auto; opacity: 1; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform: scale(0.95) translateY(10px); }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .compare-table td:first-child {
+            background: #f8fafc; font-weight: 600; color: #475569;
+            border-right: 1px solid #e2e8f0;
+        }
+        .compare-best {
+            color: #16a34a; font-weight: bold; background: #dcfce7;
+            border-radius: 4px; padding: 2px 6px; font-size: 0.8em;
+        }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #f97316;
+            color: #f97316; font-weight: 700;
+        }
+
+        .toast {
+            pointer-events: auto; background: white; border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+            min-width: 280px; transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+            opacity: 0; border-left: 4px solid #10b981;
+        }
+        html.dark .toast { background: #1e293b; color: #f1f5f9; border-left-color: #34d399; }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.hide { transform: translateX(120%); opacity: 0; }
+        .toast-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .toast-success .toast-icon { background: #dcfce7; color: #16a34a; }
+        .toast-info .toast-icon { background: #dbeafe; color: #2563eb; }
+
+        .voice-listening { color: #ef4444 !important; }
+        .voice-listening::after {
+            content: ''; position: absolute; inset: -4px; border-radius: 50%;
+            border: 2px solid #ef4444; animation: ring-pulse 1s infinite;
+        }
+        @keyframes ring-pulse {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* Dark mode overrides */
+        html.dark {
+            --bg-page: #0f172a; --bg-card: #1e293b; --bg-slate-50: #1e293b;
+            --bg-slate-100: #334155; --text-primary: #f1f5f9; --text-secondary: #94a3b8;
+            --border-color: #334155; --shadow-card: 0 10px 40px -10px rgba(0,0,0,0.5);
+        }
+        html.dark body { background: var(--bg-page); color: var(--text-primary); }
+        html.dark .bg-white { background: var(--bg-card) !important; }
+        html.dark .bg-slate-50 { background: var(--bg-slate-50) !important; }
+        html.dark .bg-slate-100 { background: var(--bg-slate-100) !important; }
+        html.dark .text-slate-900 { color: var(--text-primary) !important; }
+        html.dark .text-slate-700 { color: var(--text-secondary) !important; }
+        html.dark .text-slate-600 { color: #cbd5e1 !important; }
+        html.dark .text-slate-500 { color: #94a3b8 !important; }
+        html.dark .border-slate-100 { border-color: var(--border-color) !important; }
+        html.dark .border-slate-200 { border-color: #475569 !important; }
+        html.dark .shadow-card { box-shadow: var(--shadow-card) !important; }
+        html.dark .glass { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.05); }
+        html.dark .glass-dark { background: rgba(15, 23, 42, 0.8); border-color: rgba(255,255,255,0.05); }
+        html.dark .hover\:bg-slate-100:hover { background: #334155 !important; }
+        html.dark .hover\:bg-slate-200:hover { background: #475569 !important; }
+        html.dark .hover\:border-brand-500:hover { border-color: #f97316 !important; }
+        html.dark .hover\:text-brand-600:hover { color: #f97316 !important; }
+        html.dark .skeleton { background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%); background-size: 200% 100%; }
+        html.dark .compare-table td:first-child { background: #1e293b; color: #e2e8f0; border-color: #475569; }
+        html.dark .compare-best { background: #064e3b; color: #34d399; }
+        html.dark input[type=range]::-webkit-slider-runnable-track { background: #475569; }
+        html.dark select, html.dark input[type="text"], html.dark input[type="email"], html.dark input[type="number"], html.dark textarea {
+            background: #1e293b !important; color: #f1f5f9 !important; border-color: #475569 !important;
+        }
+        html.dark select option { background: #1e293b; color: #f1f5f9; }
+        html.dark input::placeholder { color: #64748b !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <div id="toastContainer" class="fixed top-24 right-4 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass shadow-sm transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow">
+                    <i class="bi bi-stars text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Moya<span class="text-brand-500">Jobs</span></span>
+            </div>
+             <div class="hidden md:flex items-center gap-8">
+                <a href="#" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-500 font-medium transition-colors" data-i18n="nav_find">Find Talent</a>
+                <a href="{% url 'jobs:construction_workforce' %}" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-500 font-medium transition-colors" data-i18n="nav_const">
+                    Construction Workforce
+                </a>
+                <a href="{% url 'jobs:business_consultancy' %}" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-500 font-medium transition-colors" data-i18n="nav_consult">
+                    Business Consultancy
+                </a>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="darkToggle" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-300">
+                    <i class="bi bi-moon text-xl dark:hidden"></i>
+                    <i class="bi bi-sun text-xl hidden dark:block"></i>
+                </button>
+
+                <button id="langToggle" class="px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">EN</button>
+
+                <button id="recentTrigger" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                    <i class="bi bi-clock-history text-2xl text-slate-700 dark:text-slate-300 group-hover:text-brand-600 transition-colors"></i>
+                </button>
+
+                <button id="wishlistTrigger" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                    <i class="bi bi-heart text-2xl text-slate-700 dark:text-slate-300 group-hover:text-rose-500 transition-colors"></i>
+                    <span id="wishlistCount" class="absolute -top-1 -right-1 bg-rose-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm transform scale-0 transition-transform duration-300">0</span>
+                </button>
+
+                <button id="compareTrigger" onclick="openCompareModal()" class="hidden relative group">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 compare-avatar">?</div>
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 compare-avatar">?</div>
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 compare-avatar">?</div>
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-4 w-4 bg-brand-500 text-white text-[8px] items-center justify-center font-bold compare-count">0</span>
+                    </span>
+                </button>
+
+                <button id="cartTrigger" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                    <i class="bi bi-cart3 text-2xl text-slate-700 dark:text-slate-300 group-hover:text-brand-600 transition-colors"></i>
+                    <span id="cartCount" class="absolute -top-1 -right-1 bg-brand-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm transform scale-0 transition-transform duration-300">0</span>
+                </button>
+
+                <div class="hidden lg:flex gap-2">
+                    <button onclick="openPostNeedModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:border-brand-500 hover:text-brand-600 transition-all text-sm" data-i18n="nav_post">Post a Need</button>
+                    <button onclick="window.location.href='/login/'" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:border-brand-500 hover:text-brand-600 transition-all text-sm flex items-center gap-2">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span data-i18n="nav_login">Login</span>
+                    </button>
+                    <div class="relative" id="regDropdownContainer">
+                        <button id="regDropdownBtn" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:border-brand-500 hover:text-brand-600 transition-all text-sm flex items-center gap-2">
+                            <i class="bi bi-person-plus"></i>
+                            <span data-i18n="nav_register">Register</span>
+                            <i class="bi bi-chevron-down text-xs transition-transform" id="regChevron"></i>
+                        </button>
+                        <div id="regDropdownMenu" class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden z-50 hidden">
+                            <button onclick="openModal('employer')" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
+                                <i class="bi bi-building"></i> Employer Registration
+                            </button>
+                            <button onclick="openModal('jobseeker')" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
+                                <i class="bi bi-person"></i> Job Seeker Registration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="lg:hidden text-slate-700 dark:text-slate-300"><i class="bi bi-list text-2xl"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative pt-32 pb-12 lg:pt-48 lg:pb-24 overflow-hidden bg-slate-900 text-white">
+        <canvas id="networkCanvas" class="absolute inset-0 w-full h-full z-0 opacity-40"></canvas>
+        <div class="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-slate-900/80 to-slate-900"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="lg:w-3/5 space-y-8">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-400 text-sm font-semibold tracking-wide" data-i18n="hero_badge">
+                        <i class="bi bi-stars"></i> Verified Talent Network
+                    </div>
+                    <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight leading-tight" data-i18n="hero_title">
+                        Your Workforce, <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-amber-400">On Demand</span>
+                    </h1>
+                    <p class="text-xl text-slate-300 max-w-2xl leading-relaxed" data-i18n="hero_desc">
+                        Build high-performing teams with verified professionals. From construction specialists to business consultants, hire the skills you need today.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 max-w-2xl">
+                        <div class="relative flex-grow">
+                            <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                            <input type="text" id="heroSearch" class="w-full pl-12 pr-12 py-4 rounded-2xl bg-white text-slate-900 placeholder-slate-400 border-none outline-none focus:ring-4 focus:ring-brand-500/20 shadow-xl transition-all" data-i18n-placeholder="hero_ph">
+                            <button id="voiceSearchBtn" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 transition-colors relative" title="Voice Search (Press /)">
+                                <i class="bi bi-mic-fill text-lg"></i>
+                            </button>
+                        </div>
+                        <button class="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-brand-500/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2" data-i18n="hero_btn">
+                            Search <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:w-2/5 w-full">
+                    <div class="glass-dark p-8 rounded-3xl border border-white/10 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-sm uppercase tracking-widest text-slate-400 font-bold" data-i18n="market_status">Market Status</h3>
+                            <span class="flex h-3 w-3 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                            </span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-2">
+                            <span class="text-5xl font-bold text-white tracking-tight counter-anim" data-target="28405">0</span>
+                            <span class="text-lg text-slate-400" data-i18n="assets_ready">Assets Ready</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden mb-4">
+                            <div class="bg-gradient-to-r from-emerald-400 to-brand-500 h-full rounded-full w-[85%]"></div>
+                        </div>
+                        <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold" data-i18n="market_demand">
+                            <i class="bi bi-graph-up-arrow"></i> High demand in Construction & IT
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="relative -mt-12 z-20 container mx-auto px-4 mb-12" id="statsSection">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-brand-500 mb-1 stat-counter" data-target="12500">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">Verified Talents</div>
+            </div>
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-emerald-500 mb-1 stat-counter" data-target="8400">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">Projects Completed</div>
+            </div>
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-blue-500 mb-1 stat-counter" data-target="98">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">% Satisfaction Rate</div>
+            </div>
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-amber-500 mb-1 stat-counter" data-target="24">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">/7 AI Support</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Marketplace -->
+    <main class="container mx-auto px-4 py-12">
+        <div class="flex flex-col lg:flex-row gap-8">
+
+            <!-- Sidebar -->
+            <aside class="lg:w-1/4">
+                <div class="sticky top-28 space-y-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-2" data-i18n="sidebar_title">
+                                <i class="bi bi-sliders text-brand-500"></i> Filters
+                            </h3>
+                            <button id="resetFilters" class="text-sm text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors" data-i18n="reset">Reset All</button>
+                        </div>
+
+                        <div class="mb-6 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300" data-i18n="filter_verified">Verified Only</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="verifiedCheck" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 dark:bg-slate-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_cat">Category</label>
+                            <select id="categoryFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="all" data-i18n="opt_all">All Categories</option>
+                                <option value="Construction" data-i18n="opt_const">Construction Workforce</option>
+                                <option value="Consultancy" data-i18n="opt_consult">Business Consultancy</option>
+                                <option value="Development" data-i18n="opt_dev">Development</option>
+                                <option value="Design" data-i18n="opt_des">Design</option>
+                                <option value="Data" data-i18n="opt_data">Data Science</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="trending_skills">Trending Skills</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="filterBySkill('React')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">React</button>
+                                <button onclick="filterBySkill('AutoCAD')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">AutoCAD</button>
+                                <button onclick="filterBySkill('Finance')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">Finance</button>
+                                <button onclick="filterBySkill('Python')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">Python</button>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_dur">Duration</label>
+                            <select id="durationFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="all" data-i18n="opt_any">Any Duration</option>
+                                <option value="Hourly">Hourly</option>
+                                <option value="Daily">Daily</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="Monthly">Monthly</option>
+                                <option value="Annually">Annually</option>
+                                <option value="Special Units">Special Units</option>
+                                <option value="Project">Project</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Availability</label>
+                            <select id="availabilityFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="any">Any</option>
+                                <option value="immediate">Immediate</option>
+                                <option value="week">Next Week</option>
+                                <option value="month">Next Month</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Experience Level</label>
+                            <select id="levelFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="all">All Levels</option>
+                                <option value="junior">Junior (0‑2 yrs)</option>
+                                <option value="mid">Mid (3‑5 yrs)</option>
+                                <option value="senior">Senior (6+ yrs)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_type">Working Type</label>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="type-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Full-time">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Full-time</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="type-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Part-time">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Part-time</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="type-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Contract">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Contract</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_loc">Location</label>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Addis Ababa" checked>
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Addis Ababa</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Remote" checked>
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Remote</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Hawassa">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Hawassa</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Bahir Dar">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Bahir Dar</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="filter_radius">Service Radius</label>
+                                <span class="text-xs font-bold text-brand-600" id="radiusDisplay">Any</span>
+                            </div>
+                            <input type="range" id="radiusRange" min="5" max="100" step="5" value="100" class="w-full">
+                        </div>
+
+                        <div class="mb-6 flex items-center justify-between bg-slate-50 dark:bg-slate-700 p-3 rounded-xl">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Global Remote</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-500">Work from anywhere</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="remoteCheck" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-300 dark:bg-slate-600 rounded-full peer peer-checked:bg-brand-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                            </label>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="filter_rate">Target Rate</label>
+                                <span class="text-sm font-bold text-brand-600" id="priceDisplay">50k ETB</span>
+                            </div>
+                            <input type="range" id="priceRange" min="5000" max="200000" step="1000" value="50000" class="w-full">
+                        </div>
+
+                        <button id="saveSearchBtn" class="w-full py-3 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-600 transition-all flex items-center justify-center gap-2">
+                            <i class="bi bi-bookmark-plus"></i> Save Current Search
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700">
+                        <h3 class="font-bold text-slate-900 dark:text-white text-lg mb-4 flex items-center gap-2">
+                            <i class="bi bi-bookmarks-fill text-brand-500"></i> Saved Searches
+                        </h3>
+                        <div id="savedSearchesList" class="space-y-3"></div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-xl">
+                        <div class="text-sm uppercase tracking-wider text-slate-400 mb-2">Employer Insights</div>
+                        <div class="text-3xl font-extrabold mb-2">87%</div>
+                        <p class="text-slate-300 text-sm mb-4">of employers hire within 7 days when they shortlist 3+ verified talents.</p>
+                        <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+                            <i class="bi bi-graph-up-arrow"></i> Trending upward
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Talent Grid -->
+            <div class="lg:w-3/4">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center gap-3">
+                        <span class="text-slate-500 dark:text-slate-400 font-medium text-sm" data-i18n="toolbar_sort">Sort by:</span>
+                        <select id="sortSelect" class="bg-slate-50 dark:bg-slate-700 border-none text-sm font-bold text-slate-800 dark:text-slate-200 rounded-lg px-3 py-2 cursor-pointer outline-none hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
+                            <option value="rating">Top Rated</option>
+                            <option value="newest">Newest First</option>
+                            <option value="price_low">Rate: Low to High</option>
+                            <option value="price_high">Rate: High to Low</option>
+                            <option value="reviews">Most Reviewed</option>
+                            <option value="match">Best Match</option>
+                            <option value="experience">Most Experienced</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <span class="text-slate-500 dark:text-slate-400 font-medium text-sm" id="resultCount">0 workers found</span>
+                        <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
+                            <button id="gridBtn" class="p-2 rounded-md bg-white dark:bg-slate-600 text-brand-600 shadow-sm transition-all hover:text-brand-600">
+                                <i class="bi bi-grid-3x3-gap-fill"></i>
+                            </button>
+                            <button id="listBtn" class="p-2 rounded-md text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all">
+                                <i class="bi bi-list-task"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="recommendationBar" class="mb-6 bg-gradient-to-r from-brand-500 to-amber-500 text-white p-4 rounded-2xl shadow-lg hidden">
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-stars text-xl mt-0.5"></i>
+                        <div>
+                            <div class="font-bold">AI Recommendation</div>
+                            <div id="recommendationText" class="text-sm text-white/90">Top matches will appear here based on your filters.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="activeFiltersBar" class="hidden mb-6 flex flex-wrap gap-2"></div>
+
+                <div id="skeletonLoader" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 hidden">
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 h-[400px] flex flex-col gap-4">
+                        <div class="w-20 h-20 rounded-full skeleton mx-auto mt-4"></div>
+                        <div class="h-6 w-3/4 skeleton mx-auto rounded"></div>
+                        <div class="h-4 w-1/2 skeleton mx-auto rounded"></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 h-[400px] flex flex-col gap-4">
+                        <div class="w-20 h-20 rounded-full skeleton mx-auto mt-4"></div>
+                        <div class="h-6 w-3/4 skeleton mx-auto rounded"></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 h-[400px] flex flex-col gap-4">
+                        <div class="w-20 h-20 rounded-full skeleton mx-auto mt-4"></div>
+                        <div class="h-6 w-3/4 skeleton mx-auto rounded"></div>
+                    </div>
+                </div>
+
+                <div id="talentContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+
+                <div class="mt-8 text-center">
+                    <button id="loadMoreBtn" class="hidden px-6 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-brand-600 transition-all">
+                        Load More Talents
+                    </button>
+                </div>
+
+                <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-600">
+                    <div class="w-20 h-20 bg-slate-50 dark:bg-slate-700 rounded-full flex items-center justify-center mb-6">
+                        <i class="bi bi-search text-3xl text-slate-300 dark:text-slate-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2" data-i18n="empty_title">No talents found</h3>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6" data-i18n="empty_desc">Try adjusting your filters.</p>
+                    <button onclick="resetFiltersFn()" class="text-brand-600 font-bold hover:text-brand-700 dark:hover:text-brand-400 flex items-center gap-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="reset">Reset Filters</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Drawer -->
+    <div id="cartOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity duration-300 opacity-0"></div>
+    <aside id="cartDrawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-slate-900 z-50 cart-drawer shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2" data-i18n="cart_title">
+                <i class="bi bi-bag-check text-brand-500"></i> Selected Workers
+            </h2>
+            <button id="closeCart" class="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-slate-600 dark:text-slate-300"></i>
+            </button>
+        </div>
+        <div id="cartItems" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+        <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-slate-500 dark:text-slate-400 font-medium" data-i18n="cart_total">Estimated Monthly Cost</span>
+                <span class="text-2xl font-bold text-slate-900 dark:text-white" id="cartTotal">0 ETB</span>
+            </div>
+            <button id="checkoutBtn" onclick="handleCheckout()" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-bold hover:bg-brand-600 dark:hover:bg-brand-500 transition-all shadow-lg flex items-center justify-center gap-2 group" data-i18n="cart_checkout">
+                Proceed to Checkout <i class="bi bi-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            <button id="exportCartBtn" class="w-full mt-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2">
+                <i class="bi bi-download"></i> Export Shortlist CSV
+            </button>
+        </div>
+    </aside>
+
+    <!-- Wishlist Drawer -->
+    <div id="wishlistOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity duration-300 opacity-0"></div>
+    <aside id="wishlistDrawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-slate-900 z-50 cart-drawer shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-heart-fill text-rose-500"></i> Wishlist
+            </h2>
+            <button id="closeWishlist" class="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-slate-600 dark:text-slate-300"></i>
+            </button>
+        </div>
+        <div id="wishlistItems" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+        <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+            <button id="clearWishlist" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition-all">
+                Clear All
+            </button>
+        </div>
+    </aside>
+
+    <!-- Recent Drawer -->
+    <div id="recentOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity duration-300 opacity-0"></div>
+    <aside id="recentDrawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-slate-900 z-50 cart-drawer shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-clock-history text-brand-500"></i> Recently Viewed
+            </h2>
+            <button id="closeRecent" class="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-slate-600 dark:text-slate-300"></i>
+            </button>
+        </div>
+        <div id="recentItems" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+    </aside>
+
+    <!-- Compare Modal -->
+    <div id="compareOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-6xl rounded-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+            <button onclick="closeCompareModal()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+                <h2 class="text-xl font-bold flex items-center gap-2"><i class="bi bi-collection"></i> Compare Candidates</h2>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <table class="w-full text-left border-collapse compare-table" id="compareTable"></table>
+            </div>
+            <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                <button onclick="closeCompareModal()" class="px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Close</button>
+                <button class="px-6 py-3 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-600 shadow-lg">Contact All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick View Modal -->
+    <div id="quickViewOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+            <button onclick="closeQuickView()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div id="quickViewContent" class="flex flex-col"></div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="regOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
+            <button onclick="closeRegModal()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="bg-slate-900 text-white p-6 text-center flex-shrink-0">
+                <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <i class="bi bi-person-check text-3xl text-brand-500"></i>
+                </div>
+                <h2 id="modalTitle" class="text-2xl font-bold mb-1">Job Seeker Registration</h2>
+                <p class="text-slate-400 text-sm">Create your account to start your journey.</p>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow">
+                <div id="formErrors" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-600 dark:text-red-400 mb-4"></div>
+                <form id="jobSeekerRegForm" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Username *</label>
+                            <input type="text" name="username" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white" placeholder="Choose a username">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Email Address *</label>
+                            <input type="email" name="email" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white" placeholder="your.email@example.com">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">First Name *</label>
+                            <input type="text" name="first_name" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white" placeholder="First Name">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Last Name *</label>
+                            <input type="text" name="last_name" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white" placeholder="Last Name">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Password *</label>
+                            <input type="password" name="password1" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white" placeholder="Create a password">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Confirm Password *</label>
+                            <input type="password" name="password2" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white" placeholder="Confirm your password">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Country *</label>
+                            <select name="country" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white">
+                                <option value="">Select country</option>
+                                <option value="ET">Ethiopia</option>
+                                <option value="US">United States</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="CA">Canada</option>
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="AE">UAE</option>
+                                <option value="SA">Saudi Arabia</option>
+                                <option value="KE">Kenya</option>
+                                <option value="NG">Nigeria</option>
+                                <option value="ZA">South Africa</option>
+                                <option value="IN">India</option>
+                                <option value="CN">China</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Phone (Optional)</label>
+                            <input type="tel" name="phone_number" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all dark:text-white" placeholder="+251 9XX XXX XXX">
+                        </div>
+                    </div>
+                    <button type="submit" id="submitRegBtn" class="w-full bg-brand-500 text-white py-3 rounded-xl font-bold hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2">
+                        <span>Create Account</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <p class="text-center text-sm text-slate-500 dark:text-slate-400">
+                        Already have an account? <a href="/login/" class="text-brand-600 font-bold hover:underline">Login here</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post a Need Modal -->
+    <div id="postNeedOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative">
+            <button onclick="closePostNeedModal()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Post a Specific Need</h2>
+                <p class="text-slate-500 dark:text-slate-400 mb-6">Describe exactly what you need and we'll find the best talent for you.</p>
+                <form id="postNeedForm" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="text" name="job_title" placeholder="Job Title" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border-none outline-none dark:text-white">
+                    <textarea name="description" placeholder="Description" rows="3" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border-none outline-none dark:text-white"></textarea>
+                    <input type="number" name="budget" placeholder="Budget (ETB)" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border-none outline-none dark:text-white">
+                    <button type="submit" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl font-bold hover:bg-brand-600 dark:hover:bg-brand-500 transition-all">Post Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hire Request Modal -->
+    <div id="hireOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden relative">
+            <button onclick="closeHireModal()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Send Hiring Request</h2>
+                <p id="hireModalSubtitle" class="text-slate-500 dark:text-slate-400 mb-6"></p>
+                <form id="hireForm" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="talent_id" id="hireTalentId">
+                    <input type="text" name="company_name" placeholder="Company Name" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border-none outline-none dark:text-white">
+                    <input type="email" name="email" placeholder="Work Email" required class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border-none outline-none dark:text-white">
+                    <input type="number" name="budget" placeholder="Offer Budget (ETB)" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border-none outline-none dark:text-white">
+                    <textarea name="details" rows="4" placeholder="Project details" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border-none outline-none dark:text-white"></textarea>
+                    <button type="submit" class="w-full bg-brand-500 text-white py-3 rounded-xl font-bold hover:bg-brand-600 transition-all">
+                        Submit Request
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 py-12 mt-12 border-t border-slate-800">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="text-center md:text-left">
+                    <div class="mb-4"><span class="text-2xl font-bold text-white tracking-tight">Moya<span class="text-brand-500">Jobs</span></span></div>
+                    <p class="text-slate-500 text-sm max-w-xs" data-i18n="footer_desc">Connecting talent with opportunity across Ethiopia and beyond.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all group"><i class="bi bi-linkedin text-lg group-hover:scale-110 transition-transform"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all group"><i class="bi bi-twitter text-lg group-hover:scale-110 transition-transform"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all group"><i class="bi bi-facebook text-lg group-hover:scale-110 transition-transform"></i></a>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 mt-8 pt-8 text-center text-slate-500 text-sm">© 2026 Moya Jobs.</div>
+        </div>
+    </footer>
+
+    <!-- AI Assistant -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
+        <div id="aiChatWindow" class="hidden w-80 h-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden transform origin-bottom-right scale-95 opacity-0 transition-all duration-300">
+            <div class="bg-gradient-to-r from-brand-500 to-amber-500 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"><i class="bi bi-robot"></i></div>
+                    <div>
+                        <div class="font-bold text-sm">Moya AI Assistant</div>
+                        <div class="text-xs opacity-80 flex items-center gap-1"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Online</div>
+                    </div>
+                </div>
+                <button onclick="toggleAIChat()" class="hover:bg-white/20 p-1 rounded"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div id="aiChatMessages" class="flex-grow p-4 overflow-y-auto space-y-3 bg-slate-50 dark:bg-slate-900">
+                <div class="flex gap-2">
+                    <div class="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="bi bi-robot text-sm"></i></div>
+                    <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 dark:text-slate-200 max-w-[80%]">
+                        Hello! 👋 I'm Moya AI. How can I help you find the perfect talent today?
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="flex gap-2">
+                    <input type="text" id="aiChatInput" placeholder="Ask about salaries, skills..." class="flex-grow p-2 text-sm bg-slate-100 dark:bg-slate-700 rounded-lg outline-none border-none dark:text-white">
+                    <button onclick="sendAIMessage()" class="bg-brand-500 text-white p-2 rounded-lg hover:bg-brand-600 transition-colors"><i class="bi bi-send-fill"></i></button>
+                </div>
+            </div>
+        </div>
+        <button onclick="toggleAIChat()" id="aiChatBtn" class="w-14 h-14 bg-gradient-to-br from-brand-500 to-amber-500 text-white rounded-full shadow-lg shadow-brand-500/30 flex items-center justify-center text-2xl hover:scale-110 transition-transform relative">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold animate-pulse">1</span>
+        </button>
+    </div>
+
+    <!-- Django URLs for JS -->
+    <script>
+        const DJANGO_URLS = {
+            hire_request: "{% url 'jobs:hire_request' %}",
+            post_need: "{% url 'jobs:post_need' %}",
+            update_session: "{% url 'jobs:update_session' %}",
+        };
+        const CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
+
+    <!-- ========== REFINED JAVASCRIPT ========== -->
+    <script>
+        // --- INJECTED FROM DJANGO ---
+        const talents = {{ talents_json|safe }};
+        let cart = {{ initial_cart|safe }} || [];
+        let wishlist = {{ initial_wishlist|safe }} || [];
+        let compareList = {{ initial_compare|safe }} || [];
+        let recentlyViewed = {{ initial_recent|safe }} || [];
+        let currentLang = "{{ initial_lang|safe }}" || 'en';
+
+        // --- Translations ---
+        const translations = {
+            en: {
+                nav_find: "Find Talent", nav_const: "Construction Specials", nav_consult: "Business Consultancy",
+                nav_post: "Post a Need", nav_employer: "Employer Reg", nav_seeker: "Job Seeker",
+                nav_login: "Login", nav_register: "Register",
+                hero_badge: "<i class='bi bi-stars'></i> Verified Talent Network",
+                hero_title: "Your Workforce,<br>On Demand",
+                hero_desc: "Build high-performing teams with verified professionals.",
+                hero_ph: "e.g. React Developer, Structural Engineer...", hero_btn: "Search <i class='bi bi-arrow-right'></i>",
+                market_status: "Market Status", assets_ready: "Assets Ready",
+                market_demand: "<i class='bi bi-graph-up-arrow'></i> High demand in Construction & IT",
+                sidebar_title: "<i class='bi bi-sliders text-brand-500'></i> Filters", reset: "Reset All",
+                filter_verified: "Verified Only", filter_cat: "Category", opt_all: "All Categories",
+                opt_const: "Construction Workforce", opt_consult: "Business Consultancy", opt_dev: "Development",
+                opt_des: "Design", opt_data: "Data Science", trending_skills: "Trending Skills",
+                filter_dur: "Duration", opt_any: "Any Duration",
+                filter_type: "Working Type", filter_loc: "Location", filter_rate: "Target Rate",
+                toolbar_sort: "Sort by:",
+                card_view: "Quick View", card_compare: "Compare",
+                card_btn_add: "Add to Selection", card_btn_added: "In Selection",
+                cart_title: "<i class='bi bi-bag-check text-brand-500'></i> Selected Workers", cart_empty: "No workers selected yet.",
+                cart_total: "Estimated Monthly Cost", cart_checkout: "Proceed to Checkout <i class='bi bi-arrow-right group-hover:translate-x-1 transition-transform'></i>",
+                cart_remove: "<i class='bi bi-trash'></i> Remove", empty_title: "No talents found", empty_desc: "Try adjusting your filters.",
+                modal_sub: "Join the professional network today.", form_name: "Full Name", form_email: "Email Address", form_btn: "Create Account",
+                footer_desc: "Connecting talent with opportunity across Ethiopia and beyond.", results_found: "workers found",
+                r_quality: "Quality of Work", r_punctuality: "Punctuality", r_communication: "Communication",
+                qv_overview: "Overview", qv_portfolio: "Portfolio", qv_calendar: "Availability", qv_reviews: "Reviews",
+                qv_bio: "Bio", qv_radius: "Service Radius", qv_offer: "Send Offer",
+            },
+            am: {
+                nav_find: "ተስማሚ ፈላጊ ፈልግ", nav_const: "የግንባታ ልዩ አገልግሎት", nav_consult: "የንግድ አማካሪነት",
+                nav_post: "ፍለጽ ፈጥር", nav_employer: "ሰራተኛ ቅጥር", nav_seeker: "ሰራተኛ ሆን",
+                nav_login: "መግቢያ", nav_register: "ተመዝገብ",
+                hero_badge: "<i class='bi bi-stars'></i> የተረጋገጠ ባለሙያ አውታረ",
+                hero_title: "የስራ ኃይልዎ,<br>በአሁኑ ጊዜ",
+                hero_desc: "በተረጋገጠ ባለሙያዎች የተሟሉ ቡድኖችን ይገንቡ።",
+                hero_ph: "ለምሳሌ ሲቪል ኢንጂነር...", hero_btn: "ፈልግ <i class='bi bi-arrow-right'></i>",
+                market_status: "የገበያ ሁኔታ", assets_ready: "ባለሙያዎች ዝግጁ",
+                market_demand: "<i class='bi bi-graph-up-arrow'></i> በግንባታ እና ቲክኖሎጂ ትልቅ ፍላጎት አለ",
+                sidebar_title: "<i class='bi bi-sliders text-brand-500'></i> ማጣሪያዎች", reset: "ሁሉንም አጽዳ",
+                filter_verified: "ብቻ የተረጋገጠ", filter_cat: "ምድብ", opt_all: "ሁሉም ምድቦች",
+                opt_const: "የግንባታ ሰራተኞች", opt_consult: "የንግድ አማካሪነት", opt_dev: "የሶፍትዌር ገንቢ",
+                opt_des: "ዲዛይን", opt_data: "የዳታ ሳይንስ", trending_skills: "ታዋቂ ችሎታዎች",
+                filter_dur: "ጊዜ ርዝመት", opt_any: "ማንኛውም ጊዜ",
+                filter_type: "የስራ አይነት", filter_loc: "አካባቢ", filter_rate: "የገበያ ዋጋ",
+                toolbar_sort: "በዚህ አደራደር:",
+                card_view: "ትንሹ መመልከት", card_compare: "አነፃፅር",
+                card_btn_add: "ወደ ምርጫ ያክሉ", card_btn_added: "በምርጫ ውስጥ",
+                cart_title: "<i class='bi bi-bag-check text-brand-500'></i> የተመረጡ ሰራተኞች", cart_empty: "ምንም ሰራተኛ አልተመረጠም",
+                cart_total: "ጠቅላላ ወርህ ወጪ", cart_checkout: "ወደ ክፍያ ቀጥል <i class='bi bi-arrow-right group-hover:translate-x-1 transition-transform'></i>",
+                cart_remove: "<i class='bi bi-trash'></i> አስወግድ", empty_title: "ምንም ባለሙያ አልተገኘም", empty_desc: "ማጣሪያዎችን ያስተካክሉ።",
+                modal_sub: "ዛሬ ባለሙያዎችን ያግኙ።", form_name: "ሙሉ ስም", form_email: "ኢሜይል አድራሻ", form_btn: "መለያ ይፍጠሩ",
+                footer_desc: "ባለሙያዎችን ከእድል ጋር አንድ ላይ ማገናኘት በኢትዮጵያ።",
+                results_found: "ሰራተኞች ተገኙ",
+                r_quality: "የስራ ጥራት", r_punctuality: "ሰዓት ጠባቂ", r_communication: "ግንኙነት",
+                qv_overview: "አጠቃላይ እይታ", qv_portfolio: "የስራው ስራው", qv_calendar: "ዝግጁነት", qv_reviews: "አስተያየት",
+                qv_bio: "ታሪክ", qv_radius: "የአገል ርዝመት", qv_offer: "አሁን ያግኙ",
+            }
+        };
+
+        // --- Global State ---
+        let currentView = 'grid';
+        let savedSearches = JSON.parse(localStorage.getItem('moya_saved_searches') || '[]');
+        let visibleCount = 6;
+        let activeHireTalent = null;
+        let currentPhotoFile = null;
+
+        let filterState = {
+            search: '', category: 'all', duration: 'all', workingType: [],
+            locations: ['Addis Ababa', 'Remote'], maxPrice: 200000, sort: 'rating',
+            radius: 100, remoteOnly: false, skillSearch: '', availability: 'any',
+            experienceLevel: 'all', verifiedOnly: false
+        };
+
+        // --- Persistence ---
+        function saveState() {
+            localStorage.setItem('moya_cart', JSON.stringify(cart));
+            localStorage.setItem('moya_wishlist', JSON.stringify(wishlist));
+            localStorage.setItem('moya_compare', JSON.stringify(compareList));
+            localStorage.setItem('moya_recent', JSON.stringify(recentlyViewed));
+            localStorage.setItem('moya_lang', currentLang);
+            localStorage.setItem('moya_filters', JSON.stringify(filterState));
+            localStorage.setItem('moya_saved_searches', JSON.stringify(savedSearches));
+
+            fetch(DJANGO_URLS.update_session, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    cart: cart, wishlist: wishlist, compare: compareList,
+                    recently_viewed: recentlyViewed, lang: currentLang
+                })
+            }).catch(err => console.warn('Session sync failed:', err));
+        }
+
+        function loadState() {
+            try {
+                const savedFilters = JSON.parse(localStorage.getItem('moya_filters'));
+                if (savedFilters) filterState = { ...filterState, ...savedFilters };
+            } catch (e) { console.error('Failed to load state', e); }
+        }
+
+        function syncFilterUI() {
+            heroSearch.value = filterState.search || '';
+            categoryFilter.value = filterState.category || 'all';
+            durationFilter.value = filterState.duration || 'all';
+            verifiedCheck.checked = !!filterState.verifiedOnly;
+            remoteCheck.checked = !!filterState.remoteOnly;
+            availabilityFilter.value = filterState.availability || 'any';
+            levelFilter.value = filterState.experienceLevel || 'all';
+            priceRange.value = filterState.maxPrice || 200000;
+            priceDisplay.textContent = (filterState.maxPrice || 200000) >= 200000 ? '200k+ ETB' : `${(filterState.maxPrice || 200000).toLocaleString()} ETB`;
+            radiusRange.value = filterState.radius || 100;
+            radiusDisplay.textContent = (filterState.radius || 100) === 100 ? 'Any' : `${filterState.radius} km`;
+            typeChecks.forEach(c => c.checked = (filterState.workingType || []).includes(c.value));
+            locationChecks.forEach(c => c.checked = (filterState.locations || []).includes(c.value));
+            sortSelect.value = filterState.sort || 'rating';
+            langToggle.textContent = currentLang.toUpperCase();
+        }
+
+        // --- DOM Elements ---
+        const container = document.getElementById('talentContainer');
+        const skeletonLoader = document.getElementById('skeletonLoader');
+        const emptyState = document.getElementById('emptyState');
+        const countDisplay = document.getElementById('resultCount');
+        const heroSearch = document.getElementById('heroSearch');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const durationFilter = document.getElementById('durationFilter');
+        const verifiedCheck = document.getElementById('verifiedCheck');
+        const typeChecks = document.querySelectorAll('.type-check');
+        const locationChecks = document.querySelectorAll('.location-check');
+        const priceRange = document.getElementById('priceRange');
+        const priceDisplay = document.getElementById('priceDisplay');
+        const sortSelect = document.getElementById('sortSelect');
+        const gridBtn = document.getElementById('gridBtn');
+        const listBtn = document.getElementById('listBtn');
+        const resetBtn = document.getElementById('resetFilters');
+        const langToggle = document.getElementById('langToggle');
+        const compareTrigger = document.getElementById('compareTrigger');
+        const radiusRange = document.getElementById('radiusRange');
+        const radiusDisplay = document.getElementById('radiusDisplay');
+        const remoteCheck = document.getElementById('remoteCheck');
+        const availabilityFilter = document.getElementById('availabilityFilter');
+        const levelFilter = document.getElementById('levelFilter');
+        const darkToggle = document.getElementById('darkToggle');
+
+        const cartTrigger = document.getElementById('cartTrigger');
+        const cartDrawer = document.getElementById('cartDrawer');
+        const cartOverlay = document.getElementById('cartOverlay');
+        const closeCart = document.getElementById('closeCart');
+        const cartItemsContainer = document.getElementById('cartItems');
+        const cartCountBadge = document.getElementById('cartCount');
+        const cartTotalDisplay = document.getElementById('cartTotal');
+
+        const wishlistTrigger = document.getElementById('wishlistTrigger');
+        const wishlistDrawer = document.getElementById('wishlistDrawer');
+        const wishlistOverlay = document.getElementById('wishlistOverlay');
+        const closeWishlist = document.getElementById('closeWishlist');
+        const wishlistItemsContainer = document.getElementById('wishlistItems');
+        const wishlistCountBadge = document.getElementById('wishlistCount');
+        const clearWishlistBtn = document.getElementById('clearWishlist');
+
+        const recentTrigger = document.getElementById('recentTrigger');
+        const recentDrawer = document.getElementById('recentDrawer');
+        const recentOverlay = document.getElementById('recentOverlay');
+        const closeRecent = document.getElementById('closeRecent');
+
+        // Registration Dropdown Elements
+        const regContainer = document.getElementById('regDropdownContainer');
+        const regBtn = document.getElementById('regDropdownBtn');
+        const regMenu = document.getElementById('regDropdownMenu');
+        const regChevron = document.getElementById('regChevron');
+
+        // --- Toast ---
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-info-circle-fill';
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="bi ${iconClass} text-lg"></i></div>
+                <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${message}</div>
+            `;
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // --- Filter Chips ---
+        function renderFilterChips() {
+            const bar = document.getElementById('activeFiltersBar');
+            const chips = [];
+            if (filterState.search) chips.push({ key: 'search', label: `Search: ${filterState.search}` });
+            if (filterState.category !== 'all') chips.push({ key: 'category', label: `Category: ${filterState.category}` });
+            if (filterState.duration !== 'all') chips.push({ key: 'duration', label: `Duration: ${filterState.duration}` });
+            if (filterState.verifiedOnly) chips.push({ key: 'verified', label: 'Verified Only' });
+            if (filterState.remoteOnly) chips.push({ key: 'remote', label: 'Remote Only' });
+            if (filterState.availability !== 'any') chips.push({ key: 'availability', label: `Availability: ${filterState.availability}` });
+            if (filterState.experienceLevel !== 'all') chips.push({ key: 'experienceLevel', label: `Level: ${filterState.experienceLevel}` });
+            if (filterState.skillSearch) chips.push({ key: 'skillSearch', label: `Skill: ${filterState.skillSearch}` });
+            if (filterState.radius < 100) chips.push({ key: 'radius', label: `Radius: ${filterState.radius}km` });
+
+            if (!chips.length) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+            bar.classList.remove('hidden');
+            bar.innerHTML = chips.map(chip => `
+                <button onclick="removeFilterChip('${chip.key}')" class="px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:border-brand-500 transition-colors flex items-center gap-1">
+                    ${chip.label} <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            `).join('');
+        }
+
+        window.removeFilterChip = function(key) {
+            if (key === 'search') { filterState.search = ''; heroSearch.value = ''; }
+            if (key === 'category') { filterState.category = 'all'; categoryFilter.value = 'all'; }
+            if (key === 'duration') { filterState.duration = 'all'; durationFilter.value = 'all'; }
+            if (key === 'verified') { filterState.verifiedOnly = false; verifiedCheck.checked = false; }
+            if (key === 'remote') { filterState.remoteOnly = false; remoteCheck.checked = false; }
+            if (key === 'availability') { filterState.availability = 'any'; availabilityFilter.value = 'any'; }
+            if (key === 'experienceLevel') { filterState.experienceLevel = 'all'; levelFilter.value = 'all'; }
+            if (key === 'skillSearch') { filterState.skillSearch = ''; }
+            if (key === 'radius') { filterState.radius = 100; radiusRange.value = 100; radiusDisplay.textContent = 'Any'; }
+            renderFilterChips();
+            renderTalents();
+            saveState();
+        }
+
+        // --- Recently Viewed ---
+        function addToRecentlyViewed(id) {
+            recentlyViewed = [id, ...recentlyViewed.filter(x => x !== id)].slice(0, 8);
+            updateRecentUI();
+            saveState();
+        }
+
+        function updateRecentUI() {
+            const c = document.getElementById('recentItems');
+            if (!c) return;
+            if (!recentlyViewed.length) {
+                c.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-500 mt-10">
+                    <i class="bi bi-clock-history text-4xl mb-2 block"></i>
+                    <span>No recently viewed talents.</span>
+                </div>`;
+                return;
+            }
+            c.innerHTML = recentlyViewed.map(id => {
+                const worker = talents.find(t => t.id === id);
+                if (!worker) return '';
+                return `
+                    <div class="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <img src="${worker.image}" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">${worker.name}</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">${worker.role}</p>
+                        </div>
+                        <button onclick="showQuickView(${worker.id})" class="text-brand-600 font-bold text-sm hover:underline">View</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- Saved Searches ---
+        function saveCurrentSearch() {
+            const name = `Search ${savedSearches.length + 1}`;
+            savedSearches.unshift({ id: Date.now(), name, state: JSON.parse(JSON.stringify(filterState)) });
+            savedSearches = savedSearches.slice(0, 6);
+            renderSavedSearches();
+            saveState();
+            showToast('Search saved successfully!', 'success');
+        }
+
+        function renderSavedSearches() {
+            const box = document.getElementById('savedSearchesList');
+            if (!box) return;
+            if (!savedSearches.length) {
+                box.innerHTML = `<div class="text-sm text-slate-400 dark:text-slate-500">No saved searches yet.</div>`;
+                return;
+            }
+            box.innerHTML = savedSearches.map(item => `
+                <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700">
+                    <button onclick="applySavedSearch(${item.id})" class="text-left flex-grow">
+                        <div class="font-semibold text-slate-800 dark:text-slate-100 text-sm">${item.name}</div>
+                        <div class="text-xs text-slate-400 dark:text-slate-500">${item.state.category}${item.state.search ? ', ' + item.state.search : ''}</div>
+                    </button>
+                    <button onclick="deleteSavedSearch(${item.id})" class="text-rose-500 hover:text-rose-600"><i class="bi bi-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        window.applySavedSearch = function(id) {
+            const item = savedSearches.find(s => s.id === id);
+            if (!item) return;
+            filterState = { ...filterState, ...item.state };
+            syncFilterUI();
+            renderTalents();
+            renderFilterChips();
+            showToast('Saved search applied.', 'success');
+        }
+
+        window.deleteSavedSearch = function(id) {
+            savedSearches = savedSearches.filter(s => s.id !== id);
+            renderSavedSearches();
+            saveState();
+        }
+
+        // --- Share Profile ---
+        window.shareTalent = async function(id) {
+            const worker = talents.find(t => t.id === id);
+            const shareData = {
+                title: `${worker.name} - ${worker.role}`,
+                text: `Check out ${worker.name}, ${worker.role} on MoyaJobs`,
+                url: window.location.href.split('#')[0] + `#talent-${id}`
+            };
+            try {
+                if (navigator.share) await navigator.share(shareData);
+                else {
+                    await navigator.clipboard.writeText(shareData.url);
+                    showToast('Profile link copied to clipboard!', 'success');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // --- CSV Export ---
+        function exportCartCSV() {
+            if (!cart.length) { showToast('No shortlisted workers to export.', 'info'); return; }
+            const rows = [['Name', 'Role', 'Location', 'Price', 'Rating']];
+            cart.forEach(id => {
+                const w = talents.find(t => t.id === id);
+                rows.push([w.name, w.role, w.location, w.price, w.rating]);
+            });
+            const csv = rows.map(row => row.map(v => `"${v}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'moyajobs-shortlist.csv';
+            link.click();
+        }
+
+        // --- Verification Details ---
+        window.showVerificationDetails = function(id) {
+            const worker = talents.find(t => t.id === id);
+            let certs = worker.certifications && worker.certifications.length ? worker.certifications.join(', ') : 'Standard checks';
+            showToast(`${worker.name} is identity-checked, skill-reviewed (${certs}), and reference-verified.`, 'info');
+        }
+
+        // --- AI Recommendations ---
+        function updateRecommendation(filtered) {
+            const el = document.getElementById('recommendationText');
+            const bar = document.getElementById('recommendationBar');
+            if (!filtered.length) { bar.classList.add('hidden'); return; }
+            bar.classList.remove('hidden');
+            const top = filtered[0];
+            el.textContent = `${top.name} looks like a strong match for your current filters, especially for ${top.role} in ${top.location}.`;
+        }
+
+        // --- Hire Request Modal ---
+        window.openHireModal = function(id) {
+            const worker = talents.find(t => t.id === id);
+            activeHireTalent = worker;
+            document.getElementById('hireModalSubtitle').textContent = `Send a hiring request for ${worker.name}, ${worker.role}.`;
+            document.getElementById('hireTalentId').value = id;
+            document.getElementById('hireOverlay').classList.add('active');
+        }
+        window.closeHireModal = function() {
+            document.getElementById('hireOverlay').classList.remove('active');
+        }
+
+        // Handle Hire Form Submission
+        document.getElementById('hireForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(DJANGO_URLS.hire_request, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': CSRF_TOKEN }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    closeHireModal();
+                    showToast(data.message, 'success');
+                    document.getElementById('hireForm').reset();
+                } else {
+                    showToast(data.message || 'Error submitting request', 'info');
+                }
+            })
+            .catch(err => showToast('Network error. Please try again.', 'info'));
+        });
+
+        // Handle Post Need Form Submission
+        document.getElementById('postNeedForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(DJANGO_URLS.post_need, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': CSRF_TOKEN }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    closePostNeedModal();
+                    showToast(data.message, 'success');
+                    document.getElementById('postNeedForm').reset();
+                } else {
+                    showToast(data.message || 'Error posting request', 'info');
+                }
+            })
+            .catch(err => showToast('Network error. Please try again.', 'info'));
+        });
+
+        // --- Render Function ---
+        function renderTalents() {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+            skeletonLoader.classList.remove('hidden');
+
+            setTimeout(() => {
+                skeletonLoader.classList.add('hidden');
+                container.classList.remove('hidden');
+
+                let filtered = talents.filter(t => {
+                    const matchesSearch = t.name.toLowerCase().includes(filterState.search) || t.role.toLowerCase().includes(filterState.search);
+                    const matchesSkill = filterState.skillSearch ? t.skills.some(s => s.toLowerCase().includes(filterState.skillSearch.toLowerCase())) : true;
+                    const matchesCategory = filterState.category === 'all' || t.category === filterState.category;
+                    const matchesDuration = filterState.duration === 'all' || t.duration === filterState.duration;
+                    const matchesWorkingType = filterState.workingType.length === 0 || filterState.workingType.includes(t.type);
+                    const matchesLocation = filterState.locations.includes(t.location);
+                    const matchesRemote = filterState.remoteOnly ? t.remote : true;
+                    const matchesPrice = t.price <= filterState.maxPrice;
+                    const matchesVerified = filterState.verifiedOnly ? t.verified : true;
+                    const matchesRadius = t.remote ? true : t.radius <= filterState.radius;
+
+                    let matchesAvailability = true;
+                    if (filterState.availability !== 'any') {
+                        const days = t.availableFrom;
+                        if (filterState.availability === 'immediate') matchesAvailability = days <= 3;
+                        else if (filterState.availability === 'week') matchesAvailability = days <= 7;
+                        else if (filterState.availability === 'month') matchesAvailability = days <= 30;
+                    }
+
+                    let matchesLevel = true;
+                    if (filterState.experienceLevel !== 'all') {
+                        const exp = t.experience;
+                        if (filterState.experienceLevel === 'junior') matchesLevel = exp <= 2;
+                        else if (filterState.experienceLevel === 'mid') matchesLevel = exp >= 3 && exp <= 5;
+                        else if (filterState.experienceLevel === 'senior') matchesLevel = exp >= 6;
+                    }
+
+                    return matchesSearch && matchesSkill && matchesCategory && matchesDuration && matchesWorkingType && matchesLocation && matchesRemote && matchesPrice && matchesVerified && matchesAvailability && matchesLevel && matchesRadius;
+                });
+
+                filtered.sort((a, b) => {
+                    if (filterState.sort === 'rating') return b.rating - a.rating;
+                    if (filterState.sort === 'price_low') return a.price - b.price;
+                    if (filterState.sort === 'price_high') return b.price - a.price;
+                    if (filterState.sort === 'reviews') return b.reviews - a.reviews;
+                    if (filterState.sort === 'experience') return b.experience - a.experience;
+                    if (filterState.sort === 'match') return (b.rating + (b.verified ? 1 : 0)) - (a.rating + (a.verified ? 1 : 0));
+                    if (filterState.sort === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+                    return 0;
+                });
+
+                updateRecommendation(filtered);
+                renderFilterChips();
+
+                const allFiltered = filtered;
+                filtered = filtered.slice(0, visibleCount);
+
+                countDisplay.textContent = `${allFiltered.length} ${translations[currentLang].results_found}`;
+
+                if (allFiltered.length === 0) {
+                    container.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                } else {
+                    container.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                    emptyState.classList.remove('flex');
+                }
+
+                filtered.forEach((t, index) => {
+                    const isGrid = currentView === 'grid';
+                    const inCart = cart.includes(t.id);
+                    const inWishlist = wishlist.includes(t.id);
+                    const inCompare = compareList.includes(t.id);
+
+                    let matchScore = 50;
+                    if (t.rating >= 4.8) matchScore += 20;
+                    else if (t.rating >= 4.5) matchScore += 10;
+                    if (t.verified) matchScore += 15;
+                    if (t.top) matchScore += 10;
+                    if (filterState.search) {
+                        if (t.name.toLowerCase().includes(filterState.search) || t.role.toLowerCase().includes(filterState.search)) matchScore += 20;
+                        if (t.skills.some(s => s.toLowerCase().includes(filterState.search))) matchScore += 15;
+                    }
+                    if (filterState.category !== 'all' && t.category === filterState.category) matchScore += 10;
+                    matchScore = Math.min(99, matchScore);
+
+                    let matchColorClass = "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300";
+                    if (matchScore > 85) matchColorClass = "border-emerald-500 text-emerald-600 dark:text-emerald-400";
+                    else if (matchScore > 70) matchColorClass = "border-amber-500 text-amber-600 dark:text-amber-400";
+
+                    const matchBadge = `
+                        <div class="absolute top-4 right-4 z-10 flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full bg-white dark:bg-slate-700 shadow-lg flex items-center justify-center border-2 ${matchColorClass} transition-all hover:scale-110">
+                                <span class="text-xs font-extrabold">${matchScore}%</span>
+                            </div>
+                            <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">Match</span>
+                        </div>
+                    `;
+
+                    const card = document.createElement('div');
+                    card.className = `talent-grid-item group relative bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-card hover:shadow-card-hover hover:border-brand-200 transition-all duration-300 flex flex-col justify-between overflow-hidden ${isGrid ? 'h-full' : 'flex-row items-center gap-6'}`;
+
+                    const verifiedBadge = t.verified ?
+                        `<span class="flex items-center gap-1 px-2 py-1 rounded-md ${t.tier === 3 ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300' : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'} text-[10px] font-bold uppercase tracking-wide">
+                            ${t.tier === 3 ? '<i class="bi bi-patch-check-fill"></i> Tier 3' : '<i class="bi bi-patch-check"></i>'} Verified
+                         </span>` :
+                        '';
+
+                    const topBadge = t.top ? `<span class="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-300 text-[10px] font-bold uppercase tracking-wide"><i class="bi bi-trophy-fill"></i> Top Talent</span>` :
+                        '';
+
+                    const skillsHtml = t.skills.map(s => `<span class="px-3 py-1 bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg border border-slate-100 dark:border-slate-600 group-hover:bg-white dark:group-hover:bg-slate-600 group-hover:border-slate-200 dark:group-hover:border-slate-500 transition-colors">${s}</span>`).join(
+                    '');
+
+                    const certHtml = t.certifications && t.certifications.length ?
+                        `<div class="mt-3 flex flex-wrap gap-2 justify-center ${isGrid ? '' : 'justify-start'}">
+                            ${t.certifications.map(cert => `<span class="px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase">${cert}</span>`).join('')}
+                          </div>` :
+                        '';
+
+                    const cartBtnClass = inCart ?
+                        "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-300 cursor-default" :
+                        "bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-brand-600 dark:hover:bg-brand-500";
+                    const cartBtnText = inCart ? translations[currentLang].card_btn_added : translations[currentLang].card_btn_add;
+                    const cartIcon = inCart ? "bi-check2" : "bi-cart-plus";
+                    const cartAction = inCart ? "" : `onclick="addToCart(${t.id})"`;
+
+                    const compareClass = inCompare ? "bg-brand-500 text-white" :
+                        "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-900/20";
+                    const compareAction = inCompare ? `onclick="removeFromCompare(${t.id})"` :
+                    `onclick="addToCompare(${t.id})"`;
+
+                    const wishlistClass = inWishlist ? "text-rose-500" :
+                        "text-slate-300 dark:text-slate-500 hover:text-rose-400";
+
+                    const metaBadges =
+                        `<div class="flex gap-2 mb-2 justify-center ${isGrid ? '' : 'justify-start'}">
+                        <span class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">${t.duration}</span>
+                        <span class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">${t.type}</span>
+                        ${t.remote ? '<span class="text-[10px] font-bold uppercase text-blue-100 dark:text-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-1 rounded">Global</span>' : ''}
+                    </div>`;
+
+                    card.innerHTML = `
+                        <div class="card-gradient-line"></div>
+                        ${matchBadge}
+                        <div class="${isGrid ? 'text-center' : 'flex items-center gap-4'}">
+                            <div class="relative">
+                                <img src="${t.image}" class="${isGrid ? 'w-20 h-20' : 'w-16 h-16'} rounded-full object-cover border-4 border-slate-50 dark:border-slate-700 shadow-sm" alt="${t.name}">
+                                <span class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full"></span>
+                            </div>
+                            <div class="${isGrid ? 'mt-4' : ''}">
+                                <div class="flex items-center justify-center gap-2 mb-1 ${isGrid ? '' : 'justify-start'}">
+                                    ${verifiedBadge} ${topBadge}
+                                </div>
+                                ${metaBadges}
+                                <h3 class="font-bold text-slate-900 dark:text-white text-lg leading-tight">${t.name}</h3>
+                                <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">${t.role}</p>
+                                <div class="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 ${isGrid ? 'justify-center' : ''}">
+                                    <i class="bi bi-geo-alt-fill text-brand-500"></i> ${t.location}
+                                    ${t.radius > 0 && t.radius < 100 ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 ml-1">(${t.radius}km)</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="${isGrid ? 'mt-6' : 'mt-0 flex-grow'}">
+                            <div class="flex flex-wrap gap-2 justify-center ${isGrid ? '' : 'justify-start'}">
+                                ${skillsHtml}
+                            </div>
+                            ${certHtml}
+                        </div>
+
+                        <div class="${isGrid ? 'mt-6 pt-4 border-t border-slate-100 dark:border-slate-700' : 'mt-0 flex flex-col items-end justify-center gap-2 border-l border-slate-100 dark:border-slate-700 pl-6'}">
+                            <div class="${isGrid ? 'text-center' : 'text-right'}">
+                                <div class="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">${translations[currentLang].filter_rate}</div>
+                                <div class="font-extrabold text-slate-900 dark:text-white text-xl">${t.price.toLocaleString()} <span class="text-sm font-normal text-slate-500 dark:text-slate-400">ETB</span></div>
+                            </div>
+                            <div class="flex flex-col w-full gap-2 mt-2 ${isGrid ? '' : 'w-auto'}">
+                                <button onclick="showQuickView(${t.id})" class="w-full py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600">
+                                    <i class="bi bi-eye"></i> ${translations[currentLang].card_view}
+                                </button>
+                                <div class="flex gap-2">
+                                    <button onclick="toggleWishlist(${t.id})" class="flex-grow py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 ${wishlistClass}">
+                                        <i class="bi ${inWishlist ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                                    </button>
+                                    <button ${compareAction} class="flex-grow py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 ${compareClass}">
+                                        <i class="bi ${inCompare ? 'bi-check2' : 'bi-collection'}"></i> ${inCompare ? 'Added' : translations[currentLang].card_compare}
+                                    </button>
+                                    <button onclick="shareTalent(${t.id})" class="flex-grow py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-brand-500">
+                                        <i class="bi bi-share"></i>
+                                    </button>
+                                </div>
+                                <button ${cartAction} class="w-full py-2.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 ${cartBtnClass}">
+                                    <i class="bi ${cartIcon}"></i> ${cartBtnText}
+                                </button>
+                                <button onclick="showVerificationDetails(${t.id})" class="text-xs text-brand-600 dark:text-brand-400 font-bold hover:underline mt-1 text-center w-full">
+                                    <i class="bi bi-patch-check"></i> Verification Details
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-1 text-amber-400 text-xs font-bold ${isGrid ? 'mt-3 justify-center' : 'mt-1'}">
+                                <i class="bi bi-star-fill"></i> ${t.rating} <span class="text-slate-300 dark:text-slate-500">(${t.reviews})</span>
+                            </div>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                if (allFiltered.length > visibleCount) loadMoreBtn.classList.remove('hidden');
+                else loadMoreBtn.classList.add('hidden');
+
+                gsap.fromTo(".talent-grid-item",
+                    { opacity: 0, y: 20 },
+                    { opacity: 1, y: 0, duration: 0.4, stagger: 0.05, ease: "power2.out" }
+                );
+
+                saveState();
+            }, 600);
+        }
+
+        // --- Cart Functions ---
+        function addToCart(id) {
+            if (!cart.includes(id)) {
+                cart.push(id);
+                updateCartUI();
+                renderTalents();
+                const worker = talents.find(t => t.id === id);
+                showToast(`${worker.name} added to selection!`, 'success');
+            }
+        }
+
+        function removeFromCart(id) {
+            const worker = talents.find(t => t.id === id);
+            cart = cart.filter(itemId => itemId !== id);
+            updateCartUI();
+            renderTalents();
+            showToast(`${worker.name} removed.`, 'info');
+        }
+
+        function updateCartUI() {
+            cartCountBadge.textContent = cart.length;
+            if (cart.length > 0) cartCountBadge.classList.remove('scale-0');
+            else cartCountBadge.classList.add('scale-0');
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML =
+                    `<div class="text-center text-slate-400 dark:text-slate-500 mt-10"><i class="bi bi-cart-x text-4xl mb-2 block"></i><span>${translations[currentLang].cart_empty}</span></div>`;
+                cartTotalDisplay.textContent = "0 ETB";
+            } else {
+                cartItemsContainer.innerHTML = '';
+                let total = 0;
+                cart.forEach(id => {
+                    const worker = talents.find(t => t.id === id);
+                    total += worker.price;
+                    const item = document.createElement('div');
+                    item.className = "flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700";
+                    item.innerHTML = `
+                        <img src="${worker.image}" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-grow"><h4 class="font-bold text-slate-900 dark:text-white text-sm">${worker.name}</h4><p class="text-xs text-slate-500 dark:text-slate-400">${worker.role}</p></div>
+                        <div class="text-right">
+                            <div class="font-bold text-slate-900 dark:text-white text-sm">${worker.price.toLocaleString()}</div>
+                            <button onclick="removeFromCart(${worker.id})" class="text-red-500 text-xs hover:underline flex items-center justify-end gap-1 w-full">${translations[currentLang].cart_remove}</button>
+                        </div>`;
+                    cartItemsContainer.appendChild(item);
+                });
+                cartTotalDisplay.textContent = total.toLocaleString() + " ETB";
+            }
+        }
+
+        function toggleCart(show) {
+            if (show) { cartOverlay.classList.remove('hidden');
+                setTimeout(() => cartOverlay.classList.remove('opacity-0'), 10);
+                cartDrawer.classList.add('open'); } else { cartOverlay.classList.add('opacity-0');
+                cartDrawer.classList.remove('open');
+                setTimeout(() => cartOverlay.classList.add('hidden'), 300); }
+        }
+
+        // --- Wishlist Functions ---
+        function toggleWishlist(id) {
+            const idx = wishlist.indexOf(id);
+            const worker = talents.find(t => t.id === id);
+            if (idx > -1) {
+                wishlist.splice(idx, 1);
+                showToast(`Removed ${worker.name} from wishlist.`, 'info');
+            } else {
+                wishlist.push(id);
+                showToast(`Saved ${worker.name} to wishlist!`, 'success');
+            }
+            updateWishlistUI();
+            renderTalents();
+        }
+
+        function removeFromWishlist(id) {
+            const worker = talents.find(t => t.id === id);
+            wishlist = wishlist.filter(itemId => itemId !== id);
+            updateWishlistUI();
+            renderTalents();
+            showToast(`Removed ${worker.name} from wishlist.`, 'info');
+        }
+
+        function updateWishlistUI() {
+            wishlistCountBadge.textContent = wishlist.length;
+            if (wishlist.length > 0) wishlistCountBadge.classList.remove('scale-0');
+            else wishlistCountBadge.classList.add('scale-0');
+
+            if (wishlist.length === 0) {
+                wishlistItemsContainer.innerHTML =
+                    `<div class="text-center text-slate-400 dark:text-slate-500 mt-10"><i class="bi bi-heart text-4xl mb-2 block"></i><span>No saved talents yet.</span></div>`;
+            } else {
+                wishlistItemsContainer.innerHTML = '';
+                wishlist.forEach(id => {
+                    const worker = talents.find(t => t.id === id);
+                    const item = document.createElement('div');
+                    item.className = "flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700";
+                    item.innerHTML = `
+                        <img src="${worker.image}" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-grow"><h4 class="font-bold text-slate-900 dark:text-white text-sm">${worker.name}</h4><p class="text-xs text-slate-500 dark:text-slate-400">${worker.role}</p></div>
+                        <div class="text-right">
+                            <div class="font-bold text-slate-900 dark:text-white text-sm">${worker.price.toLocaleString()}</div>
+                            <button onclick="removeFromWishlist(${worker.id})" class="text-rose-500 text-xs hover:underline flex items-center justify-end gap-1 w-full"><i class="bi bi-trash"></i> Remove</button>
+                        </div>`;
+                    wishlistItemsContainer.appendChild(item);
+                });
+            }
+        }
+
+        function toggleWishlistDrawer(show) {
+            if (show) { wishlistOverlay.classList.remove('hidden');
+                setTimeout(() => wishlistOverlay.classList.remove('opacity-0'), 10);
+                wishlistDrawer.classList.add('open'); } else { wishlistOverlay.classList.add('opacity-0');
+                wishlistDrawer.classList.remove('open');
+                setTimeout(() => wishlistOverlay.classList.add('hidden'), 300); }
+        }
+
+        // --- Compare Functions ---
+        function addToCompare(id) {
+            if (!compareList.includes(id)) {
+                if (compareList.length < 3) {
+                    compareList.push(id);
+                    updateCompareUI();
+                    renderTalents();
+                    const worker = talents.find(t => t.id === id);
+                    showToast(`${worker.name} added to compare.`, 'success');
+                } else {
+                    showToast("Max 3 items allowed for comparison", 'info');
+                }
+            }
+        }
+
+        function removeFromCompare(id) {
+            compareList = compareList.filter(itemId => itemId !== id);
+            updateCompareUI();
+            renderTalents();
+        }
+
+        function updateCompareUI() {
+            const trigger = document.getElementById('compareTrigger');
+            document.querySelector('.compare-count').textContent = compareList.length;
+            if (compareList.length > 0) {
+                trigger.classList.remove('hidden');
+                trigger.classList.add('flex');
+                const avatars = trigger.querySelectorAll('.compare-avatar');
+                compareList.forEach((id, index) => {
+                    const worker = talents.find(t => t.id === id);
+                    if (avatars[index]) {
+                        avatars[index].textContent = worker.name.charAt(0);
+                        avatars[index].style.backgroundColor = '#f97316';
+                        avatars[index].style.color = '#fff';
+                    }
+                });
+            } else {
+                trigger.classList.add('hidden');
+                trigger.classList.remove('flex');
+            }
+        }
+
+        function openCompareModal() {
+            const overlay = document.getElementById('compareOverlay');
+            const table = document.getElementById('compareTable');
+
+            if (compareList.length < 2) {
+                showToast("Please select at least 2 candidates to compare.", 'info');
+                return;
+            }
+            const workers = compareList.map(id => talents.find(t => t.id === id));
+
+            let html = `<thead><tr class="border-b border-slate-200 dark:border-slate-700">
+                <th class="py-3 pl-4"></th>
+                ${workers.map(w => `<th class="py-3 text-center"><img src="${w.image}" class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-brand-500"><div class="font-bold text-slate-900 dark:text-white">${w.name}</div></th>`).join('')}
+            </tr></thead><tbody>`;
+
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4">Role</td>${workers.map(w => `<td class="py-3 text-center font-semibold text-slate-700 dark:text-slate-300">${w.role}</td>`).join('')}</tr>`;
+            const maxRating = Math.max(...workers.map(w => w.rating));
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4">Rating</td>${workers.map(w => `<td class="py-3 text-center font-bold text-slate-900 dark:text-white">${w.rating} <i class="bi bi-star-fill text-amber-400"></i> ${w.rating === maxRating ? '<span class="compare-best">BEST</span>' : ''}</td>`).join('')}</tr>`;
+            const minPrice = Math.min(...workers.map(w => w.price));
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4">Rate</td>${workers.map(w => `<td class="py-3 text-center font-bold text-slate-900 dark:text-white">${w.price.toLocaleString()} ${w.price === minPrice ? '<span class="compare-best">LOWEST</span>' : ''}</td>`).join('')}</tr>`;
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4">Location</td>${workers.map(w => `<td class="py-3 text-center text-slate-600 dark:text-slate-400">${w.location}</td>`).join('')}</tr>`;
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4">Service Radius</td>${workers.map(w => `<td class="py-3 text-center text-slate-600 dark:text-slate-400">${w.remote ? 'Global (Remote)' : w.radius + ' km'}</td>`).join('')}</tr>`;
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4 align-top">Top Skills</td>${workers.map(w => `<td class="py-3 text-center text-sm text-slate-600 dark:text-slate-400"><div class="flex flex-wrap justify-center gap-1">${w.skills.slice(0,3).map(s=>`<span class="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-xs">${s}</span>`).join('')}</div></td>`).join('')}</tr>`;
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4">Experience</td>${workers.map(w => `<td class="py-3 text-center text-slate-700 dark:text-slate-300">${w.experience} years</td>`).join('')}</tr>`;
+            html +=
+                `<tr class="border-b border-slate-100 dark:border-slate-700"><td class="py-3 pl-4">Education</td>${workers.map(w => `<td class="py-3 text-center text-slate-700 dark:text-slate-300">${w.education}</td>`).join('')}</tr>`;
+            html +=
+                `<tr><td class="py-3 pl-4">Languages</td>${workers.map(w => `<td class="py-3 text-center text-slate-700 dark:text-slate-300">${w.languages.join(', ')}</td>`).join('')}</tr>`;
+
+            html += '</tbody>';
+            table.innerHTML = html;
+            overlay.classList.add('active');
+        }
+
+        function closeCompareModal() {
+            document.getElementById('compareOverlay').classList.remove('active');
+        }
+
+        // --- Quick View Modal ---
+        function showQuickView(id) {
+            addToRecentlyViewed(id);
+            const worker = talents.find(t => t.id === id);
+            if (!worker) return;
+
+            const overlay = document.getElementById('quickViewOverlay');
+            const content = document.getElementById('quickViewContent');
+
+            const tierColor = worker.tier === 3 ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-brand-800' :
+                (worker.tier === 2 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
+                    'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600');
+
+            content.innerHTML = `
+                <div class="flex flex-col md:flex-row h-full">
+                    <div class="md:w-1/3 bg-slate-50 dark:bg-slate-800 p-8 flex flex-col items-center justify-center text-center relative">
+                        <div class="absolute top-4 left-4 ${tierColor} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                            Tier ${worker.tier} Verified
+                        </div>
+                        <img src="${worker.image}" class="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-xl mb-4">
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">${worker.name}</h2>
+                        <p class="text-brand-600 dark:text-brand-400 font-semibold mb-2">${worker.role}</p>
+                        <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4">
+                             <span class="flex items-center gap-1"><i class="bi bi-star-fill text-amber-400"></i> ${worker.rating}</span>
+                             <span>(${worker.reviews} reviews)</span>
+                        </div>
+                        ${worker.remote ? '<span class="text-xs font-bold uppercase text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">Available Globally</span>' : ''}
+
+                        <div class="mt-4">
+                             <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Weekly Availability</span>
+                             <div class="grid grid-cols-7 gap-1 mt-2">
+                                ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => {
+                                    const isAvail = worker.availability.includes(day);
+                                    return `<div class="h-6 w-6 rounded-full flex items-center justify-center text-xs ${isAvail ? 'bg-brand-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'}">${day.charAt(0)}</div>`
+                                }).join('')}
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="md:w-2/3 bg-white dark:bg-slate-900 p-8 flex flex-col">
+                        <div class="flex border-b border-slate-100 dark:border-slate-700 mb-6">
+                             <button onclick="switchTab(this, 'overview')" class="tab-btn active px-4 py-2 font-semibold text-sm focus:outline-none" data-tab="overview">${translations[currentLang].qv_overview}</button>
+                             <button onclick="switchTab(this, 'portfolio')" class="tab-btn px-4 py-2 font-semibold text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 focus:outline-none" data-tab="portfolio">${translations[currentLang].qv_portfolio}</button>
+                             <button onclick="switchTab(this, 'calendar')" class="tab-btn px-4 py-2 font-semibold text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 focus:outline-none" data-tab="calendar">${translations[currentLang].qv_calendar}</button>
+                             <button onclick="switchTab(this, 'reviews')" class="tab-btn px-4 py-2 font-semibold text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 focus:outline-none" data-tab="reviews">${translations[currentLang].qv_reviews} (${worker.reviews})</button>
+                        </div>
+
+                        <div id="tab-overview" class="tab-content flex-grow">
+                             <div class="mb-6">
+                                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">${translations[currentLang].qv_bio}</label>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${worker.bio}</p>
+                             </div>
+
+                             <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">${translations[currentLang].qv_radius}</label>
+                                    <div class="font-bold text-slate-900 dark:text-white">${worker.remote ? 'Global' : worker.radius + ' km'}</div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Base Price</label>
+                                    <div class="font-bold text-slate-900 dark:text-white">${worker.price.toLocaleString()} ETB / ${worker.duration}</div>
+                                </div>
+                             </div>
+
+                             <div class="mt-auto p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <h4 class="font-bold text-slate-900 dark:text-white mb-3">${translations[currentLang].qv_offer}</h4>
+                                <form class="flex gap-2" onsubmit="event.preventDefault(); showToast('Offer sent successfully!', 'success');">
+                                    <input type="number" placeholder="Proposed Price" class="flex-grow w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none dark:bg-slate-700 dark:text-white">
+                                    <button class="bg-brand-500 text-white px-4 rounded-lg font-bold text-sm hover:bg-brand-600">Send</button>
+                                </form>
+                                <div class="grid grid-cols-2 gap-2 mt-4">
+                                    <button class="py-3 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
+                                        <i class="bi bi-whatsapp"></i> WhatsApp
+                                    </button>
+                                    <button class="py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
+                                        <i class="bi bi-envelope-fill"></i> Email
+                                    </button>
+                                </div>
+                                <button onclick="openHireModal(${worker.id})" class="w-full mt-4 py-3 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-600 transition-all">
+                                    Hire Now
+                                </button>
+                             </div>
+                        </div>
+
+                        <div id="tab-portfolio" class="tab-content hidden flex-grow">
+                             ${worker.portfolio.length === 0 ? '<div class="text-slate-400 dark:text-slate-500 text-center py-10">No portfolio items.</div>' :
+                                `<div class="grid grid-cols-2 gap-4">
+                                    ${worker.portfolio.map(img => `
+                                        <div class="relative group cursor-pointer overflow-hidden rounded-xl">
+                                            <img src="${img}" class="w-full h-32 object-cover transition-transform group-hover:scale-110">
+                                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <i class="bi bi-zoom-in text-white text-2xl"></i>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>`
+                             }
+                        </div>
+
+                        <div id="tab-calendar" class="tab-content hidden flex-grow">
+                             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="grid grid-cols-7 gap-2 text-center text-sm text-slate-500 dark:text-slate-400 mb-2 font-bold uppercase tracking-wider">
+                                    ${['M','T','W','T','F','S','S'].map(d => `<div>${d}</div>`).join('')}
+                                </div>
+                                <div class="grid grid-cols-7 gap-2">
+                                    ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(day => {
+                                        const isAvail = worker.availability.includes(day);
+                                        return `<div class="h-10 w-full rounded-lg ${isAvail ? 'bg-brand-500' : 'bg-slate-200 dark:bg-slate-700'} flex items-center justify-center transition-colors hover:scale-110"></div>`
+                                    }).join('')}
+                                </div>
+                             </div>
+                        </div>
+
+                        <div id="tab-reviews" class="tab-content hidden flex-grow">
+                             <h3 class="font-bold text-slate-900 dark:text-white mb-4">Endorsements</h3>
+                             <div class="space-y-4">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400 font-medium">${translations[currentLang].r_quality}</span>
+                                    <div class="flex-grow mx-3 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand-500 rounded-full" style="width: ${worker.sub_ratings.quality * 20}%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold text-slate-900 dark:text-white">${worker.sub_ratings.quality}/5.0</span>
+                                </div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400 font-medium">${translations[currentLang].r_punctuality}</span>
+                                    <div class="flex-grow mx-3 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand-500 rounded-full" style="width: ${worker.sub_ratings.punctuality * 20}%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold text-slate-900 dark:text-white">${worker.sub_ratings.punctuality}/5.0</span>
+                                </div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400 font-medium">${translations[currentLang].r_communication}</span>
+                                    <div class="flex-grow mx-3 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand-500 rounded-full" style="width: ${worker.sub_ratings.communication * 20}%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold text-slate-900 dark:text-white">${worker.sub_ratings.communication}/5.0</span>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            overlay.classList.add('active');
+        }
+
+        window.switchTab = function(btn, tabId) {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'text-brand-600', 'border-b-2', 'border-brand-500');
+                b.classList.add('text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-200');
+            });
+            btn.classList.add('active');
+            btn.classList.remove('text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-200');
+
+            const content = document.getElementById('quickViewContent');
+            content.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function closeQuickView() {
+            document.getElementById('quickViewOverlay').classList.remove('active');
+        }
+
+        // --- Modals Logic ---
+        window.openModal = function(type) {
+            document.getElementById('modalTitle').textContent = type === 'employer' ? (currentLang === 'en' ? 'Employer Registration' : 'ሰራተኛ ቅጥር') :
+                (currentLang === 'en' ? 'Job Seeker Registration' : 'ሰራተኛ ሆን');
+            document.getElementById('regOverlay').classList.add('active');
+        };
+        window.closeRegModal = function() {
+            document.getElementById('regOverlay').classList.remove('active');
+        };
+
+        window.openPostNeedModal = function() {
+            document.getElementById('postNeedOverlay').classList.add('active');
+        };
+        window.closePostNeedModal = function() {
+            document.getElementById('postNeedOverlay').classList.remove('active');
+        };
+
+        // --- Registration Dropdown ---
+        if (regBtn && regMenu) {
+            regBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = regMenu.classList.contains('hidden');
+                regMenu.classList.toggle('hidden');
+                regMenu.classList.toggle('block');
+                regChevron.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!regContainer.contains(e.target)) {
+                    regMenu.classList.add('hidden');
+                    regMenu.classList.remove('block');
+                    regChevron.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        heroSearch.addEventListener('input', (e) => {
+            filterState.search = e.target.value.toLowerCase();
+            visibleCount = 6;
+            renderTalents();
+        });
+
+        window.filterBySkill = function(skill) {
+            filterState.skillSearch = skill;
+            visibleCount = 6;
+            renderTalents();
+        };
+
+        verifiedCheck.addEventListener('change', (e) => {
+            filterState.verifiedOnly = e.target.checked;
+            visibleCount = 6;
+            renderTalents();
+        });
+
+        categoryFilter.addEventListener('change', (e) => { filterState.category = e.target.value;
+            visibleCount = 6;
+            renderTalents(); });
+        durationFilter.addEventListener('change', (e) => { filterState.duration = e.target.value;
+            visibleCount = 6;
+            renderTalents(); });
+
+        typeChecks.forEach(chk => {
+            chk.addEventListener('change', () => {
+                filterState.workingType = Array.from(typeChecks).filter(c => c.checked).map(c => c.value);
+                visibleCount = 6;
+                renderTalents();
+            });
+        });
+
+        locationChecks.forEach(chk => {
+            chk.addEventListener('change', () => {
+                filterState.locations = Array.from(locationChecks).filter(c => c.checked).map(c => c.value);
+                visibleCount = 6;
+                renderTalents();
+            });
+        });
+
+        radiusRange.addEventListener('input', (e) => {
+            filterState.radius = parseInt(e.target.value);
+            if (filterState.radius === 100) radiusDisplay.textContent = "Any";
+            else radiusDisplay.textContent = filterState.radius + " km";
+            visibleCount = 6;
+            renderTalents();
+        });
+
+        remoteCheck.addEventListener('change', (e) => {
+            filterState.remoteOnly = e.target.checked;
+            visibleCount = 6;
+            renderTalents();
+        });
+
+        priceRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            filterState.maxPrice = val;
+            priceDisplay.textContent = val >= 200000 ? '200k+ ETB' : val.toLocaleString() + ' ETB';
+            visibleCount = 6;
+            renderTalents();
+        });
+
+        sortSelect.addEventListener('change', (e) => { filterState.sort = e.target.value;
+            renderTalents(); });
+
+        availabilityFilter.addEventListener('change', (e) => {
+            filterState.availability = e.target.value;
+            visibleCount = 6;
+            renderTalents();
+        });
+        levelFilter.addEventListener('change', (e) => {
+            filterState.experienceLevel = e.target.value;
+            visibleCount = 6;
+            renderTalents();
+        });
+
+        gridBtn.addEventListener('click', () => {
+            currentView = 'grid';
+            container.className = "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6";
+            gridBtn.className = "p-2 rounded-md bg-white dark:bg-slate-600 text-brand-600 shadow-sm transition-all hover:text-brand-600";
+            listBtn.className = "p-2 rounded-md text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all";
+            renderTalents();
+        });
+
+        listBtn.addEventListener('click', () => {
+            currentView = 'list';
+            container.className = "grid grid-cols-1 gap-4";
+            listBtn.className = "p-2 rounded-md bg-white dark:bg-slate-600 text-brand-600 shadow-sm transition-all hover:text-brand-600";
+            gridBtn.className = "p-2 rounded-md text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all";
+            renderTalents();
+        });
+
+        function resetFiltersFn() {
+            filterState = {
+                search: '', category: 'all', duration: 'all', workingType: [], locations: ['Addis Ababa', 'Remote'],
+                maxPrice: 200000, sort: 'rating', skillSearch: '', radius: 100, remoteOnly: false, availability: 'any',
+                experienceLevel: 'all', verifiedOnly: false
+            };
+            heroSearch.value = '';
+            verifiedCheck.checked = false;
+            categoryFilter.value = 'all';
+            durationFilter.value = 'all';
+            typeChecks.forEach(c => c.checked = false);
+            locationChecks.forEach(c => {
+                c.checked = (c.value === 'Addis Ababa' || c.value === 'Remote');
+            });
+            radiusRange.value = 100;
+            remoteCheck.checked = false;
+            radiusDisplay.textContent = "Any";
+            priceRange.value = 200000;
+            priceDisplay.textContent = '200k+ ETB';
+            sortSelect.value = 'rating';
+            availabilityFilter.value = 'any';
+            levelFilter.value = 'all';
+            visibleCount = 6;
+            renderTalents();
+        }
+        resetBtn.addEventListener('click', resetFiltersFn);
+
+        // Cart events
+        cartTrigger.addEventListener('click', () => toggleCart(true));
+        closeCart.addEventListener('click', () => toggleCart(false));
+        cartOverlay.addEventListener('click', () => toggleCart(false));
+
+        // Wishlist events
+        wishlistTrigger.addEventListener('click', () => toggleWishlistDrawer(true));
+        closeWishlist.addEventListener('click', () => toggleWishlistDrawer(false));
+        wishlistOverlay.addEventListener('click', () => toggleWishlistDrawer(false));
+        clearWishlistBtn.addEventListener('click', () => {
+            wishlist = [];
+            updateWishlistUI();
+            renderTalents();
+            showToast("Wishlist cleared.", 'info');
+        });
+
+        // Recent events
+        recentTrigger.addEventListener('click', () => {
+            recentOverlay.classList.remove('hidden');
+            setTimeout(() => recentOverlay.classList.remove('opacity-0'), 10);
+            recentDrawer.classList.add('open');
+        });
+        closeRecent.addEventListener('click', () => {
+            recentOverlay.classList.add('opacity-0');
+            recentDrawer.classList.remove('open');
+            setTimeout(() => recentOverlay.classList.add('hidden'), 300);
+        });
+        recentOverlay.addEventListener('click', () => {
+            recentOverlay.classList.add('opacity-0');
+            recentDrawer.classList.remove('open');
+            setTimeout(() => recentOverlay.classList.add('hidden'), 300);
+        });
+
+        document.getElementById('saveSearchBtn').addEventListener('click', saveCurrentSearch);
+
+        document.getElementById('loadMoreBtn').addEventListener('click', () => {
+            visibleCount += 6;
+            renderTalents();
+        });
+
+        document.getElementById('exportCartBtn').addEventListener('click', exportCartCSV);
+
+        // Dark Mode Toggle
+        darkToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            const iconMoon = darkToggle.querySelector('.bi-moon');
+            const iconSun = darkToggle.querySelector('.bi-sun');
+            if (document.documentElement.classList.contains('dark')) {
+                iconMoon.classList.add('hidden');
+                iconSun.classList.remove('hidden');
+            } else {
+                iconMoon.classList.remove('hidden');
+                iconSun.classList.add('hidden');
+            }
+        });
+
+        // --- Canvas Animation ---
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles = [];
+        const particleCount = 60,
+            connectionDistance = 150;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            const headerRect = document.querySelector('header').getBoundingClientRect();
+            canvas.height = headerRect.height;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() { this.x += this.vx;
+                this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; }
+            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill(); }
+        }
+
+        function initParticles() { particles = []; for (let i = 0; i < particleCount; i++) particles.push(new Particle()); }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 - dist/connectionDistance * 0.15})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+
+        // --- AI Assistant Logic ---
+        function toggleAIChat() {
+            const chatWindow = document.getElementById('aiChatWindow');
+            const chatBtn = document.getElementById('aiChatBtn');
+
+            if (chatWindow.classList.contains('hidden')) {
+                chatWindow.classList.remove('hidden', 'scale-95', 'opacity-0');
+                chatWindow.classList.add('scale-100', 'opacity-100');
+            } else {
+                chatWindow.classList.add('hidden', 'scale-95', 'opacity-0');
+                chatWindow.classList.remove('scale-100', 'opacity-100');
+            }
+
+            const badge = chatBtn.querySelector('span');
+            if (badge) badge.style.display = 'none';
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('aiChatInput');
+            const messagesContainer = document.getElementById('aiChatMessages');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const userMsg = document.createElement('div');
+            userMsg.className = "flex gap-2 justify-end";
+            userMsg.innerHTML =
+                `<div class="bg-brand-500 text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%]">${text}</div>`;
+            messagesContainer.appendChild(userMsg);
+            input.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = "flex gap-2";
+
+                let response =
+                    "I'm still learning, but I can help you filter by skills, location, or budget! Try using the sidebar filters.";
+                const lowerText = text.toLowerCase();
+                if (lowerText.includes('salary') || lowerText.includes('price') || lowerText.includes('cost')) {
+                    response = "Our talents range from 12,000 ETB for junior roles to over 90,000 ETB for senior consultants.";
+                } else if (lowerText.includes('react') || lowerText.includes('developer') || lowerText.includes('code')) {
+                    response = "We have excellent React and Fullstack developers available! Check the 'Development' category.";
+                } else if (lowerText.includes('construction') || lowerText.includes('engineer')) {
+                    response = "For construction, we have verified civil engineers and site supervisors.";
+                } else if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('selam')) {
+                    response = "Hello! 👋 How can I assist you in finding the right professional today?";
+                }
+
+                botMsg.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="bi bi-robot text-sm"></i></div>
+                    <div class="bg-white dark:bg-slate-700 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 dark:text-slate-200 max-w-[80%]">${response}</div>
+                `;
+                messagesContainer.appendChild(botMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 800);
+        }
+
+        document.getElementById('aiChatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendAIMessage();
+        });
+
+        // --- Keyboard Shortcuts ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('quickViewOverlay').classList.contains('active')) closeQuickView();
+                if (document.getElementById('regOverlay').classList.contains('active')) closeRegModal();
+                if (document.getElementById('postNeedOverlay').classList.contains('active')) closePostNeedModal();
+                if (document.getElementById('compareOverlay').classList.contains('active')) closeCompareModal();
+                if (document.getElementById('hireOverlay').classList.contains('active')) closeHireModal();
+                if (cartDrawer.classList.contains('open')) toggleCart(false);
+                if (wishlistDrawer.classList.contains('open')) toggleWishlistDrawer(false);
+                if (recentDrawer.classList.contains('open')) {
+                    recentOverlay.classList.add('opacity-0');
+                    recentDrawer.classList.remove('open');
+                    setTimeout(() => recentOverlay.classList.add('hidden'), 300);
+                }
+                if (!document.getElementById('aiChatWindow').classList.contains('hidden')) toggleAIChat();
+            }
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                heroSearch.focus();
+            }
+        });
+
+        // --- Voice Search ---
+        const voiceBtn = document.getElementById('voiceSearchBtn');
+        let recognition;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = currentLang === 'am' ? 'am-ET' : 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            voiceBtn.addEventListener('click', () => {
+                if (voiceBtn.classList.contains('voice-listening')) {
+                    recognition.stop();
+                    return;
+                }
+                recognition.start();
+                voiceBtn.classList.add('voice-listening');
+                voiceBtn.title = "Listening...";
+                showToast("Listening... Speak now", 'info');
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                heroSearch.value = transcript;
+                filterState.search = transcript.toLowerCase();
+                visibleCount = 6;
+                renderTalents();
+                voiceBtn.classList.remove('voice-listening');
+                voiceBtn.title = "Voice Search";
+                showToast(`Search updated: "${transcript}"`, 'success');
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error', event.error);
+                voiceBtn.classList.remove('voice-listening');
+                voiceBtn.title = "Voice Search";
+                showToast("Voice search failed. Please try again.", 'info');
+            };
+
+            recognition.onend = () => {
+                voiceBtn.classList.remove('voice-listening');
+                voiceBtn.title = "Voice Search";
+            };
+        } else {
+            voiceBtn.style.display = 'none';
+        }
+
+        // --- Language Logic ---
+        langToggle.addEventListener('click', () => {
+            currentLang = currentLang === 'en' ? 'am' : 'en';
+            langToggle.textContent = currentLang.toUpperCase();
+            updatePageText();
+            renderTalents();
+            updateCartUI();
+            updateWishlistUI();
+            if (recognition) recognition.lang = currentLang === 'am' ? 'am-ET' : 'en-US';
+            saveState();
+        });
+
+        function updatePageText() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    if (el.tagName === 'OPTION') el.textContent = translations[currentLang][key];
+                    else el.innerHTML = translations[currentLang][key];
+                }
+            });
+        }
+
+        // --- Checkout Handler ---
+        function handleCheckout() {
+            if (cart.length === 0) {
+                showToast('Your cart is empty. Please add workers before checkout.', 'info');
+                return;
+            }
+            window.location.href = '/login/?next=/employer-dashboard/';
+        }
+
+        // ================================================================
+        //  SAVE TALENT (REFINED)
+        // ================================================================
+        function saveTalent() {
+            const btn = document.getElementById('saveTalentBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+            const id = document.getElementById('editTalentId').value;
+            const data = {
+                name: document.getElementById('editTalentName').value.trim(),
+                role: document.getElementById('editTalentRole').value.trim(),
+                category: document.getElementById('editTalentCategory').value.trim(),
+                price: parseFloat(document.getElementById('editTalentPrice').value) || 0,
+                rating: parseFloat(document.getElementById('editTalentRating').value) || 0,
+                reviews: parseInt(document.getElementById('editTalentReviews').value) || 0,
+                location: document.getElementById('editTalentLocation').value.trim(),
+                duration: document.getElementById('editTalentDuration').value.trim(),
+                bio: document.getElementById('editTalentBio').value.trim(),
+                skills: document.getElementById('editTalentSkills').value.split(',').map(s => s.trim()).filter(Boolean),
+                languages: document.getElementById('editTalentLanguages').value.split(',').map(s => s.trim()).filter(Boolean),
+                image: document.getElementById('editTalentImageUrl').value.trim(),
+                photo_data: document.getElementById('editTalentPhotoData').value,
+                photo_removed: document.getElementById('editTalentPhotoRemoved').value === 'true',
+                verified: document.getElementById('editTalentVerified').checked,
+                top: document.getElementById('editTalentTop').checked,
+                remote: document.getElementById('editTalentRemote').checked,
+                experience: parseInt(document.getElementById('editTalentExperience').value) || 0,
+                tier: parseInt(document.getElementById('editTalentTier').value) || 1,
+            };
+
+            // If we have a file, use FormData
+            if (currentPhotoFile) {
+                const formData = new FormData();
+                
+                // Add all data fields (convert arrays to JSON strings)
+                Object.keys(data).forEach(key => {
+                    if (key === 'photo_data') return; // Skip base64 when file is present
+                    
+                    let value = data[key];
+                    if (Array.isArray(value) || typeof value === 'object') {
+                        value = JSON.stringify(value);
+                    } else if (typeof value === 'boolean') {
+                        value = value.toString();
+                    }
+                    formData.append(key, value);
+                });
+                
+                // Add the file as 'photo'
+                formData.append('photo', currentPhotoFile);
+                
+                fetch(`/api/talent/${id}/update/`, {
+                    method: 'PUT',
+                    headers: {
+                        'X-CSRFToken': CSRF_TOKEN || getCsrfToken(),
+                    },
+                    body: formData
+                })
+                .then(response => handleSaveResponse(response))
+                .catch(err => handleSaveError(err));
+            } else {
+                // Use JSON
+                fetch(`/api/talent/${id}/update/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN || getCsrfToken(),
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => handleSaveResponse(response))
+                .catch(err => handleSaveError(err));
+            }
+        }
+
+        function handleSaveResponse(response) {
+            const btn = document.getElementById('saveTalentBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
+
+            if (!response.ok) {
+                return response.json().then(err => {
+                    showToast(err.message || `HTTP ${response.status}: ${response.statusText}`, 'error');
+                }).catch(() => {
+                    showToast(`HTTP ${response.status}: ${response.statusText}`, 'error');
+                });
+            }
+
+            return response.json().then(result => {
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    closeEditTalent();
+                    refreshTalents();
+                } else {
+                    showToast(result.message || 'Update failed.', 'error');
+                }
+            });
+        }
+
+        function handleSaveError(err) {
+            const btn = document.getElementById('saveTalentBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
+            console.error('Save error:', err);
+            showToast('Network error. Please check your connection and try again.', 'error');
+        }
+
+        // Helper to get CSRF token from cookie if not set globally
+        function getCsrfToken() {
+            const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+            return cookie ? cookie.split('=')[1] : '';
+        }
+
+        // --- Photo Upload Helpers (existing) ---
+        // These are already defined in your original JavaScript.
+        // I've omitted them for brevity, but they remain unchanged.
+
+        // --- Initialization ---
+        window.addEventListener('resize', resize);
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            syncFilterUI();
+            updateRecentUI();
+            renderSavedSearches();
+            updateCartUI();
+            updateWishlistUI();
+            updateCompareUI();
+
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                const iconMoon = darkToggle.querySelector('.bi-moon');
+                const iconSun = darkToggle.querySelector('.bi-sun');
+                iconMoon.classList.add('hidden');
+                iconSun.classList.remove('hidden');
+            }
+
+            resize();
+            initParticles();
+            animateCanvas();
+            updatePageText();
+            renderTalents();
+
+            const counter = document.querySelector('.counter-anim');
+            gsap.to(counter, { innerHTML: 28405, duration: 2.5, snap: { innerHTML: 1 }, ease: "power1.inOut" });
+
+            const statsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counters = entry.target.querySelectorAll('.stat-counter');
+                        counters.forEach(counter => {
+                            const target = parseInt(counter.getAttribute('data-target'));
+                            gsap.to(counter, {
+                                innerHTML: target,
+                                duration: 2,
+                                snap: { innerHTML: 1 },
+                                ease: "power1.inOut"
+                            });
+                        });
+                        statsObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            const statsSection = document.getElementById('statsSection');
+            if (statsSection) statsObserver.observe(statsSection);
+        });
+
+        // Job Seeker Registration Form Handler
+        document.getElementById('jobSeekerRegForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = this;
+            const submitBtn = document.getElementById('submitRegBtn');
+            const errorDiv = document.getElementById('formErrors');
+            const formData = new FormData(form);
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin"></i> Creating Account...';
+            errorDiv.classList.add('hidden');
+
+            fetch("{% url 'jobs:job_seeker_register' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000);
+                } else {
+                    let errorHtml = '<ul class="list-disc list-inside space-y-1">';
+                    for (let field in data.errors) {
+                        data.errors[field].forEach(error => {
+                            errorHtml += `<li>${error}</li>`;
+                        });
+                    }
+                    errorHtml += '</ul>';
+                    errorDiv.innerHTML = errorHtml;
+                    errorDiv.classList.remove('hidden');
+
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>Create Account</span><i class="bi bi-arrow-right"></i>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorDiv.innerHTML = '<p>An error occurred. Please try again.</p>';
+                errorDiv.classList.remove('hidden');
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Create Account</span><i class="bi bi-arrow-right"></i>';
+            });
+        });
+    </script>
+</body>
+</html>

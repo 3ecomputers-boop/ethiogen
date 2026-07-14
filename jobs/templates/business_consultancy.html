@@ -1,0 +1,427 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Consultancy | MoyaJobs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#f97316',
+                            600: '#ea580c',
+                            900: '#0f172a',
+                        },
+                        consulting: {
+                            blue: '#0284c7',
+                            dark: '#1e3a8a',
+                            light: '#dbeafe'
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['Oswald', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <!-- NAVIGATION -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4 h-20 flex items-center justify-between">
+
+            <!-- Logo -->
+            <a href="{% url 'jobs:home' %}" class="flex items-center gap-2 group flex-shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-lg">
+                    <i class="bi bi-briefcase-fill text-xl"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-slate-900 group-hover:text-brand-600 transition-colors">Moya<span class="text-brand-500">Jobs</span></span>
+            </a>
+
+            <!-- Desktop Links -->
+            <div class="hidden lg:flex items-center gap-8">
+                <a href="{% url 'jobs:construction_workforce' %}" class="text-slate-500 hover:text-brand-600 font-medium transition-colors">Construction Workforce</a>
+                <a href="#" class="text-slate-900 font-bold border-b-2 border-brand-500 pb-1">Business Consultancy</a>
+            </div>
+
+            <!-- Right Side: Language Switcher + Back Button -->
+            <div class="hidden lg:flex items-center gap-4">
+
+                <!-- Language Switcher -->
+                <div class="relative" id="langDropdown">
+                    <button onclick="toggleLangMenu()" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-sm font-medium">
+                        <i class="bi bi-globe2 text-brand-500"></i>
+                        <span id="currentLang">English</span>
+                        <i class="bi bi-chevron-down text-xs"></i>
+                    </button>
+
+                    <!-- Language Options -->
+                    <div id="langMenu" class="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-slate-100 py-1 w-44 hidden z-50">
+                        <form method="POST" action="{% url 'jobs:change_language' 'en' %}" class="lang-form">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                                <span class="text-base">🇬🇧</span> English
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'jobs:change_language' 'am' %}" class="lang-form">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                                <span class="text-base">🇪🇹</span> አማርኛ
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'jobs:change_language' 'om' %}" class="lang-form">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                                <span class="text-base">🇪🇹</span> Afaan Oromoo
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Back to Home -->
+                <a href="{% url 'jobs:home' %}" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors">
+                    Back to Home
+                </a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()" class="lg:hidden w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="bi bi-list text-xl" id="mobileMenuIcon"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden lg:hidden border-t border-slate-100 bg-white">
+            <div class="container mx-auto px-4 py-4 space-y-1">
+
+                <a href="{% url 'jobs:construction_workforce' %}" class="block px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 font-medium transition-colors">Construction Workforce</a>
+                <a href="#" class="block px-4 py-3 rounded-xl text-slate-900 font-bold bg-slate-50 transition-colors">Business Consultancy</a>
+
+                <!-- Mobile Language Switcher -->
+                <div class="pt-3 mt-2 border-t border-slate-100">
+                    <p class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Language</p>
+                    <div class="flex gap-2 px-4">
+                        <form method="POST" action="{% url 'jobs:change_language' 'en' %}" class="flex-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border border-slate-200 hover:bg-slate-50 transition-colors">🇬🇧 English</button>
+                        </form>
+                        <form method="POST" action="{% url 'jobs:change_language' 'am' %}" class="flex-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border border-slate-200 hover:bg-slate-50 transition-colors">🇪🇹 አማርኛ</button>
+                        </form>
+                        <form method="POST" action="{% url 'jobs:change_language' 'om' %}" class="flex-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium border border-slate-200 hover:bg-slate-50 transition-colors">🇪🇹 Oromoo</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="pt-3">
+                    <a href="{% url 'jobs:home' %}" class="block text-center px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HEADER / HERO SECTION -->
+    <header class="relative pt-32 pb-16 lg:pt-48 lg:pb-24 overflow-hidden bg-slate-900 text-white">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92adb6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover opacity-40" alt="Business office">
+        </div>
+        <div class="absolute inset-0 z-0 bg-gradient-to-b from-slate-900/80 via-slate-900 to-slate-900"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="lg:w-3/5 space-y-6">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-consulting-light text-consulting-dark border border-consulting-blue/30 text-sm font-bold tracking-wide shadow-lg backdrop-blur-sm">
+                        <i class="bi bi-graph-up-arrow"></i> Strategic Growth Partners
+                    </div>
+                    <h1 class="text-5xl lg:text-7xl font-heading font-bold tracking-tight leading-tight">
+                        DRIVING <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-amber-400">BUSINESS EXCELLENCE</span>
+                    </h1>
+                    <p class="text-xl text-slate-300 max-w-2xl leading-relaxed">
+                        Transform your enterprise with data-driven strategies. From startups to corporations, we provide the expertise to scale efficiently and sustainably.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center gap-2">
+                            Book Consultation <i class="bi bi-arrow-right"></i>
+                        </button>
+                        <button class="bg-transparent border border-slate-300 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition-all">
+                            View Case Studies
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hero Card -->
+                <div class="lg:w-2/5 w-full">
+                    <div class="bg-slate-800/80 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-2xl">
+                        <h3 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center">
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                            Our Core Pillars
+                        </h3>
+                        <ul class="space-y-4 text-slate-300">
+                            <li class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-400 mt-1"></i>
+                                <span>Strategic Planning & Execution</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-400 mt-1"></i>
+                                <span>Financial Advisory & Auditing</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-400 mt-1"></i>
+                                <span>Operational Efficiency</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-400 mt-1"></i>
+                                <span>Digital Transformation</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- STATS SECTION -->
+    <section class="relative -mt-12 z-20 container mx-auto px-4 mb-12">
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="text-4xl font-extrabold text-brand-500 mb-1">15+</div>
+                <div class="text-sm text-slate-500 font-medium">Years Experience</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-extrabold text-consulting-blue mb-1">500+</div>
+                <div class="text-sm text-slate-500 font-medium">Corporate Clients</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-extrabold text-emerald-500 mb-1">$2B+</div>
+                <div class="text-sm text-slate-500 font-medium">Revenue Generated</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <div class="container mx-auto px-4 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- LEFT COLUMN: Services -->
+            <div class="lg:col-span-8 space-y-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 font-heading">Our Expertise</h2>
+                    <div class="h-px flex-grow bg-slate-200"></div>
+                </div>
+
+                <!-- Service Card 1 -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all p-8 flex gap-6 group">
+                    <div class="w-16 h-16 rounded-2xl bg-consulting-light text-consulting-blue flex items-center justify-center text-2xl shrink-0 group-hover:bg-consulting-blue group-hover:text-white transition-colors">
+                        <i class="bi bi-bar-chart-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Financial Strategy</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Optimize capital structure, manage risks, and ensure long-term fiscal health with our expert financial modeling.</p>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">Audit</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">Planning</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">Compliance</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Card 2 -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all p-8 flex gap-6 group">
+                    <div class="w-16 h-16 rounded-2xl bg-consulting-light text-consulting-blue flex items-center justify-center text-2xl shrink-0 group-hover:bg-consulting-blue group-hover:text-white transition-colors">
+                        <i class="bi bi-gear-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Operations Management</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Streamline processes, reduce waste, and improve throughput with Lean Six Sigma methodologies.</p>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">Process</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">Efficiency</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Card 3 -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all p-8 flex gap-6 group">
+                    <div class="w-16 h-16 rounded-2xl bg-consulting-light text-consulting-blue flex items-center justify-center text-2xl shrink-0 group-hover:bg-consulting-blue group-hover:text-white transition-colors">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">HR Consultancy</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Talent acquisition, performance management, and organizational development for modern enterprises.</p>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">Recruitment</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">Training</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case Study Banner -->
+                <div class="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden">
+                    <div class="relative z-10">
+                        <span class="text-xs font-bold text-brand-500 uppercase tracking-widest mb-2 block">Success Story</span>
+                        <h3 class="text-2xl font-bold mb-4">Scaling FinTech Startup by 200%</h3>
+                        <p class="text-slate-300 text-sm mb-6 max-w-lg">We helped a local financial technology firm optimize their operational costs, resulting in rapid market expansion.</p>
+                        <button class="px-6 py-3 bg-white text-slate-900 font-bold rounded-lg hover:bg-slate-200 transition-colors">Read Case Study</button>
+                    </div>
+                    <div class="absolute right-0 bottom-0 opacity-20">
+                        <i class="bi bi-trophy-fill text-[150px]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Info & Contact -->
+            <div class="lg:col-span-4 space-y-6">
+
+                <!-- Why Choose Us -->
+                <div class="bg-gradient-to-br from-consulting-dark to-slate-900 text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-brand-500 rounded-bl-full opacity-10"></div>
+                    <h3 class="text-2xl font-bold mb-6 text-white">Why Us?</h3>
+                    <ul class="space-y-6">
+                        <li class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 text-brand-400">
+                                <i class="bi bi-gear-wide-connected"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-brand-400">Customized Solutions</h4>
+                                <p class="text-xs text-slate-400 mt-1">We don't do cookie-cutter strategies.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 text-brand-400">
+                                <i class="bi bi-check2-circle"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-brand-400">Proven Results</h4>
+                                <p class="text-xs text-slate-400 mt-1">Data-driven guarantees for KPIs.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 text-brand-400">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-brand-400">Risk Management</h4>
+                                <p class="text-xs text-slate-400 mt-1">Secure your business future.</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="mt-8 pt-6 border-t border-slate-700">
+                        <p class="text-sm text-slate-400 mb-2">Not sure what you need?</p>
+                        <a href="#contact" class="inline-block w-full text-center bg-brand-500 text-consulting-dark font-bold py-3 rounded-lg hover:bg-brand-600 transition-colors">
+                            Get Free Assessment
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Consultation Request Form -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                    <h3 class="font-bold text-slate-900 text-lg mb-4">Consultation Request</h3>
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Full Name</label>
+                            <input type="text" placeholder="John Doe" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500/20 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                            <input type="email" placeholder="john@company.com" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500/20 outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition-colors">
+                            Submit Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <section id="contact" class="bg-slate-900 text-white py-16">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div>
+                    <h2 class="text-2xl font-bold font-heading mb-6">Moya Consultancy</h2>
+                    <p class="text-slate-400 mb-6 leading-relaxed">Empowering businesses to reach their full potential through strategic insight and operational excellence.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-brand-500 mb-4">Contact Us</h3>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-3 text-slate-300">
+                            <i class="bi bi-telephone-fill text-brand-500"></i>
+                            <span>+251 911 123 456</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-slate-300">
+                            <i class="bi bi-envelope-fill text-brand-500"></i>
+                            <span>consulting@moyajobs.com</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-slate-300">
+                            <i class="bi bi-geo-alt-fill text-brand-500"></i>
+                            <span>Bole Sub City, Addis Ababa</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-brand-500 mb-4">Quick Links</h3>
+                    <div class="flex flex-col gap-2">
+                        <a href="#" class="text-slate-400 hover:text-white transition-colors">About Us</a>
+                        <a href="#" class="text-slate-400 hover:text-white transition-colors">Our Team</a>
+                        <a href="#" class="text-slate-400 hover:text-white transition-colors">Careers</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // ── Language Dropdown ──
+        function toggleLangMenu() {
+            const menu = document.getElementById('langMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close language menu when clicking outside
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('langDropdown');
+            const menu = document.getElementById('langMenu');
+            if (dropdown && !dropdown.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // ── Mobile Menu ──
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const icon = document.getElementById('mobileMenuIcon');
+            menu.classList.toggle('hidden');
+            icon.classList.toggle('bi-list');
+            icon.classList.toggle('bi-x-lg');
+        }
+
+        // ── Close mobile menu on resize ──
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 1024) {
+                document.getElementById('mobileMenu').classList.add('hidden');
+            }
+        });
+    </script>
+
+</body>
+</html>

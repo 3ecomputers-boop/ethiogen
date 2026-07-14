@@ -1,0 +1,134 @@
+{% load form_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Profile | MoyaJobs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316', // MoyaJobs Orange
+                            600: '#ea580c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-3xl shadow-xl p-8">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="bi bi-person-badge text-3xl text-brand-600"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold text-slate-900 mb-2">Complete Your Profile</h1>
+                    <p class="text-slate-500">Tell us about yourself to get started</p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 mb-6">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Title & Location -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Professional Title</label>
+                            {{ form.title|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
+                            {% if form.title.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Location (City, Country)</label>
+                            {{ form.location|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
+                            {% if form.location.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.location.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Bio -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Professional Bio</label>
+                        {{ form.bio|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all h-32 resize-none" }}
+                        {% if form.bio.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.bio.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Rate & Experience -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Hourly Rate (ETB)</label>
+                            {{ form.hourly_rate|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
+                            {% if form.hourly_rate.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.hourly_rate.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Years of Experience</label>
+                            {{ form.years_of_experience|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
+                            {% if form.years_of_experience.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.years_of_experience.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Skills -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Skills</label>
+                        <p class="text-xs text-slate-400 mb-2">Separate skills with a comma (e.g., Python, Django, React)</p>
+                        {{ form.skills|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
+                        {% if form.skills.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.skills.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Profile Picture -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Profile Picture</label>
+                        <div class="relative">
+                            {{ form.profile_picture|add_class:"block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer" }}
+                        </div>
+                        {% if form.profile_picture.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.profile_picture.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full bg-brand-500 text-white py-4 rounded-xl font-bold hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transform hover:-translate-y-1">
+                        <span>Save Profile</span>
+                        <i class="bi bi-check-circle-fill"></i>
+                    </button>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'jobs:home' %}" class="text-slate-400 text-sm hover:text-brand-500 transition-colors">Cancel and go back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

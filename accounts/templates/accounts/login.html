@@ -1,0 +1,317 @@
+{% load form_tags %}
+<style>
+    /* Import Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap');
+
+    :root {
+        --primary-color: #f97316; /* MoyaJobs Orange */
+        --primary-hover: #ea580c;
+        --text-dark: #1e293b;
+        --text-light: #64748b;
+        --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        --card-bg: #ffffff;
+        --input-border: #cbd5e1;
+        --input-focus: #f97316;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Raleway', sans-serif;
+    }
+
+    body {
+        background: var(--bg-gradient);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dark);
+    }
+
+    /* Main Container */
+    .auth-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 20px;
+        perspective: 1000px;
+    }
+
+    /* Card Design */
+    .auth-card {
+        background: var(--card-bg);
+        border-radius: 24px;
+        padding: 40px 30px;
+        box-shadow: 
+            0 10px 25px -5px rgba(0, 0, 0, 0.1), 
+            0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    /* Decorative Top Bar */
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: var(--primary-color);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .auth-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .auth-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+
+    .auth-header p {
+        color: var(--text-light);
+        font-size: 14px;
+    }
+
+    /* Form Elements */
+    .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .input-group {
+        position: relative;
+    }
+
+    .input-group label {
+        position: absolute;
+        left: 45px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 14px;
+        font-weight: 600;
+        pointer-events: none;
+        transition: all 0.3s ease;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary-color);
+        font-size: 18px;
+    }
+
+    /* Floating Label Logic (handled via JS usually, but styled for clean look here) */
+    .login__input {
+        width: 100%;
+        padding: 16px 15px 16px 45px; /* Left padding for icon */
+        border: 2px solid #f1f5f9;
+        background: #f8fafc;
+        border-radius: 12px;
+        font-size: 15px;
+        color: var(--text-dark);
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .login__input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+    }
+
+    .login__input::placeholder {
+        color: transparent; /* Hide default placeholder to show custom label if desired */
+    }
+
+    /* Button */
+    .btn-submit {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+    }
+
+    .btn-submit:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    /* Social Login Divider */
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        color: #cbd5e1;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e2e8f0;
+    }
+    
+    .divider span {
+        padding: 0 10px;
+    }
+
+    /* Social Icons */
+    .social-login {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .social-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .social-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: scale(1.1);
+    }
+
+    /* Go Back Link */
+    .go-back {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .go-back__button {
+        color: var(--text-light);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .go-back__button:hover {
+        color: var(--primary-color);
+    }
+    
+    /* Error Messages */
+    .errorlist {
+        color: #ef4444;
+        font-size: 13px;
+        margin-bottom: 15px;
+        list-style: none;
+        background: #fef2f2;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #fecaca;
+    }
+
+</style>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p>Please enter your details to sign in.</p>
+        </div>
+
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="input-group">
+                <i class="input-icon fas fa-user"></i>
+                {{ form.username|add_class:"login__input" }}
+            </div>
+
+            <div class="input-group">
+                <i class="input-icon fas fa-lock"></i>
+                {{ form.password|add_class:"login__input" }}
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <span>Log In</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>Or continue with</span>
+        </div>
+
+        <div class="social-login">
+            <a href="#" class="social-btn" aria-label="Login with Google">
+                <i class="fab fa-google"></i>
+            </a>
+            <a href="#" class="social-btn" aria-label="Login with LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="#" class="social-btn" aria-label="Login with Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+        </div>
+{% if next %}
+    <input type="hidden" name="next" value="{{ next }}">
+{% endif %}
+        <div class="go-back">
+            <a href="javascript:history.back()" class="go-back__button">
+                <i class="fas fa-arrow-left"></i>
+                <span>Go Back</span>
+            </a>
+        </div>
+    </div>
+</div>

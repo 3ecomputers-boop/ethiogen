@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moya Jobs | Premium Talent Marketplace</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 900: '#7c2d12' },
+                        slate: { 850: '#151f32', 900: '#0f172a' }
+                    },
+                    boxShadow: {
+                        glow: '0 0 20px -5px rgba(249, 115, 22, 0.4)',
+                        card: '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'card-hover': '0 20px 50px -12px rgba(0,0,0,0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --nav-bg: rgba(255, 255, 255, 0.85);
+            --nav-border: rgba(255, 255, 255, 0.3);
+            --input-bg: #f1f5f9;
+            --modal-overlay: rgba(0, 0, 0, 0.6);
+            --toast-bg: #1e293b;
+            --toast-text: #ffffff;
+        }
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --nav-bg: rgba(15, 23, 42, 0.9);
+            --nav-border: rgba(255, 255, 255, 0.05);
+            --input-bg: #1e293b;
+            --modal-overlay: rgba(0, 0, 0, 0.8);
+            --toast-bg: #f1f5f9;
+            --toast-text: #0f172a;
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            margin: 0; padding: 0;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #475569; }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .glass {
+            background: var(--nav-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--nav-border);
+        }
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .talent-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 40px -10px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        .talent-card:hover {
+            box-shadow: 0 20px 50px -12px var(--shadow-color);
+            border-color: #f97316;
+            transform: translateY(-4px);
+        }
+        .card-gradient-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, #f97316, #fbbf24);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .talent-card:hover .card-gradient-line { opacity: 1; }
+
+        /* FIXED: removed min-height:100vh — now content-based height so body scrolls naturally */
+        .page-section {
+            display: none;
+            padding-top: 6rem;
+            padding-bottom: 5rem;
+        }
+        .page-section.active { display: block; }
+        #mainContent.hidden { display: none; }
+
+        .cart-drawer {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateX(100%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .cart-drawer.open { transform: translateX(0); }
+
+        .mobile-nav {
+            position: fixed; top: 0; right: 0; width: 300px; max-width: 80vw; height: 100%;
+            background: var(--bg-secondary); z-index: 60;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+            padding: 2rem 1.5rem; overflow-y: auto;
+            border-left: 1px solid var(--border-color);
+        }
+        .mobile-nav.open { transform: translateX(0); }
+        .mobile-nav-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 59;
+            opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
+        }
+        .mobile-nav-overlay.active { opacity: 1; pointer-events: auto; }
+        body.nav-open { overflow: hidden; }
+
+        .theme-toggle {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary); color: var(--text-primary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s; font-size: 1.2rem;
+        }
+        .theme-toggle:hover { border-color: #f97316; color: #f97316; }
+
+        .toast-container {
+            position: fixed; bottom: 24px; right: 24px; z-index: 999;
+            display: flex; flex-direction: column; gap: 12px;
+            max-width: 400px; width: 100%; pointer-events: none;
+        }
+        .toast {
+            background: var(--toast-bg); color: var(--toast-text);
+            padding: 16px 20px; border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 12px;
+            transform: translateX(120%); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto; border-left: 4px solid #f97316;
+        }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.success { border-left-color: #22c55e; }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.warning { border-left-color: #f59e0b; }
+        .toast.info { border-left-color: #3b82f6; }
+        .toast-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .toast-msg { flex: 1; font-weight: 500; font-size: 0.95rem; }
+        .toast-close {
+            background: none; border: none; color: var(--toast-text);
+            opacity: 0.6; cursor: pointer; font-size: 1.2rem; padding: 0 4px;
+            transition: opacity 0.2s;
+        }
+        .toast-close:hover { opacity: 1; }
+        @media (max-width: 480px) {
+            .toast-container { bottom: 16px; right: 16px; left: 16px; max-width: none; }
+        }
+
+        .spinner {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 4px solid var(--border-color); border-top-color: #f97316;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-spinner {
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+
+        .strength-bar {
+            height: 4px; border-radius: 2px;
+            background: var(--border-color); overflow: hidden; margin-top: 6px;
+        }
+        .strength-bar .fill {
+            height: 100%; width: 0%; border-radius: 2px;
+            transition: width 0.4s ease, background 0.4s ease;
+        }
+        .strength-label {
+            font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;
+        }
+
+        .step-indicators { display: flex; gap: 8px; justify-content: center; margin-bottom: 1.25rem; }
+        .step-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--border-color); transition: all 0.4s ease;
+        }
+        .step-dot.active {
+            background: #f97316; transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
+        }
+        .step-dot.done { background: #22c55e; }
+        .step-progress {
+            height: 3px; background: var(--border-color);
+            border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem;
+        }
+        .step-progress .fill {
+            height: 100%; background: linear-gradient(90deg, #f97316, #fbbf24);
+            width: 0%; transition: width 0.5s ease; border-radius: 2px;
+        }
+
+        .form-input {
+            width: 100%; padding: 0.7rem 1rem;
+            background: var(--input-bg); border: 2px solid var(--border-color);
+            border-radius: 12px; outline: none; transition: all 0.3s;
+            color: var(--text-primary); font-family: inherit; font-size: 0.9rem;
+        }
+        .form-input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+        }
+        .form-input.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+        }
+        .form-input.success {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+        }
+        .form-error {
+            color: #ef4444; font-size: 0.75rem; font-weight: 500;
+            margin-top: 4px; display: none;
+        }
+        .form-error.visible { display: block; }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--border-color) 25%, var(--bg-primary) 50%, var(--border-color) 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px;
+        }
+        [data-theme="dark"] .skeleton {
+            background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+            background-size: 200% 100%;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        input[type="range"] { -webkit-appearance: none; background: transparent; }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+            background: #f97316; cursor: pointer; margin-top: -8px;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); transition: transform 0.15s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: var(--border-color); border-radius: 2px;
+        }
+        [data-theme="dark"] input[type="range"]::-webkit-slider-runnable-track { background: #334155; }
+
+        /* Auth page decorative blobs */
+        .auth-blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; pointer-events: none;
+        }
+        .auth-blob-1 { width: 400px; height: 400px; background: #f97316; top: -100px; right: -100px; }
+        .auth-blob-2 { width: 300px; height: 300px; background: #fbbf24; bottom: -80px; left: -80px; }
+        [data-theme="dark"] .auth-blob { opacity: 0.08; }
+
+        /* Divider with text */
+        .divider-text {
+            display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0;
+        }
+        .divider-text::before, .divider-text::after {
+            content: ''; flex: 1; height: 1px; background: var(--border-color);
+        }
+        .divider-text span {
+            font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Social button */
+        .social-btn {
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.7rem 1rem; border-radius: 12px;
+            border: 2px solid var(--border-color); background: var(--bg-secondary);
+            color: var(--text-primary); font-weight: 600; font-size: 0.9rem;
+            cursor: pointer; transition: all 0.3s; width: 100%;
+        }
+        .social-btn:hover {
+            border-color: #f97316; background: var(--bg-primary);
+        }
+
+        /* Password toggle */
+        .pw-toggle {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-secondary);
+            cursor: pointer; font-size: 1.1rem; padding: 4px;
+            transition: color 0.2s;
+        }
+        .pw-toggle:hover { color: #f97316; }
+
+        /* Checkbox styled */
+        .check-box {
+            width: 20px; height: 20px; border-radius: 6px;
+            border: 2px solid var(--border-color); background: var(--bg-secondary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+        }
+        .check-box.checked {
+            background: #f97316; border-color: #f97316; color: #fff;
+        }
+
+        /* Step panel animation */
+        .step-panel { display: none; }
+        .step-panel.active { display: block; animation: fadeSlideIn 0.4s ease; }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* File upload area */
+        .upload-area {
+            border: 2px dashed var(--border-color); border-radius: 16px;
+            padding: 1.5rem; text-align: center; cursor: pointer;
+            transition: all 0.3s; background: var(--input-bg);
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #f97316; background: rgba(249, 115, 22, 0.05);
+        }
+
+        /* Compact spacing for registration form fields */
+        .reg-form-space > * + * { margin-top: 0.85rem; }
+
+        @media (max-width: 640px) {
+            .talent-card { border-radius: 1.25rem; }
+            .hero-title { font-size: 2.5rem !important; }
+            .page-section { padding-top: 5rem; padding-left: 1rem; padding-right: 1rem; padding-bottom: 3rem; }
+        }
+        @media (min-width: 1920px) {
+            .container { max-width: 1440px; }
+        }
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0,0,0,0); border: 0;
+        }
+        :focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+        .transition-theme { transition: background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body>
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
+
+    <!-- ===== MOBILE NAV OVERLAY ===== -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+
+    <!-- ===== MOBILE NAV ===== -->
+    <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
+        <div class="flex items-center justify-between mb-8">
+            <span class="text-xl font-bold text-brand-500">Moya<span class="text-slate-900 dark:text-white">Jobs</span></span>
+            <button id="closeMobileNav" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-colors" aria-label="Close menu">
+                <i class="bi bi-x-lg text-xl"></i>
+            </button>
+        </div>
+        <div class="flex flex-col gap-6 text-lg font-semibold">
+            <a href="#" onclick="navigateTo('marketplace'); closeMobileNav(); return false;" class="hover:text-brand-500 transition-colors">Find Talent</a>
+            <a href="#" onclick="navigateTo('marketplace'); closeMobileNav(); return false;" class="hover:text-brand-500 transition-colors">Construction Workforce</a>
+            <a href="#" onclick="navigateTo('marketplace'); closeMobileNav(); return false;" class="hover:text-brand-500 transition-colors">Business Consultancy</a>
+            <hr class="border-slate-200 dark:border-slate-700" />
+            <button onclick="navigateTo('employerLogin'); closeMobileNav();" class="text-left hover:text-brand-500 transition-colors">Employer Login</button>
+            <button onclick="navigateTo('seekerLogin'); closeMobileNav();" class="text-left hover:text-brand-500 transition-colors">Job Seeker Login</button>
+            <button onclick="navigateTo('employerReg'); closeMobileNav();" class="text-left hover:text-brand-500 transition-colors text-sm text-slate-400 dark:text-slate-500">Register as Employer</button>
+            <button onclick="navigateTo('seekerReg'); closeMobileNav();" class="text-left hover:text-brand-500 transition-colors text-sm text-slate-400 dark:text-slate-500">Register as Job Seeker</button>
+        </div>
+        <div class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-700">
+            <button id="mobileThemeToggle" class="flex items-center gap-3 text-sm font-medium hover:text-brand-500 transition-colors">
+                <i class="bi bi-moon-stars"></i> Toggle Theme
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="fixed top-0 w-full z-40 glass shadow-sm transition-all duration-300" id="navbar" role="navigation" aria-label="Main navigation">
+        <div class="container mx-auto px-4 h-20 flex items-center justify-between">
+            <a href="#" onclick="navigateTo('marketplace'); return false;" class="flex items-center gap-3 no-underline" aria-label="MoyaJobs home">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow">
+                    <i class="bi bi-stars text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Moya<span class="text-brand-500">Jobs</span></span>
+            </a>
+
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#" onclick="navigateTo('marketplace'); return false;" class="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors">Find Talent</a>
+                <a href="#" onclick="navigateTo('marketplace'); return false;" class="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors">Construction Workforce</a>
+                <a href="#" onclick="navigateTo('marketplace'); return false;" class="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors">Business Consultancy</a>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <i class="bi bi-moon-stars" id="themeIcon"></i>
+                </button>
+                <button id="langToggle" class="px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" aria-label="Toggle language">EN</button>
+
+                <button id="cartTrigger" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group" aria-label="Open cart">
+                    <i class="bi bi-cart3 text-2xl text-slate-700 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"></i>
+                    <span id="cartCount" class="absolute -top-1 -right-1 bg-brand-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm transform scale-0 transition-transform duration-300">0</span>
+                </button>
+
+                <div class="hidden lg:flex gap-2">
+                    <button onclick="navigateTo('employerLogin')" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 transition-all text-sm">Employer Login</button>
+                    <button onclick="navigateTo('seekerLogin')" class="bg-slate-900 dark:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-brand-600 transition-all shadow-lg text-sm flex items-center gap-2">
+                        <i class="bi bi-box-arrow-in-right"></i> Job Seeker Login
+                    </button>
+                </div>
+
+                <button id="hamburgerBtn" class="lg:hidden w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors" aria-label="Open menu" aria-expanded="false">
+                    <i class="bi bi-list text-2xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- =============== MAIN CONTENT (Marketplace) ================== -->
+    <!-- ============================================================ -->
+    <div id="mainContent">
+        <header class="relative pt-32 pb-12 lg:pt-48 lg:pb-24 overflow-hidden bg-slate-900 text-white">
+            <canvas id="networkCanvas" class="absolute inset-0 w-full h-full z-0 opacity-40"></canvas>
+            <div class="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-slate-900/80 to-slate-900"></div>
+            <div class="container mx-auto px-4 relative z-10">
+                <div class="flex flex-col lg:flex-row items-center gap-12">
+                    <div class="lg:w-3/5 space-y-8">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-400 text-sm font-semibold tracking-wide">
+                            <i class="bi bi-stars"></i> Verified Talent Network
+                        </div>
+                        <h1 class="hero-title text-5xl lg:text-7xl font-extrabold tracking-tight leading-tight">
+                            Your Workforce, <br />
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-amber-400">On Demand</span>
+                        </h1>
+                        <p class="text-xl text-slate-300 max-w-2xl leading-relaxed">
+                            Build high-performing teams with verified professionals. From construction specialists to business consultants, hire the skills you need today.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 max-w-2xl">
+                            <div class="relative flex-grow">
+                                <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                                <input type="text" id="heroSearch" class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-slate-900 placeholder-slate-400 border-none outline-none focus:ring-4 focus:ring-brand-500/20 shadow-xl transition-all" placeholder="Search roles, skills, or names..." aria-label="Search for talent" />
+                            </div>
+                            <button class="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-brand-500/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                                Search <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lg:w-2/5 w-full">
+                        <div class="glass-dark p-8 rounded-3xl border border-white/10 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                            <div class="flex justify-between items-start mb-6">
+                                <h3 class="text-sm uppercase tracking-widest text-slate-400 font-bold">Market Status</h3>
+                                <span class="flex h-3 w-3 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                </span>
+                            </div>
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-5xl font-bold text-white tracking-tight counter-anim" data-target="28405">0</span>
+                                <span class="text-lg text-slate-400">Assets Ready</span>
+                            </div>
+                            <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden mb-4">
+                                <div class="bg-gradient-to-r from-emerald-400 to-brand-500 h-full rounded-full w-[85%]"></div>
+                            </div>
+                            <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+                                <i class="bi bi-graph-up-arrow"></i> High demand in Construction &amp; IT
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-12">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <aside class="lg:w-1/4">
+                    <div class="sticky top-28 space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700 transition-theme">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-2">
+                                    <i class="bi bi-sliders text-brand-500"></i> Filters
+                                </h3>
+                                <button id="resetFilters" class="text-sm text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors">Reset All</button>
+                            </div>
+                            <div class="mb-6 flex items-center justify-between">
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Verified Only</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="verifiedCheck" class="sr-only peer" aria-label="Verified only">
+                                    <div class="w-11 h-6 bg-slate-200 dark:bg-slate-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                                </label>
+                            </div>
+                            <div class="mb-8">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Category</label>
+                                <select id="categoryFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                    <option value="all">All Categories</option>
+                                    <option value="Construction">Construction Workforce</option>
+                                    <option value="Consultancy">Business Consultancy</option>
+                                    <option value="Development">Development</option>
+                                    <option value="Design">Design</option>
+                                    <option value="Data">Data Science</option>
+                                </select>
+                            </div>
+                            <div class="mb-8">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Trending Skills</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="filterBySkill('React')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">React</button>
+                                    <button onclick="filterBySkill('AutoCAD')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">AutoCAD</button>
+                                    <button onclick="filterBySkill('Finance')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">Finance</button>
+                                    <button onclick="filterBySkill('Python')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">Python</button>
+                                </div>
+                            </div>
+                            <div class="mb-8">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Duration</label>
+                                <select id="durationFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                    <option value="all">Any Duration</option>
+                                    <option value="Hourly">Hourly</option>
+                                    <option value="Daily">Daily</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Annually">Annually</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-4">
+                                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Target Rate</label>
+                                    <span class="text-sm font-bold text-brand-600" id="priceDisplay">50k ETB</span>
+                                </div>
+                                <input type="range" id="priceRange" min="5000" max="200000" step="1000" value="50000" class="w-full" aria-label="Price range" />
+                                <div class="flex justify-between text-xs text-slate-400 dark:text-slate-500 mt-2">
+                                    <span>5k</span><span>200k+</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="lg:w-3/4">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-theme">
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-500 dark:text-slate-400 font-medium text-sm">Sort by:</span>
+                            <select id="sortSelect" class="bg-slate-50 dark:bg-slate-700 border-none text-sm font-bold text-slate-800 dark:text-slate-200 rounded-lg px-3 py-2 cursor-pointer outline-none hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
+                                <option value="rating">Top Rated</option>
+                                <option value="newest">Newest First</option>
+                                <option value="price_low">Rate: Low to High</option>
+                                <option value="price_high">Rate: High to Low</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-slate-500 dark:text-slate-400 font-medium text-sm" id="resultCount">0 workers found</span>
+                            <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
+                                <button id="gridBtn" class="p-2 rounded-md bg-white dark:bg-slate-600 text-brand-600 shadow-sm transition-all" aria-label="Grid view"><i class="bi bi-grid-3x3-gap-fill"></i></button>
+                                <button id="listBtn" class="p-2 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-all" aria-label="List view"><i class="bi bi-list-task"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="talentContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+                    <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-600 transition-theme">
+                        <div class="w-20 h-20 bg-slate-50 dark:bg-slate-700 rounded-full flex items-center justify-center mb-6"><i class="bi bi-search text-3xl text-slate-300 dark:text-slate-500"></i></div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">No talents found</h3>
+                        <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">Try adjusting your filters or broaden your search parameters.</p>
+                        <button onclick="resetFiltersFn()" class="text-brand-600 font-bold hover:text-brand-700 flex items-center gap-2"><i class="bi bi-arrow-counterclockwise"></i> Reset Filters</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- =============== JOB SEEKER LOGIN PAGE ======================= -->
+    <!-- ============================================================ -->
+    <div id="seekerLoginPage" class="page-section relative overflow-hidden">
+        <div class="auth-blob auth-blob-1"></div>
+        <div class="auth-blob auth-blob-2"></div>
+        <div class="container mx-auto px-4 max-w-md relative z-10">
+            <button onclick="navigateTo('marketplace')" class="mb-6 flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                <i class="bi bi-arrow-left"></i> Back to Marketplace
+            </button>
+            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700 transition-theme">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-brand-50 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="bi bi-person-check text-3xl text-brand-500"></i></div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Job Seeker Login</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Welcome back! Access your profile and opportunities.</p>
+                </div>
+                <form id="seekerLoginForm" class="space-y-4" novalidate>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Email Address</label>
+                        <div class="relative">
+                            <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="email" name="s_login_email" required class="form-input pl-11" placeholder="you@example.com" data-validate="email" />
+                        </div>
+                        <div class="form-error" data-error="s_login_email">Please enter a valid email address</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Password</label>
+                        <div class="relative">
+                            <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="password" name="s_login_pw" required class="form-input pl-11 pr-11" placeholder="Enter your password" data-validate="password" />
+                            <button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Toggle password visibility"><i class="bi bi-eye"></i></button>
+                        </div>
+                        <div class="form-error" data-error="s_login_pw">Password is required</div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <div class="check-box" onclick="this.classList.toggle('checked')"><i class="bi bi-check2 text-sm" style="display:none"></i></div>
+                            <span class="text-sm text-slate-600 dark:text-slate-300">Remember me</span>
+                        </label>
+                        <button type="button" class="text-sm font-bold text-brand-600 hover:text-brand-700 transition-colors">Forgot Password?</button>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-brand-500/25 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                        Sign In <i class="bi bi-box-arrow-in-right"></i>
+                    </button>
+                </form>
+                <div class="divider-text"><span>or continue with</span></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="social-btn"><i class="bi bi-google"></i> Google</button>
+                    <button class="social-btn"><i class="bi bi-linkedin"></i> LinkedIn</button>
+                </div>
+                <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+                    Don't have an account?
+                    <button onclick="navigateTo('seekerReg')" class="font-bold text-brand-600 hover:text-brand-700 transition-colors">Register as Job Seeker</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- =============== EMPLOYER LOGIN PAGE ========================= -->
+    <!-- ============================================================ -->
+    <div id="employerLoginPage" class="page-section relative overflow-hidden">
+        <div class="auth-blob auth-blob-1" style="background:#3b82f6;"></div>
+        <div class="auth-blob auth-blob-2" style="background:#8b5cf6;"></div>
+        <div class="container mx-auto px-4 max-w-md relative z-10">
+            <button onclick="navigateTo('marketplace')" class="mb-6 flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                <i class="bi bi-arrow-left"></i> Back to Marketplace
+            </button>
+            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700 transition-theme">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="bi bi-building text-3xl text-blue-500"></i></div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Employer Login</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Access your dashboard and manage hires.</p>
+                </div>
+                <form id="employerLoginForm" class="space-y-4" novalidate>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Company Email</label>
+                        <div class="relative">
+                            <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="email" name="e_login_email" required class="form-input pl-11" placeholder="hr@company.com" data-validate="email" />
+                        </div>
+                        <div class="form-error" data-error="e_login_email">Please enter a valid company email</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Password</label>
+                        <div class="relative">
+                            <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="password" name="e_login_pw" required class="form-input pl-11 pr-11" placeholder="Enter your password" data-validate="password" />
+                            <button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Toggle password visibility"><i class="bi bi-eye"></i></button>
+                        </div>
+                        <div class="form-error" data-error="e_login_pw">Password is required</div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <div class="check-box" onclick="this.classList.toggle('checked')"><i class="bi bi-check2 text-sm" style="display:none"></i></div>
+                            <span class="text-sm text-slate-600 dark:text-slate-300">Remember me</span>
+                        </label>
+                        <button type="button" class="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors">Forgot Password?</button>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/25 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                        Sign In <i class="bi bi-box-arrow-in-right"></i>
+                    </button>
+                </form>
+                <div class="divider-text"><span>or continue with</span></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="social-btn"><i class="bi bi-google"></i> Google</button>
+                    <button class="social-btn"><i class="bi bi-linkedin"></i> LinkedIn</button>
+                </div>
+                <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+                    Don't have an account?
+                    <button onclick="navigateTo('employerReg')" class="font-bold text-blue-600 hover:text-blue-700 transition-colors">Register as Employer</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- =============== JOB SEEKER REGISTRATION PAGE ================ -->
+    <!-- ============================================================ -->
+    <div id="seekerRegPage" class="page-section relative overflow-hidden">
+        <div class="auth-blob auth-blob-1"></div>
+        <div class="auth-blob auth-blob-2"></div>
+        <div class="container mx-auto px-4 max-w-2xl relative z-10">
+            <button onclick="navigateTo('marketplace')" class="mb-5 flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                <i class="bi bi-arrow-left"></i> Back to Marketplace
+            </button>
+
+            <div class="bg-white dark:bg-slate-800 p-5 sm:p-7 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700 transition-theme">
+                <!-- Header — compact -->
+                <div class="text-center mb-5">
+                    <div class="w-14 h-14 bg-brand-50 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <i class="bi bi-person-plus text-2xl text-brand-500"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Job Seeker Registration</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Create your profile and start getting noticed.</p>
+                </div>
+
+                <!-- Step Indicators -->
+                <div class="step-indicators" id="seekerRegIndicators">
+                    <span class="step-dot active" data-step="1"></span>
+                    <span class="step-dot" data-step="2"></span>
+                    <span class="step-dot" data-step="3"></span>
+                </div>
+                <div class="step-progress">
+                    <div class="fill" id="seekerRegProgressFill" style="width:0%;"></div>
+                </div>
+
+                <form id="seekerRegForm" class="reg-form-space" novalidate>
+
+                    <!-- Step 1: Personal Info -->
+                    <div class="step-panel active" data-step="1">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <i class="bi bi-person text-brand-500"></i> Personal Information
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">First Name *</label>
+                                <input type="text" name="sr_first" required class="form-input" placeholder="John" data-validate="name" />
+                                <div class="form-error" data-error="sr_first">Please enter your first name</div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Last Name *</label>
+                                <input type="text" name="sr_last" required class="form-input" placeholder="Doe" data-validate="name" />
+                                <div class="form-error" data-error="sr_last">Please enter your last name</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Email Address *</label>
+                            <div class="relative">
+                                <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="email" name="sr_email" required class="form-input pl-11" placeholder="you@example.com" data-validate="email" />
+                            </div>
+                            <div class="form-error" data-error="sr_email">Please enter a valid email address</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Phone Number *</label>
+                            <div class="relative">
+                                <i class="bi bi-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="tel" name="sr_phone" required class="form-input pl-11" placeholder="+251 9XX XXX XXX" data-validate="phone" />
+                            </div>
+                            <div class="form-error" data-error="sr_phone">Please enter a valid phone number</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Password *</label>
+                            <div class="relative">
+                                <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="password" name="sr_pw" required class="form-input pl-11 pr-11" placeholder="Min 8 characters" data-validate="password" oninput="checkPwStrength(this.value, 'seekerStrength')" />
+                                <button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Toggle password visibility"><i class="bi bi-eye"></i></button>
+                            </div>
+                            <div class="form-error" data-error="sr_pw">Password must be at least 8 characters</div>
+                            <div class="strength-bar" id="seekerStrengthBar"><div class="fill"></div></div>
+                            <div class="strength-label" id="seekerStrength"></div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="seekerRegNext(2)" class="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/25 transition-all transform hover:scale-[1.02] flex items-center gap-2 text-sm">
+                                Next Step <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Professional Info -->
+                    <div class="step-panel" data-step="2">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <i class="bi bi-briefcase text-brand-500"></i> Professional Details
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Professional Title *</label>
+                            <input type="text" name="sr_title" required class="form-input" placeholder="e.g. Senior Civil Engineer" data-validate="name" />
+                            <div class="form-error" data-error="sr_title">Please enter your professional title</div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Category *</label>
+                                <select name="sr_category" required class="form-input" data-validate="select">
+                                    <option value="">Select Category</option>
+                                    <option value="Construction">Construction Workforce</option>
+                                    <option value="Consultancy">Business Consultancy</option>
+                                    <option value="Development">Development</option>
+                                    <option value="Design">Design</option>
+                                    <option value="Data">Data Science</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <div class="form-error" data-error="sr_category">Please select a category</div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Experience *</label>
+                                <select name="sr_experience" required class="form-input" data-validate="select">
+                                    <option value="">Select Experience</option>
+                                    <option value="0-1">Less than 1 year</option>
+                                    <option value="1-3">1 - 3 years</option>
+                                    <option value="3-5">3 - 5 years</option>
+                                    <option value="5-10">5 - 10 years</option>
+                                    <option value="10+">10+ years</option>
+                                </select>
+                                <div class="form-error" data-error="sr_experience">Please select your experience</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Key Skills * <span class="normal-case text-slate-400">(comma separated)</span></label>
+                            <input type="text" name="sr_skills" required class="form-input" placeholder="AutoCAD, Project Management, Site Supervision" data-validate="name" />
+                            <div class="form-error" data-error="sr_skills">Please enter your key skills</div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Expected Rate (ETB)</label>
+                                <input type="number" name="sr_rate" class="form-input" placeholder="e.g. 25000" min="0" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Duration Preference</label>
+                                <select name="sr_duration" class="form-input">
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Daily">Daily</option>
+                                    <option value="Hourly">Hourly</option>
+                                    <option value="Annually">Annually</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Location *</label>
+                            <select name="sr_location" required class="form-input" data-validate="select">
+                                <option value="">Select Location</option>
+                                <option value="Addis Ababa">Addis Ababa</option>
+                                <option value="Hawassa">Hawassa</option>
+                                <option value="Bahir Dar">Bahir Dar</option>
+                                <option value="Dire Dawa">Dire Dawa</option>
+                                <option value="Remote">Remote</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="form-error" data-error="sr_location">Please select your location</div>
+                        </div>
+                        <div class="flex justify-between pt-1">
+                            <button type="button" onclick="seekerRegNext(1)" class="px-5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold hover:border-brand-500 hover:text-brand-600 transition-all flex items-center gap-2 text-sm">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="button" onclick="seekerRegNext(3)" class="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/25 transition-all transform hover:scale-[1.02] flex items-center gap-2 text-sm">
+                                Next Step <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Bio & Finish -->
+                    <div class="step-panel" data-step="3">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <i class="bi bi-file-text text-brand-500"></i> Profile Summary
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Professional Bio *</label>
+                            <textarea name="sr_bio" required class="form-input" rows="3" placeholder="Tell employers about yourself, your expertise, and what you bring to the table..." data-validate="name" style="resize:vertical; min-height:70px;"></textarea>
+                            <div class="form-error" data-error="sr_bio">Please write a short bio</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload CV / Resume</label>
+                            <div class="upload-area" id="seekerUploadArea" onclick="document.getElementById('seekerCvInput').click()">
+                                <i class="bi bi-cloud-upload text-2xl text-slate-400 dark:text-slate-500 mb-1"></i>
+                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Click to upload or drag &amp; drop</p>
+                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">PDF, DOC, DOCX (max 5MB)</p>
+                                <p class="text-xs text-brand-600 font-bold mt-1" id="seekerFileName" style="display:none;"></p>
+                                <input type="file" id="seekerCvInput" accept=".pdf,.doc,.docx" class="hidden" onchange="handleFileSelect(this, 'seekerFileName')" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <div class="check-box mt-0.5" onclick="this.classList.toggle('checked')"><i class="bi bi-check2 text-sm" style="display:none"></i></div>
+                                <span class="text-sm text-slate-600 dark:text-slate-300">I agree to the <button type="button" class="font-bold text-brand-600 hover:text-brand-700">Terms of Service</button> and <button type="button" class="font-bold text-brand-600 hover:text-brand-700">Privacy Policy</button></span>
+                            </label>
+                        </div>
+                        <div class="flex justify-between pt-1">
+                            <button type="button" onclick="seekerRegNext(2)" class="px-5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold hover:border-brand-500 hover:text-brand-600 transition-all flex items-center gap-2 text-sm">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="submit" id="seekerRegSubmit" class="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/25 transition-all transform hover:scale-[1.02] flex items-center gap-2 text-sm">
+                                Create Account <i class="bi bi-check-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-5">
+                    Already have an account?
+                    <button onclick="navigateTo('seekerLogin')" class="font-bold text-brand-600 hover:text-brand-700 transition-colors">Sign In</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- =============== EMPLOYER REGISTRATION PAGE ================== -->
+    <!-- ============================================================ -->
+    <div id="employerRegPage" class="page-section relative overflow-hidden">
+        <div class="auth-blob auth-blob-1" style="background:#3b82f6;"></div>
+        <div class="auth-blob auth-blob-2" style="background:#8b5cf6;"></div>
+        <div class="container mx-auto px-4 max-w-2xl relative z-10">
+            <button onclick="navigateTo('marketplace')" class="mb-5 flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                <i class="bi bi-arrow-left"></i> Back to Marketplace
+            </button>
+
+            <div class="bg-white dark:bg-slate-800 p-5 sm:p-7 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700 transition-theme">
+                <div class="text-center mb-5">
+                    <div class="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-3"><i class="bi bi-building-add text-2xl text-blue-500"></i></div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Employer Registration</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Post jobs and find top talent for your company.</p>
+                </div>
+
+                <div class="step-indicators" id="employerRegIndicators">
+                    <span class="step-dot active" data-step="1"></span>
+                    <span class="step-dot" data-step="2"></span>
+                    <span class="step-dot" data-step="3"></span>
+                </div>
+                <div class="step-progress">
+                    <div class="fill" id="employerRegProgressFill" style="width:0%;"></div>
+                </div>
+
+                <form id="employerRegForm" class="reg-form-space" novalidate>
+
+                    <!-- Step 1: Company Info -->
+                    <div class="step-panel active" data-step="1">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <i class="bi bi-building text-blue-500"></i> Company Information
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Company Name *</label>
+                            <div class="relative">
+                                <i class="bi bi-building absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" name="er_company" required class="form-input pl-11" placeholder="Moya Construction PLC" data-validate="name" />
+                            </div>
+                            <div class="form-error" data-error="er_company">Please enter your company name</div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Industry *</label>
+                                <select name="er_industry" required class="form-input" data-validate="select">
+                                    <option value="">Select Industry</option>
+                                    <option value="Construction">Construction &amp; Real Estate</option>
+                                    <option value="Technology">Technology &amp; IT</option>
+                                    <option value="Finance">Finance &amp; Banking</option>
+                                    <option value="Manufacturing">Manufacturing</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Consulting">Consulting</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <div class="form-error" data-error="er_industry">Please select an industry</div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Company Size *</label>
+                                <select name="er_size" required class="form-input" data-validate="select">
+                                    <option value="">Select Size</option>
+                                    <option value="1-10">1 - 10 employees</option>
+                                    <option value="11-50">11 - 50 employees</option>
+                                    <option value="51-200">51 - 200 employees</option>
+                                    <option value="201-500">201 - 500 employees</option>
+                                    <option value="500+">500+ employees</option>
+                                </select>
+                                <div class="form-error" data-error="er_size">Please select company size</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Company Address</label>
+                            <div class="relative">
+                                <i class="bi bi-geo-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" name="er_address" class="form-input pl-11" placeholder="Bole, Addis Ababa, Ethiopia" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Company Website</label>
+                            <div class="relative">
+                                <i class="bi bi-globe absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="url" name="er_website" class="form-input pl-11" placeholder="https://www.example.com" />
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="employerRegNext(2)" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/25 transition-all transform hover:scale-[1.02] flex items-center gap-2 text-sm">
+                                Next Step <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Contact Person -->
+                    <div class="step-panel" data-step="2">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <i class="bi bi-person-badge text-blue-500"></i> Contact Person
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">First Name *</label>
+                                <input type="text" name="er_first" required class="form-input" placeholder="Jane" data-validate="name" />
+                                <div class="form-error" data-error="er_first">Please enter first name</div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Last Name *</label>
+                                <input type="text" name="er_last" required class="form-input" placeholder="Smith" data-validate="name" />
+                                <div class="form-error" data-error="er_last">Please enter last name</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Job Title *</label>
+                            <input type="text" name="er_jobtitle" required class="form-input" placeholder="HR Manager" data-validate="name" />
+                            <div class="form-error" data-error="er_jobtitle">Please enter your job title</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Work Email *</label>
+                            <div class="relative">
+                                <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="email" name="er_email" required class="form-input pl-11" placeholder="jane@company.com" data-validate="email" />
+                            </div>
+                            <div class="form-error" data-error="er_email">Please enter a valid work email</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Phone Number *</label>
+                            <div class="relative">
+                                <i class="bi bi-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="tel" name="er_phone" required class="form-input pl-11" placeholder="+251 9XX XXX XXX" data-validate="phone" />
+                            </div>
+                            <div class="form-error" data-error="er_phone">Please enter a valid phone number</div>
+                        </div>
+                        <div class="flex justify-between pt-1">
+                            <button type="button" onclick="employerRegNext(1)" class="px-5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 text-sm">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="button" onclick="employerRegNext(3)" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/25 transition-all transform hover:scale-[1.02] flex items-center gap-2 text-sm">
+                                Next Step <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Account & Finish -->
+                    <div class="step-panel" data-step="3">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                            <i class="bi bi-shield-lock text-blue-500"></i> Set Up Account
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Password *</label>
+                            <div class="relative">
+                                <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="password" name="er_pw" required class="form-input pl-11 pr-11" placeholder="Min 8 characters" data-validate="password" oninput="checkPwStrength(this.value, 'employerStrength')" />
+                                <button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Toggle password visibility"><i class="bi bi-eye"></i></button>
+                            </div>
+                            <div class="form-error" data-error="er_pw">Password must be at least 8 characters</div>
+                            <div class="strength-bar" id="employerStrengthBar"><div class="fill"></div></div>
+                            <div class="strength-label" id="employerStrength"></div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Confirm Password *</label>
+                            <div class="relative">
+                                <i class="bi bi-lock-fill absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="password" name="er_pw_confirm" required class="form-input pl-11" placeholder="Re-enter password" data-validate="password" />
+                            </div>
+                            <div class="form-error" data-error="er_pw_confirm">Passwords do not match</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">How did you hear about us?</label>
+                            <select name="er_source" class="form-input">
+                                <option value="">Select an option</option>
+                                <option value="Social Media">Social Media</option>
+                                <option value="Google Search">Google Search</option>
+                                <option value="Referral">Referral</option>
+                                <option value="Event">Event / Conference</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <div class="check-box mt-0.5" onclick="this.classList.toggle('checked')"><i class="bi bi-check2 text-sm" style="display:none"></i></div>
+                                <span class="text-sm text-slate-600 dark:text-slate-300">I agree to the <button type="button" class="font-bold text-blue-600 hover:text-blue-700">Terms of Service</button> and <button type="button" class="font-bold text-blue-600 hover:text-blue-700">Privacy Policy</button></span>
+                            </label>
+                        </div>
+                        <div class="flex justify-between pt-1">
+                            <button type="button" onclick="employerRegNext(2)" class="px-5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 text-sm">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="submit" id="employerRegSubmit" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/25 transition-all transform hover:scale-[1.02] flex items-center gap-2 text-sm">
+                                Create Account <i class="bi bi-check-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-5">
+                    Already have an account?
+                    <button onclick="navigateTo('employerLogin')" class="font-bold text-blue-600 hover:text-blue-700 transition-colors">Sign In</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ======================== JAVASCRIPT ======================== -->
+    <!-- ============================================================ -->
+<script>
+    /* ===== Page Navigation (keep existing) ===== */
+    const pageMap = {
+        marketplace: { el: 'mainContent', type: 'div' },
+        seekerLogin: { el: 'seekerLoginPage', type: 'section' },
+        employerLogin: { el: 'employerLoginPage', type: 'section' },
+        seekerReg: { el: 'seekerRegPage', type: 'section' },
+        employerReg: { el: 'employerRegPage', type: 'section' },
+    };
+    let currentPage = 'marketplace';
+
+    function navigateTo(page) {
+        Object.values(pageMap).forEach(p => {
+            const el = document.getElementById(p.el);
+            if (p.type === 'div') el.style.display = 'none';
+            else el.classList.remove('active');
+        });
+        const target = pageMap[page];
+        if (!target) return;
+        const targetEl = document.getElementById(target.el);
+        if (target.type === 'div') targetEl.style.display = 'block';
+        else targetEl.classList.add('active');
+        currentPage = page;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ===== Toast System (keep existing) ===== */
+    function showToast(message, type = 'info', duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<i class="bi ${icons[type]} toast-icon"></i><span class="toast-msg">${message}</span><button class="toast-close" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>`;
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, duration);
+    }
+
+    /* ===== Theme Toggle (keep existing) ===== */
+    const themeToggle = document.getElementById('themeToggle');
+    const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+
+    function setTheme(dark) {
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        themeIcon.className = dark ? 'bi bi-sun' : 'bi bi-moon-stars';
+        localStorage.setItem('moyaTheme', dark ? 'dark' : 'light');
+    }
+    const savedTheme = localStorage.getItem('moyaTheme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) setTheme(true);
+    themeToggle.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
+    mobileThemeToggle.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
+
+    /* ===== Mobile Nav (keep existing) ===== */
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+    function openMobileNav() { mobileNav.classList.add('open'); mobileNavOverlay.classList.add('active'); document.body.classList.add('nav-open'); }
+    function closeMobileNav() { mobileNav.classList.remove('open'); mobileNavOverlay.classList.remove('active'); document.body.classList.remove('nav-open'); }
+    hamburgerBtn.addEventListener('click', openMobileNav);
+    document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+    mobileNavOverlay.addEventListener('click', closeMobileNav);
+
+    /* ===== Password Toggle (keep existing) ===== */
+    function togglePw(btn) {
+        const input = btn.parentElement.querySelector('input');
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') { input.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+        else { input.type = 'password'; icon.className = 'bi bi-eye'; }
+    }
+
+    /* ===== Password Strength (keep existing) ===== */
+    function checkPwStrength(pw, id) {
+        const bar = document.getElementById(id + 'Bar');
+        const label = document.getElementById(id);
+        const fill = bar.querySelector('.fill');
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (pw.length >= 12) score++;
+        if (/[A-Z]/.test(pw)) score++;
+        if (/[0-9]/.test(pw)) score++;
+        if (/[^A-Za-z0-9]/.test(pw)) score++;
+        const levels = [
+            { w: '0%', c: 'transparent', t: '' },
+            { w: '20%', c: '#ef4444', t: 'Very Weak' },
+            { w: '40%', c: '#f97316', t: 'Weak' },
+            { w: '60%', c: '#f59e0b', t: 'Fair' },
+            { w: '80%', c: '#22c55e', t: 'Strong' },
+            { w: '100%', c: '#16a34a', t: 'Very Strong' },
+        ];
+        const level = levels[Math.min(score, 5)];
+        fill.style.width = level.w;
+        fill.style.background = level.c;
+        label.textContent = level.t;
+        label.style.color = level.c;
+    }
+
+    /* ===== File Upload (keep existing) ===== */
+    function handleFileSelect(input, labelId) {
+        const label = document.getElementById(labelId);
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) { showToast('File is too large. Max 5MB allowed.', 'error'); input.value = ''; label.style.display = 'none'; return; }
+            label.textContent = file.name;
+            label.style.display = 'block';
+            showToast('File selected: ' + file.name, 'success', 2000);
+        }
+    }
+    document.querySelectorAll('.upload-area').forEach(area => {
+        area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+        area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+        area.addEventListener('drop', e => { e.preventDefault(); area.classList.remove('dragover'); const input = area.querySelector('input[type="file"]'); if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; input.dispatchEvent(new Event('change')); } });
+    });
+
+    /* ===== Checkbox (keep existing) ===== */
+    document.addEventListener('click', e => {
+        const box = e.target.closest('.check-box');
+        if (box) { const icon = box.querySelector('i'); if (icon) icon.style.display = box.classList.contains('checked') ? 'block' : 'none'; }
+    });
+
+    /* ===== Form Validation (keep existing) ===== */
+    function validateField(input) {
+        const type = input.dataset.validate;
+        const val = input.value.trim();
+        let valid = true;
+        if (input.required && !val) valid = false;
+        else if (type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) valid = false;
+        else if (type === 'phone' && val && !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(val)) valid = false;
+        else if (type === 'password' && val && val.length < 8) valid = false;
+        else if (type === 'select' && input.required && !val) valid = false;
+        input.classList.toggle('error', !valid);
+        input.classList.toggle('success', valid && val.length > 0);
+        const errorEl = document.querySelector(`.form-error[data-error="${input.name}"]`);
+        if (errorEl) errorEl.classList.toggle('visible', !valid);
+        return valid;
+    }
+    document.querySelectorAll('.form-input[data-validate]').forEach(input => {
+        input.addEventListener('blur', () => validateField(input));
+        input.addEventListener('input', () => { if (input.classList.contains('error')) validateField(input); });
+    });
+    function validateStep(formEl, stepNum) {
+        const panel = formEl.querySelector(`.step-panel[data-step="${stepNum}"]`);
+        const inputs = panel.querySelectorAll('.form-input[data-validate]');
+        let allValid = true;
+        inputs.forEach(input => { if (!validateField(input)) allValid = false; });
+        return allValid;
+    }
+
+    /* ===== Seeker Registration Steps (keep existing) ===== */
+    let seekerRegStep = 1;
+    function seekerRegNext(step) {
+        const form = document.getElementById('seekerRegForm');
+        if (step > seekerRegStep && !validateStep(form, seekerRegStep)) { showToast('Please fill in all required fields correctly.', 'error'); return; }
+        seekerRegStep = step;
+        updateStepUI(form, 'seekerRegIndicators', 'seekerRegProgressFill', step);
+    }
+
+    /* ===== Employer Registration Steps (keep existing) ===== */
+    let employerRegStep = 1;
+    function employerRegNext(step) {
+        const form = document.getElementById('employerRegForm');
+        if (step > employerRegStep && !validateStep(form, employerRegStep)) { showToast('Please fill in all required fields correctly.', 'error'); return; }
+        employerRegStep = step;
+        updateStepUI(form, 'employerRegIndicators', 'employerRegProgressFill', step);
+    }
+
+    function updateStepUI(form, indicatorsId, progressId, currentStep) {
+        form.querySelectorAll('.step-panel').forEach(p => p.classList.toggle('active', parseInt(p.dataset.step) === currentStep));
+        const dots = document.getElementById(indicatorsId).querySelectorAll('.step-dot');
+        dots.forEach(dot => { const s = parseInt(dot.dataset.step); dot.classList.remove('active', 'done'); if (s === currentStep) dot.classList.add('active'); else if (s < currentStep) dot.classList.add('done'); });
+        document.getElementById(progressId).style.width = ((currentStep - 1) / 2 * 100) + '%';
+    }
+
+    /* ===== CSRF Token Helper ===== */
+    function getCsrfToken() {
+        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
+    }
+
+    /* ===== ✅ SEEKER REGISTRATION — SEND TO DJANGO BACKEND ===== */
+    document.getElementById('seekerRegForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!validateStep(this, 3)) { showToast('Please complete all required fields.', 'error'); return; }
+
+        const btn = document.getElementById('seekerRegSubmit');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span> Creating...';
+
+        const formData = {
+            first_name: this.querySelector('[name="sr_first"]').value.trim(),
+            last_name: this.querySelector('[name="sr_last"]').value.trim(),
+            email: this.querySelector('[name="sr_email"]').value.trim(),
+            phone: this.querySelector('[name="sr_phone"]').value.trim(),
+            password: this.querySelector('[name="sr_pw"]').value,
+            title: this.querySelector('[name="sr_title"]').value.trim(),
+            category: this.querySelector('[name="sr_category"]').value,
+            experience: this.querySelector('[name="sr_experience"]').value,
+            skills: this.querySelector('[name="sr_skills"]').value.trim(),
+            rate: this.querySelector('[name="sr_rate"]').value || 0,
+            duration: this.querySelector('[name="sr_duration"]').value,
+            location: this.querySelector('[name="sr_location"]').value,
+            bio: this.querySelector('[name="sr_bio"]').value.trim(),
+        };
+
+        try {
+            const response = await fetch('/api/register/seeker/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            btn.disabled = false;
+            btn.innerHTML = 'Create Account <i class="bi bi-check-lg"></i>';
+
+            if (result.success) {
+                showToast(result.message, 'success', 5000);
+                this.reset();
+                seekerRegStep = 1;
+                updateStepUI(this, 'seekerRegIndicators', 'seekerRegProgressFill', 1);
+                this.querySelectorAll('.form-input').forEach(i => i.classList.remove('success', 'error'));
+                this.querySelectorAll('.form-error').forEach(e => e.classList.remove('visible'));
+                document.getElementById('seekerFileName').style.display = 'none';
+                document.getElementById('seekerStrength').textContent = '';
+                document.querySelector('#seekerStrengthBar .fill').style.width = '0%';
+                setTimeout(() => navigateTo('seekerLogin'), 1500);
+            } else {
+                showToast(result.message || 'Registration failed.', 'error');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Create Account <i class="bi bi-check-lg"></i>';
+            showToast('Network error. Please try again.', 'error');
+            console.error('Registration error:', err);
+        }
+    });
+
+    /* ===== ✅ EMPLOYER REGISTRATION — SEND TO DJANGO BACKEND ===== */
+    document.getElementById('employerRegForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!validateStep(this, 3)) { showToast('Please complete all required fields.', 'error'); return; }
+
+        const pw = this.querySelector('[name="er_pw"]').value;
+        const pwc = this.querySelector('[name="er_pw_confirm"]').value;
+        if (pw !== pwc) {
+            document.querySelector('.form-error[data-error="er_pw_confirm"]').classList.add('visible');
+            this.querySelector('[name="er_pw_confirm"]').classList.add('error');
+            showToast('Passwords do not match.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('employerRegSubmit');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span> Creating...';
+
+        const formData = {
+            company: this.querySelector('[name="er_company"]').value.trim(),
+            industry: this.querySelector('[name="er_industry"]').value,
+            size: this.querySelector('[name="er_size"]').value,
+            address: this.querySelector('[name="er_address"]').value.trim(),
+            website: this.querySelector('[name="er_website"]').value.trim(),
+            first_name: this.querySelector('[name="er_first"]').value.trim(),
+            last_name: this.querySelector('[name="er_last"]').value.trim(),
+            jobtitle: this.querySelector('[name="er_jobtitle"]').value.trim(),
+            email: this.querySelector('[name="er_email"]').value.trim(),
+            phone: this.querySelector('[name="er_phone"]').value.trim(),
+            password: pw,
+        };
+
+        try {
+            const response = await fetch('/api/register/employer/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+
+            btn.disabled = false;
+            btn.innerHTML = 'Create Account <i class="bi bi-check-lg"></i>';
+
+            if (result.success) {
+                showToast(result.message, 'success', 5000);
+                this.reset();
+                employerRegStep = 1;
+                updateStepUI(this, 'employerRegIndicators', 'employerRegProgressFill', 1);
+                this.querySelectorAll('.form-input').forEach(i => i.classList.remove('success', 'error'));
+                this.querySelectorAll('.form-error').forEach(e => e.classList.remove('visible'));
+                document.getElementById('employerStrength').textContent = '';
+                document.querySelector('#employerStrengthBar .fill').style.width = '0%';
+                setTimeout(() => navigateTo('employerLogin'), 1500);
+            } else {
+                showToast(result.message || 'Registration failed.', 'error');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Create Account <i class="bi bi-check-lg"></i>';
+            showToast('Network error. Please try again.', 'error');
+            console.error('Registration error:', err);
+        }
+    });
+
+    /* ===== ✅ SEEKER LOGIN — SEND TO DJANGO BACKEND ===== */
+    document.getElementById('seekerLoginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        let valid = true;
+        this.querySelectorAll('.form-input[data-validate]').forEach(i => { if (!validateField(i)) valid = false; });
+        if (!valid) { showToast('Please correct the errors above.', 'error'); return; }
+
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span> Signing in...';
+
+        try {
+            const response = await fetch('/api/login/seeker/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    email: this.querySelector('[name="s_login_email"]').value.trim(),
+                    password: this.querySelector('[name="s_login_pw"]').value,
+                }),
+            });
+
+            const result = await response.json();
+
+            btn.disabled = false;
+            btn.innerHTML = 'Sign In <i class="bi bi-box-arrow-in-right"></i>';
+
+            if (result.success) {
+                showToast(result.message, 'success', 3000);
+                setTimeout(() => window.location.href = result.redirect || '/dashboard/', 1000);
+            } else {
+                showToast(result.message || 'Login failed.', 'error');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Sign In <i class="bi bi-box-arrow-in-right"></i>';
+            showToast('Network error. Please try again.', 'error');
+        }
+    });
+
+    /* ===== ✅ EMPLOYER LOGIN — SEND TO DJANGO BACKEND ===== */
+    document.getElementById('employerLoginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        let valid = true;
+        this.querySelectorAll('.form-input[data-validate]').forEach(i => { if (!validateField(i)) valid = false; });
+        if (!valid) { showToast('Please correct the errors above.', 'error'); return; }
+
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span> Signing in...';
+
+        try {
+            const response = await fetch('/api/login/employer/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    email: this.querySelector('[name="e_login_email"]').value.trim(),
+                    password: this.querySelector('[name="e_login_pw"]').value,
+                }),
+            });
+
+            const result = await response.json();
+
+            btn.disabled = false;
+            btn.innerHTML = 'Sign In <i class="bi bi-box-arrow-in-right"></i>';
+
+            if (result.success) {
+                showToast(result.message, 'success', 3000);
+                setTimeout(() => window.location.href = result.redirect || '/client/dashboard/', 1000);
+            } else {
+                showToast(result.message || 'Login failed.', 'error');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Sign In <i class="bi bi-box-arrow-in-right"></i>';
+            showToast('Network error. Please try again.', 'error');
+        }
+    });
+
+    /* ===== Price Range (keep existing) ===== */
+    const priceRange = document.getElementById('priceRange');
+    const priceDisplay = document.getElementById('priceDisplay');
+    if (priceRange) { priceRange.addEventListener('input', () => { const val = parseInt(priceRange.value); priceDisplay.textContent = val >= 1000 ? (val / 1000) + 'k ETB' : val + ' ETB'; }); }
+
+    /* ===== Network Canvas (keep existing) ===== */
+    (function initCanvas() {
+        const canvas = document.getElementById('networkCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let w, h, nodes = [];
+        function resize() { w = canvas.width = canvas.offsetWidth; h = canvas.height = canvas.offsetHeight; }
+        resize(); window.addEventListener('resize', resize);
+        for (let i = 0; i < 60; i++) nodes.push({ x: Math.random() * 2000, y: Math.random() * 1000, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, r: Math.random() * 2 + 1 });
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+            nodes.forEach(n => { n.x += n.vx; n.y += n.vy; if (n.x < 0 || n.x > w) n.vx *= -1; if (n.y < 0 || n.y > h) n.vy *= -1; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(249,115,22,0.6)'; ctx.fill(); });
+            for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) { const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y, dist = Math.sqrt(dx * dx + dy * dy); if (dist < 150) { ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.strokeStyle = `rgba(249,115,22,${0.15 * (1 - dist / 150)})`; ctx.lineWidth = 0.8; ctx.stroke(); } }
+            requestAnimationFrame(draw);
+        }
+        draw();
+    })();
+
+    /* ===== Counter Animation (keep existing) ===== */
+    document.querySelectorAll('.counter-anim').forEach(el => {
+        const target = parseInt(el.dataset.target);
+        gsap.to(el, { innerText: target, duration: 2.5, snap: { innerText: 1 }, ease: 'power2.out', onUpdate: function() { el.textContent = Math.round(parseFloat(el.textContent)).toLocaleString(); } });
+    });
+
+    /* ===== ✅ FETCH TALENTS FROM DJANGO BACKEND ===== */
+    let talents = []; // Will be populated from backend
+
+    async function fetchTalents() {
+        try {
+            const response = await fetch('/api/talents/');
+            const data = await response.json();
+            if (data.success && data.talents.length > 0) {
+                talents = data.talents;
+            } else {
+                // Fallback to sample data if no talents in DB
+                talents = [
+                    { id: 1, name: 'Abebe Kebede', title: 'Senior Civil Engineer', category: 'Construction', rate: 45000, duration: 'Monthly', type: 'Full-time', location: 'Addis Ababa', rating: 4.9, reviews: 127, verified: true, skills: ['AutoCAD', 'Site Management', 'Structural Analysis'], avatar: 'https://picsum.photos/seed/abebe/200/200.jpg' },
+                    { id: 2, name: 'Sara Hailu', title: 'Full-Stack Developer', category: 'Development', rate: 55000, duration: 'Monthly', type: 'Full-time', location: 'Remote', rating: 4.8, reviews: 89, verified: true, skills: ['React', 'Node.js', 'PostgreSQL'], avatar: 'https://picsum.photos/seed/sara/200/200.jpg' },
+                    { id: 3, name: 'Dawit Tadesse', title: 'Financial Consultant', category: 'Consultancy', rate: 60000, duration: 'Monthly', type: 'Contract', location: 'Addis Ababa', rating: 4.7, reviews: 64, verified: true, skills: ['Finance', 'Tax Planning', 'Audit'], avatar: 'https://picsum.photos/seed/dawit/200/200.jpg' },
+                    { id: 4, name: 'Meron Girma', title: 'UX/UI Designer', category: 'Design', rate: 40000, duration: 'Monthly', type: 'Part-time', location: 'Remote', rating: 4.6, reviews: 53, verified: false, skills: ['Figma', 'User Research', 'Prototyping'], avatar: 'https://picsum.photos/seed/meron/200/200.jpg' },
+                    { id: 5, name: 'Yohannes Alemu', title: 'Data Scientist', category: 'Data', rate: 70000, duration: 'Monthly', type: 'Full-time', location: 'Addis Ababa', rating: 4.9, reviews: 41, verified: true, skills: ['Python', 'Machine Learning', 'TensorFlow'], avatar: 'https://picsum.photos/seed/yohannes/200/200.jpg' },
+                    { id: 6, name: 'Tigist Bekele', title: 'Project Manager', category: 'Construction', rate: 50000, duration: 'Monthly', type: 'Full-time', location: 'Hawassa', rating: 4.5, reviews: 38, verified: true, skills: ['PMI', 'Agile', 'Budgeting'], avatar: 'https://picsum.photos/seed/tigist/200/200.jpg' },
+                ];
+            }
+            renderTalents(talents);
+        } catch (err) {
+            console.warn('Failed to fetch talents from backend, using fallback:', err);
+            // Use fallback data
+            talents = [
+                { id: 1, name: 'Abebe Kebede', title: 'Senior Civil Engineer', category: 'Construction', rate: 45000, duration: 'Monthly', type: 'Full-time', location: 'Addis Ababa', rating: 4.9, reviews: 127, verified: true, skills: ['AutoCAD', 'Site Management'], avatar: 'https://picsum.photos/seed/abebe/200/200.jpg' },
+                { id: 2, name: 'Sara Hailu', title: 'Full-Stack Developer', category: 'Development', rate: 55000, duration: 'Monthly', type: 'Full-time', location: 'Remote', rating: 4.8, reviews: 89, verified: true, skills: ['React', 'Node.js'], avatar: 'https://picsum.photos/seed/sara/200/200.jpg' },
+            ];
+            renderTalents(talents);
+        }
+    }
+
+    function renderTalents(list) {
+        const container = document.getElementById('talentContainer');
+        const empty = document.getElementById('emptyState');
+        if (list.length === 0) { container.innerHTML = ''; empty.classList.remove('hidden'); empty.classList.add('flex'); document.getElementById('resultCount').textContent = '0 workers found'; return; }
+        empty.classList.add('hidden'); empty.classList.remove('flex');
+        document.getElementById('resultCount').textContent = `${list.length} worker${list.length > 1 ? 's' : ''} found`;
+        container.innerHTML = list.map((t, i) => `
+            <div class="talent-card rounded-3xl p-5 relative overflow-hidden" style="animation: fadeSlideIn 0.4s ease ${i * 0.08}s both;">
+                <div class="card-gradient-line"></div>
+                ${t.verified ? '<div class="absolute top-4 right-4 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full"><i class="bi bi-patch-check-fill"></i> Verified</div>' : ''}
+                <div class="flex flex-col items-center text-center mb-4">
+                    <img src="${t.avatar}" alt="${t.name}" class="w-20 h-20 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 mb-3" loading="lazy" />
+                    <h3 class="font-bold text-slate-900 dark:text-white text-lg">${t.name}</h3>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">${t.title}</p>
+                </div>
+                <div class="flex flex-wrap gap-1.5 justify-center mb-4">${t.skills.map(s => `<span class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold">${s}</span>`).join('')}</div>
+                <div class="flex items-center justify-between text-sm mb-4">
+                    <div class="flex items-center gap-1 text-amber-500"><i class="bi bi-star-fill"></i><span class="font-bold">${t.rating}</span><span class="text-slate-400">(${t.reviews})</span></div>
+                    <span class="text-slate-400 dark:text-slate-500"><i class="bi bi-geo-alt"></i> ${t.location}</span>
+                </div>
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <div><span class="text-xl font-bold text-slate-900 dark:text-white">${(t.rate / 1000).toFixed(0)}k</span><span class="text-xs text-slate-400"> ETB/${t.duration === 'Monthly' ? 'mo' : t.duration}</span></div>
+                    <button class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105 shadow-sm">Hire</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /* ===== Filters (keep existing, but use dynamic talents) ===== */
+    function filterBySkill(skill) { document.getElementById('heroSearch').value = skill; applyFilters(); showToast(`Filtering by: ${skill}`, 'info', 2000); }
+    function applyFilters() {
+        const search = document.getElementById('heroSearch').value.toLowerCase();
+        const cat = document.getElementById('categoryFilter').value;
+        const dur = document.getElementById('durationFilter').value;
+        const verified = document.getElementById('verifiedCheck').checked;
+        const maxPrice = parseInt(document.getElementById('priceRange').value);
+        const sort = document.getElementById('sortSelect').value;
+        let filtered = talents.filter(t => {
+            if (search && !t.name.toLowerCase().includes(search) && !t.title.toLowerCase().includes(search) && !t.skills.some(s => s.toLowerCase().includes(search))) return false;
+            if (cat !== 'all' && t.category !== cat) return false;
+            if (dur !== 'all' && t.duration !== dur) return false;
+            if (verified && !t.verified) return false;
+            if (t.rate > maxPrice) return false;
+            return true;
+        });
+        if (sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+        else if (sort === 'newest') filtered.sort((a, b) => b.id - a.id);
+        else if (sort === 'price_low') filtered.sort((a, b) => a.rate - b.rate);
+        else if (sort === 'price_high') filtered.sort((a, b) => b.rate - a.rate);
+        renderTalents(filtered);
+    }
+    document.getElementById('heroSearch').addEventListener('input', applyFilters);
+    document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+    document.getElementById('durationFilter').addEventListener('change', applyFilters);
+    document.getElementById('verifiedCheck').addEventListener('change', applyFilters);
+    document.getElementById('priceRange').addEventListener('input', applyFilters);
+    document.getElementById('sortSelect').addEventListener('change', applyFilters);
+    function resetFiltersFn() {
+        document.getElementById('heroSearch').value = '';
+        document.getElementById('categoryFilter').value = 'all';
+        document.getElementById('durationFilter').value = 'all';
+        document.getElementById('verifiedCheck').checked = false;
+        document.getElementById('priceRange').value = 50000;
+        document.getElementById('priceDisplay').textContent = '50k ETB';
+        document.getElementById('sortSelect').value = 'rating';
+        applyFilters(); showToast('Filters reset.', 'info', 2000);
+    }
+    document.getElementById('resetFilters').addEventListener('click', resetFiltersFn);
+
+    /* ===== Language Toggle (keep existing) ===== */
+    let langEn = true;
+    document.getElementById('langToggle').addEventListener('click', function() { langEn = !langEn; this.textContent = langEn ? 'EN' : 'AM'; showToast(langEn ? 'Language: English' : 'Language: Amharic', 'info', 2000); });
+
+    /* ===== ✅ INIT — Fetch data from backend on page load ===== */
+    navigateTo('marketplace');
+    fetchTalents(); // ← Fetch talents from Django backend
+</script>
+</body>
+</html>

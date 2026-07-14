@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moya Jobs | Premium Talent Marketplace</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed', 100: '#ffedd5', 500: '#f97316',
+                            600: '#ea580c', 900: '#7c2d12',
+                        },
+                        slate: { 850: '#151f32', 900: '#0f172a', }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(249, 115, 22, 0.4)',
+                        'card': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'card-hover': '0 20px 50px -12px rgba(0,0,0,0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+            background: #f97316; cursor: pointer; margin-top: -8px;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #e2e8f0; border-radius: 2px;
+        }
+
+        .card-gradient-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, #f97316, #fbbf24);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .group:hover .card-gradient-line { opacity: 1; }
+
+        .cart-drawer { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateX(100%); }
+        .cart-drawer.open { transform: translateX(0); }
+
+        .modal-overlay { transition: opacity 0.3s; pointer-events: none; opacity: 0; }
+        .modal-overlay.active { pointer-events: auto; opacity: 1; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform: scale(0.95) translateY(10px); }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .compare-table td:first-child {
+            background: #f8fafc; font-weight: 600; color: #475569;
+            border-right: 1px solid #e2e8f0;
+        }
+        .compare-best {
+            color: #16a34a; font-weight: bold; background: #dcfce7;
+            border-radius: 4px; padding: 2px 6px; font-size: 0.8em;
+        }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #f97316;
+            color: #f97316; font-weight: 700;
+        }
+
+        .toast {
+            pointer-events: auto; background: white; border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+            min-width: 280px; transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+            opacity: 0; border-left: 4px solid #10b981;
+        }
+        html.dark .toast { background: #1e293b; color: #f1f5f9; border-left-color: #34d399; }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.hide { transform: translateX(120%); opacity: 0; }
+        .toast-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .toast-success .toast-icon { background: #dcfce7; color: #16a34a; }
+        .toast-info .toast-icon { background: #dbeafe; color: #2563eb; }
+
+        .voice-listening { color: #ef4444 !important; }
+        .voice-listening::after {
+            content: ''; position: absolute; inset: -4px; border-radius: 50%;
+            border: 2px solid #ef4444; animation: ring-pulse 1s infinite;
+        }
+        @keyframes ring-pulse {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        html.dark {
+            --bg-page: #0f172a; --bg-card: #1e293b; --bg-slate-50: #1e293b;
+            --bg-slate-100: #334155; --text-primary: #f1f5f9; --text-secondary: #94a3b8;
+            --border-color: #334155; --shadow-card: 0 10px 40px -10px rgba(0,0,0,0.5);
+        }
+        html.dark body { background: var(--bg-page); color: var(--text-primary); }
+        html.dark .bg-white { background: var(--bg-card) !important; }
+        html.dark .bg-slate-50 { background: var(--bg-slate-50) !important; }
+        html.dark .bg-slate-100 { background: var(--bg-slate-100) !important; }
+        html.dark .text-slate-900 { color: var(--text-primary) !important; }
+        html.dark .text-slate-700 { color: var(--text-secondary) !important; }
+        html.dark .text-slate-600 { color: #cbd5e1 !important; }
+        html.dark .text-slate-500 { color: #94a3b8 !important; }
+        html.dark .border-slate-100 { border-color: var(--border-color) !important; }
+        html.dark .border-slate-200 { border-color: #475569 !important; }
+        html.dark .shadow-card { box-shadow: var(--shadow-card) !important; }
+        html.dark .glass { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.05); }
+        html.dark .glass-dark { background: rgba(15, 23, 42, 0.8); border-color: rgba(255,255,255,0.05); }
+        html.dark .hover\:bg-slate-100:hover { background: #334155 !important; }
+        html.dark .hover\:bg-slate-200:hover { background: #475569 !important; }
+        html.dark .hover\:border-brand-500:hover { border-color: #f97316 !important; }
+        html.dark .hover\:text-brand-600:hover { color: #f97316 !important; }
+        html.dark .skeleton { background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%); background-size: 200% 100%; }
+        html.dark .compare-table td:first-child { background: #1e293b; color: #e2e8f0; border-color: #475569; }
+        html.dark .compare-best { background: #064e3b; color: #34d399; }
+        html.dark input[type=range]::-webkit-slider-runnable-track { background: #475569; }
+        html.dark select, html.dark input[type="text"], html.dark input[type="email"], html.dark input[type="number"], html.dark textarea {
+            background: #1e293b !important; color: #f1f5f9 !important; border-color: #475569 !important;
+        }
+        html.dark select option { background: #1e293b; color: #f1f5f9; }
+        html.dark input::placeholder { color: #64748b !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <div id="toastContainer" class="fixed top-24 right-4 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass shadow-sm transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow">
+                    <i class="bi bi-stars text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Moya<span class="text-brand-500">Jobs</span></span>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-500 font-medium transition-colors" data-i18n="nav_find">Find Talent</a>
+                
+                <!-- UPDATED: Link to Construction Workforce -->
+                <a href="{% url 'jobs:construction_workforce' %}" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-500 font-medium transition-colors" data-i18n="nav_const">
+                    Construction Workforce
+                </a>
+                
+                <!-- UPDATED: Link to Business Consultancy -->
+                <a href="{% url 'business_consultancy' %}" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-500 font-medium transition-colors" data-i18n="nav_consult">
+                    Business Consultancy
+                </a>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="darkToggle" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-300">
+                    <i class="bi bi-moon text-xl dark:hidden"></i>
+                    <i class="bi bi-sun text-xl hidden dark:block"></i>
+                </button>
+
+                <button id="langToggle" class="px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">EN</button>
+
+                <button id="recentTrigger" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                    <i class="bi bi-clock-history text-2xl text-slate-700 dark:text-slate-300 group-hover:text-brand-600 transition-colors"></i>
+                </button>
+
+                <button id="wishlistTrigger" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                    <i class="bi bi-heart text-2xl text-slate-700 dark:text-slate-300 group-hover:text-rose-500 transition-colors"></i>
+                    <span id="wishlistCount" class="absolute -top-1 -right-1 bg-rose-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm transform scale-0 transition-transform duration-300">0</span>
+                </button>
+
+                <button id="compareTrigger" onclick="openCompareModal()" class="hidden relative group">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 compare-avatar">?</div>
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 compare-avatar">?</div>
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 compare-avatar">?</div>
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-4 w-4 bg-brand-500 text-white text-[8px] items-center justify-center font-bold compare-count">0</span>
+                    </span>
+                </button>
+
+                <button id="cartTrigger" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                    <i class="bi bi-cart3 text-2xl text-slate-700 dark:text-slate-300 group-hover:text-brand-600 transition-colors"></i>
+                    <span id="cartCount" class="absolute -top-1 -right-1 bg-brand-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm transform scale-0 transition-transform duration-300">0</span>
+                </button>
+
+                <!-- ========== DESKTOP NAV BUTTONS (with Login added) ========== -->
+                <div class="hidden lg:flex gap-2">
+                    <button onclick="openPostNeedModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:border-brand-500 hover:text-brand-600 transition-all text-sm" data-i18n="nav_post">Post a Need</button>
+
+                    <!-- LOGIN BUTTON (new) -->
+                    <button onclick="window.location.href='/login/'" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:border-brand-500 hover:text-brand-600 transition-all text-sm flex items-center gap-2">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span data-i18n="nav_login">Login</span>
+                    </button>
+
+                    <button onclick="openModal('employer')" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:border-brand-500 hover:text-brand-600 transition-all text-sm" data-i18n="nav_employer">Employer Reg</button>
+
+                    <button onclick="openModal('jobseeker')" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-2.5 rounded-xl font-semibold hover:bg-brand-600 transition-all shadow-lg text-sm flex items-center gap-2">
+                        <i class="bi bi-person-plus"></i> <span data-i18n="nav_seeker">Job Seeker</span>
+                    </button>
+                </div>
+
+                <button class="lg:hidden text-slate-700 dark:text-slate-300"><i class="bi bi-list text-2xl"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative pt-32 pb-12 lg:pt-48 lg:pb-24 overflow-hidden bg-slate-900 text-white">
+        <canvas id="networkCanvas" class="absolute inset-0 w-full h-full z-0 opacity-40"></canvas>
+        <div class="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-slate-900/80 to-slate-900"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="lg:w-3/5 space-y-8">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-400 text-sm font-semibold tracking-wide" data-i18n="hero_badge">
+                        <i class="bi bi-stars"></i> Verified Talent Network
+                    </div>
+                    <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight leading-tight" data-i18n="hero_title">
+                        Your Workforce, <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-amber-400">On Demand</span>
+                    </h1>
+                    <p class="text-xl text-slate-300 max-w-2xl leading-relaxed" data-i18n="hero_desc">
+                        Build high-performing teams with verified professionals. From construction specialists to business consultants, hire the skills you need today.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 max-w-2xl">
+                        <div class="relative flex-grow">
+                            <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                            <input type="text" id="heroSearch" class="w-full pl-12 pr-12 py-4 rounded-2xl bg-white text-slate-900 placeholder-slate-400 border-none outline-none focus:ring-4 focus:ring-brand-500/20 shadow-xl transition-all" data-i18n-placeholder="hero_ph">
+                            <button id="voiceSearchBtn" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 transition-colors relative" title="Voice Search (Press /)">
+                                <i class="bi bi-mic-fill text-lg"></i>
+                            </button>
+                        </div>
+                        <button class="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-brand-500/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2" data-i18n="hero_btn">
+                            Search <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:w-2/5 w-full">
+                    <div class="glass-dark p-8 rounded-3xl border border-white/10 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-sm uppercase tracking-widest text-slate-400 font-bold" data-i18n="market_status">Market Status</h3>
+                            <span class="flex h-3 w-3 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                            </span>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-2">
+                            <span class="text-5xl font-bold text-white tracking-tight counter-anim" data-target="28405">0</span>
+                            <span class="text-lg text-slate-400" data-i18n="assets_ready">Assets Ready</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden mb-4">
+                            <div class="bg-gradient-to-r from-emerald-400 to-brand-500 h-full rounded-full w-[85%]"></div>
+                        </div>
+                        <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold" data-i18n="market_demand">
+                            <i class="bi bi-graph-up-arrow"></i> High demand in Construction & IT
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="relative -mt-12 z-20 container mx-auto px-4 mb-12" id="statsSection">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 p-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-brand-500 mb-1 stat-counter" data-target="12500">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">Verified Talents</div>
+            </div>
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-emerald-500 mb-1 stat-counter" data-target="8400">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">Projects Completed</div>
+            </div>
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-blue-500 mb-1 stat-counter" data-target="98">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">% Satisfaction Rate</div>
+            </div>
+            <div class="text-center stat-item">
+                <div class="text-4xl font-extrabold text-amber-500 mb-1 stat-counter" data-target="24">0</div>
+                <div class="text-sm text-slate-500 dark:text-slate-400 font-medium">/7 AI Support</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Marketplace -->
+    <main class="container mx-auto px-4 py-12">
+        <div class="flex flex-col lg:flex-row gap-8">
+
+            <aside class="lg:w-1/4">
+                <div class="sticky top-28 space-y-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-2" data-i18n="sidebar_title">
+                                <i class="bi bi-sliders text-brand-500"></i> Filters
+                            </h3>
+                            <button id="resetFilters" class="text-sm text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium transition-colors" data-i18n="reset">Reset All</button>
+                        </div>
+
+                        <div class="mb-6 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300" data-i18n="filter_verified">Verified Only</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="verifiedCheck" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 dark:bg-slate-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_cat">Category</label>
+                            <select id="categoryFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="all" data-i18n="opt_all">All Categories</option>
+                                <option value="Construction" data-i18n="opt_const">Construction Workforce</option>
+                                <option value="Consultancy" data-i18n="opt_consult">Business Consultancy</option>
+                                <option value="Development" data-i18n="opt_dev">Development</option>
+                                <option value="Design" data-i18n="opt_des">Design</option>
+                                <option value="Data" data-i18n="opt_data">Data Science</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="trending_skills">Trending Skills</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="filterBySkill('React')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">React</button>
+                                <button onclick="filterBySkill('AutoCAD')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">AutoCAD</button>
+                                <button onclick="filterBySkill('Finance')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">Finance</button>
+                                <button onclick="filterBySkill('Python')" class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-brand-500 hover:text-white transition-colors">Python</button>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_dur">Duration</label>
+                            <select id="durationFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="all" data-i18n="opt_any">Any Duration</option>
+                                <option value="Hourly">Hourly</option>
+                                <option value="Daily">Daily</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="Monthly">Monthly</option>
+                                <option value="Annually">Annually</option>
+                                <option value="Special Units">Special Units</option>
+                                <option value="Project">Project</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Availability</label>
+                            <select id="availabilityFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="any">Any</option>
+                                <option value="immediate">Immediate</option>
+                                <option value="week">Next Week</option>
+                                <option value="month">Next Month</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Experience Level</label>
+                            <select id="levelFilter" class="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl border-none outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-700 dark:text-slate-200 font-medium transition-all cursor-pointer">
+                                <option value="all">All Levels</option>
+                                <option value="junior">Junior (0‑2 yrs)</option>
+                                <option value="mid">Mid (3‑5 yrs)</option>
+                                <option value="senior">Senior (6+ yrs)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_type">Working Type</label>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="type-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Full-time">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Full-time</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="type-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Part-time">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Part-time</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="type-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Contract">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Contract</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4" data-i18n="filter_loc">Location</label>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Addis Ababa" checked>
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Addis Ababa</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Remote" checked>
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Remote</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Hawassa">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Hawassa</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" class="location-check w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 transition-colors" value="Bahir Dar">
+                                    <span class="text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white font-medium transition-colors">Bahir Dar</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="filter_radius">Service Radius</label>
+                                <span class="text-xs font-bold text-brand-600" id="radiusDisplay">Any</span>
+                            </div>
+                            <input type="range" id="radiusRange" min="5" max="100" step="5" value="100" class="w-full">
+                        </div>
+
+                        <div class="mb-6 flex items-center justify-between bg-slate-50 dark:bg-slate-700 p-3 rounded-xl">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Global Remote</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-500">Work from anywhere</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="remoteCheck" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-300 dark:bg-slate-600 rounded-full peer peer-checked:bg-brand-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                            </label>
+                        </div>
+
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="filter_rate">Target Rate</label>
+                                <span class="text-sm font-bold text-brand-600" id="priceDisplay">50k ETB</span>
+                            </div>
+                            <input type="range" id="priceRange" min="5000" max="200000" step="1000" value="50000" class="w-full">
+                        </div>
+
+                        <button id="saveSearchBtn" class="w-full py-3 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-600 transition-all flex items-center justify-center gap-2">
+                            <i class="bi bi-bookmark-plus"></i> Save Current Search
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700">
+                        <h3 class="font-bold text-slate-900 dark:text-white text-lg mb-4 flex items-center gap-2">
+                            <i class="bi bi-bookmarks-fill text-brand-500"></i> Saved Searches
+                        </h3>
+                        <div id="savedSearchesList" class="space-y-3"></div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-xl">
+                        <div class="text-sm uppercase tracking-wider text-slate-400 mb-2">Employer Insights</div>
+                        <div class="text-3xl font-extrabold mb-2">87%</div>
+                        <p class="text-slate-300 text-sm mb-4">of employers hire within 7 days when they shortlist 3+ verified talents.</p>
+                        <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+                            <i class="bi bi-graph-up-arrow"></i> Trending upward
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="lg:w-3/4">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center gap-3">
+                        <span class="text-slate-500 dark:text-slate-400 font-medium text-sm" data-i18n="toolbar_sort">Sort by:</span>
+                        <select id="sortSelect" class="bg-slate-50 dark:bg-slate-700 border-none text-sm font-bold text-slate-800 dark:text-slate-200 rounded-lg px-3 py-2 cursor-pointer outline-none hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
+                            <option value="rating">Top Rated</option>
+                            <option value="newest">Newest First</option>
+                            <option value="price_low">Rate: Low to High</option>
+                            <option value="price_high">Rate: High to Low</option>
+                            <option value="reviews">Most Reviewed</option>
+                            <option value="match">Best Match</option>
+                            <option value="experience">Most Experienced</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <span class="text-slate-500 dark:text-slate-400 font-medium text-sm" id="resultCount">0 workers found</span>
+                        <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
+                            <button id="gridBtn" class="p-2 rounded-md bg-white dark:bg-slate-600 text-brand-600 shadow-sm transition-all hover:text-brand-600">
+                                <i class="bi bi-grid-3x3-gap-fill"></i>
+                            </button>
+                            <button id="listBtn" class="p-2 rounded-md text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all">
+                                <i class="bi bi-list-task"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="recommendationBar" class="mb-6 bg-gradient-to-r from-brand-500 to-amber-500 text-white p-4 rounded-2xl shadow-lg hidden">
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-stars text-xl mt-0.5"></i>
+                        <div>
+                            <div class="font-bold">AI Recommendation</div>
+                            <div id="recommendationText" class="text-sm text-white/90">Top matches will appear here based on your filters.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="activeFiltersBar" class="hidden mb-6 flex flex-wrap gap-2"></div>
+
+                <div id="skeletonLoader" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 hidden">
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 h-[400px] flex flex-col gap-4">
+                        <div class="w-20 h-20 rounded-full skeleton mx-auto mt-4"></div>
+                        <div class="h-6 w-3/4 skeleton mx-auto rounded"></div>
+                        <div class="h-4 w-1/2 skeleton mx-auto rounded"></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 h-[400px] flex flex-col gap-4">
+                        <div class="w-20 h-20 rounded-full skeleton mx-auto mt-4"></div>
+                        <div class="h-6 w-3/4 skeleton mx-auto rounded"></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 h-[400px] flex flex-col gap-4">
+                        <div class="w-20 h-20 rounded-full skeleton mx-auto mt-4"></div>
+                        <div class="h-6 w-3/4 skeleton mx-auto rounded"></div>
+                    </div>
+                </div>
+
+                <div id="talentContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+
+                <div class="mt-8 text-center">
+                    <button id="loadMoreBtn" class="hidden px-6 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-brand-600 transition-all">
+                        Load More Talents
+                    </button>
+                </div>
+
+                <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-600">
+                    <div class="w-20 h-20 bg-slate-50 dark:bg-slate-700 rounded-full flex items-center justify-center mb-6">
+                        <i class="bi bi-search text-3xl text-slate-300 dark:text-slate-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2" data-i18n="empty_title">No talents found</h3>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6" data-i18n="empty_desc">Try adjusting your filters.</p>
+                    <button onclick="resetFiltersFn()" class="text-brand-600 font-bold hover:text-brand-700 dark:hover:text-brand-400 flex items-center gap-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="reset">Reset Filters</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Drawer -->
+    <div id="cartOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity duration-300 opacity-0"></div>
+    <aside id="cartDrawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-slate-900 z-50 cart-drawer shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2" data-i18n="cart_title">
+                <i class="bi bi-bag-check text-brand-500"></i> Selected Workers
+            </h2>
+            <button id="closeCart" class="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-slate-600 dark:text-slate-300"></i>
+            </button>
+        </div>
+        <div id="cartItems" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+        <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-slate-500 dark:text-slate-400 font-medium" data-i18n="cart_total">Estimated Monthly Cost</span>
+                <span class="text-2xl font-bold text-slate-900 dark:text-white" id="cartTotal">0 ETB</span>
+            </div>
+            <button class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-bold hover:bg-brand-600 dark:hover:bg-brand-500 transition-all shadow-lg flex items-center justify-center gap-2 group" data-i18n="cart_checkout">
+                Proceed to Checkout <i class="bi bi-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            <button id="exportCartBtn" class="w-full mt-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2">
+                <i class="bi bi-download"></i> Export Shortlist CSV
+            </button>
+        </div>
+    </aside>
+
+    <!-- Wishlist Drawer -->
+    <div id="wishlistOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity duration-300 opacity-0"></div>
+    <aside id="wishlistDrawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-slate-900 z-50 cart-drawer shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-heart-fill text-rose-500"></i> Wishlist
+            </h2>
+            <button id="closeWishlist" class="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-slate-600 dark:text-slate-300"></i>
+            </button>
+        </div>
+        <div id="wishlistItems" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+        <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+            <button id="clearWishlist" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition-all">
+                Clear All
+            </button>
+        </div>
+    </aside>
+
+    <!-- Recent Drawer -->
+    <div id="recentOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity duration-300 opacity-0"></div>
+    <aside id="recentDrawer" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white dark:bg-slate-900 z-50 cart-drawer shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="bi bi-clock-history text-brand-500"></i> Recently Viewed
+            </h2>
+            <button id="closeRecent" class="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                <i class="bi bi-x-lg text-slate-600 dark:text-slate-300"></i>
+            </button>
+        </div>
+        <div id="recentItems" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+    </aside>
+
+    <!-- Compare Modal -->
+    <div id="compareOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-6xl rounded-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+            <button onclick="closeCompareModal()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+                <h2 class="text-xl font-bold flex items-center gap-2"><i class="bi bi-collection"></i> Compare Candidates</h2>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <table class="w-full text-left border-collapse compare-table" id="compareTable"></table>
+            </div>
+            <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                <button onclick="closeCompareModal()" class="px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Close</button>
+                <button class="px-6 py-3 rounded-xl bg-brand-500 text-white font-bold hover:bg-brand-600 shadow-lg">Contact All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick View Modal -->
+    <div id="quickViewOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+            <button onclick="closeQuickView()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div id="quickViewContent" class="flex flex-col"></div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="regOverlay" class="modal-overlay fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative p-0">
+            <button onclick="closeModal()" class="absolute top-4 right-4 w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors z-10">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

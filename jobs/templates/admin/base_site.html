@@ -1,0 +1,69 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | MoyaJobs Admin{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+    <a href="{% url 'admin:index' %}" class="flex items-center gap-2 text-xl font-bold tracking-tight">
+        <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-sm">
+            <i class="bi bi-stars text-sm"></i>
+        </span>
+        <span class="text-white">Moya<span class="text-brand-300">Jobs</span> Admin</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+    /* Brand colors */
+    :root {
+        --primary: #f97316;
+        --secondary: #ea580c;
+        --link-fg: #ea580c;
+        --link-hover-color: #7c2d12;
+        --header-color: #0f172a;
+        --header-bg: #0f172a;
+        --breadcrumbs-bg: #fff7ed;
+        --breadcrumbs-fg: #7c2d12;
+        --button-bg: #f97316;
+        --button-hover-bg: #ea580c;
+        --default-button-bg: #0f172a;
+        --default-button-hover-bg: #1e293b;
+    }
+    #header {
+        background: #0f172a !important;
+        color: white;
+    }
+    #branding h1 {
+        font-weight: 700;
+    }
+    .module h2, .module caption {
+        background: #fff7ed;
+        color: #7c2d12;
+    }
+    a:link, a:visited {
+        color: #ea580c;
+    }
+    a:hover {
+        color: #7c2d12;
+    }
+    .button, input[type="submit"], input[type="button"], .submit-row input {
+        background: #f97316;
+        color: white;
+    }
+    .button:hover, input[type="submit"]:hover, input[type="button"]:hover {
+        background: #ea580c;
+    }
+    .default {
+        background: #0f172a !important;
+    }
+    .default:hover {
+        background: #1e293b !important;
+    }
+</style>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

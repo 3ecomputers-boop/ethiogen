@@ -1,0 +1,17 @@
+<h2>{{ job.title }}</h2>
+<p>{{ job.description_of_work }}</p>
+<h3>Messages</h3>
+{% for message in job.message_set.all %}
+    <p>{{ message.sender.username }}: {{ message.message }}</p>
+{% endfor %}
+
+<form method="post">
+  {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="recipient_id" value="{{ job.service_provider.user.id }}">
+  <button type="submit">Send Message</button>
+</form>
+
+{% if job.service_provider %}
+    <a href="{% url 'create_review' job.id job.service_provider.id %}">Leave a review</a>
+{% endif %}

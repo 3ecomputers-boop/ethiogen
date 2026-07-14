@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>{{ job_posting.title }}</h1>
+    <p>{{ job_posting.description }}</p>
+    <p>Budget: {{ job_posting.budget }}</p>
+    <p>Deadline: {{ job_posting.deadline }}</p>
+    {% if bids %}
+        <h2>Bids:</h2>
+        <ul>
+            {% for bid in bids %}
+                <li>
+                    Freelancer: {{ bid.freelancer.username }} - Amount: {{ bid.amount }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No bids yet.</p>
+    {% endif %}
+    {% if user.is_authenticated %}
+        <a href="{% url 'place_bid' job_id=job_posting.id %}">Place Bid</a>
+    {% endif %}
+{% endblock %}

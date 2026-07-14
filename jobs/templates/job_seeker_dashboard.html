@@ -1,0 +1,338 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard | MoyaJobs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            900: '#7c2d12',
+                        },
+                        slate: {
+                            850: '#151e2e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown-menu { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-20">
+
+    <!-- Top Nav with User Dropdown -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="{% url 'jobs:home' %}" class="flex items-center gap-2 group">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                    <i class="bi bi-stars text-sm"></i>
+                </div>
+                <span class="text-lg font-bold text-slate-800 tracking-tight">Moya<span class="text-brand-500">Jobs</span></span>
+            </a>
+            
+            <div class="flex items-center gap-4">
+                <a href="{% url 'jobs:list_jobs' %}" class="text-slate-500 hover:text-brand-600 text-sm font-medium transition-colors">Find Work</a>
+                <a href="{% url 'jobs:create_job_seeker_profile' %}" class="text-slate-500 hover:text-brand-600 text-sm font-medium transition-colors">Profile</a>
+                <div class="h-6 w-px bg-slate-200"></div>
+                
+                <!-- User Dropdown -->
+                <div class="relative dropdown">
+                    <div class="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-1 rounded-lg transition-colors">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-bold text-slate-900">{{ profile.user.get_full_name }}</p>
+                            <p class="text-[10px] text-brand-600 font-medium">Job Seeker</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden">
+                            {% if profile.profile_picture %}
+                                <img src="{{ profile.profile_picture.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full bg-gradient-to-br from-brand-500 to-amber-500 text-white flex items-center justify-center text-xs font-bold">
+                                    {{ profile.user.first_name|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="dropdown-menu absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50">
+                        <div class="px-4 py-3 border-b border-slate-100">
+                            <p class="text-sm font-bold text-slate-900">{{ profile.user.get_full_name }}</p>
+                            <p class="text-xs text-slate-500">{{ profile.user.email }}</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="{% url 'jobs:create_job_seeker_profile' %}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-50 transition-colors text-sm text-slate-700">
+                                <i class="bi bi-person text-slate-400"></i> My Profile
+                            </a>
+                            <a href="{% url 'jobs:list_jobs' %}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-50 transition-colors text-sm text-slate-700">
+                                <i class="bi bi-briefcase text-slate-400"></i> My Applications
+                            </a>
+                            <a href="{% url 'jobs:change_password' %}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-50 transition-colors text-sm text-slate-700">
+                                <i class="bi bi-key text-slate-400"></i> Change Password
+                            </a>
+                            <hr class="my-1 border-slate-100">
+                            <form action="{% url 'jobs:logout' %}" method="post" class="block">
+                                {% csrf_token %}
+                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-rose-50 transition-colors text-sm text-rose-600">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Search Header -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-8 flex flex-col md:flex-row gap-4 items-center">
+            <div class="flex-1 relative w-full">
+                <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" placeholder="Search for jobs, companies, or keywords..." 
+                       class="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-brand-500/20 outline-none text-slate-700 font-medium">
+            </div>
+            <button class="w-full md:w-auto px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT COLUMN: Main Content -->
+            <div class="lg:col-span-8 space-y-8">
+                
+                <!-- Welcome -->
+                <div class="flex items-end justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Good morning, {{ profile.user.first_name }}! ☀️</h1>
+                        <p class="text-slate-500 mt-1">Here are the latest opportunities matching your skills.</p>
+                    </div>
+                    <div class="hidden sm:flex gap-2">
+                        <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Recommended</button>
+                        <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Newest</button>
+                    </div>
+                </div>
+
+                <!-- Featured Jobs -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="bi bi-lightning-charge text-amber-500"></i> Featured Opportunities
+                    </h2>
+                    
+                    <!-- Job Card 1 -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="flex gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl">🚀</div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-lg group-hover:text-brand-600 transition-colors">Senior Frontend Developer</h3>
+                                    <p class="text-sm text-slate-500">TechCorp • Remote</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-brand-600">$45/hr</p>
+                                <p class="text-xs text-slate-400">Contract</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-semibold rounded-full">React</span>
+                            <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-semibold rounded-full">Django</span>
+                            <span class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">Full-time</span>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 2 -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="flex gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl">🎨</div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-lg group-hover:text-brand-600 transition-colors">UI/UX Designer</h3>
+                                    <p class="text-sm text-slate-500">Creative Studio • Addis Ababa</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-brand-600">$30/hr</p>
+                                <p class="text-xs text-slate-400">Part-time</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-semibold rounded-full">Figma</span>
+                            <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-semibold rounded-full">Prototyping</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+                    <div class="p-5 border-b border-slate-100">
+                        <h2 class="font-bold text-slate-900">Recent Activity</h2>
+                    </div>
+                    <div class="divide-y divide-slate-50">
+                        <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                    <i class="bi bi-send"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-800">Applied to <span class="text-brand-600">Senior Developer</span></p>
+                                    <p class="text-xs text-slate-400">2 hours ago</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-amber-50 text-amber-600 text-xs font-bold rounded-full">Pending</span>
+                        </div>
+                        <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
+                                    <i class="bi bi-heart"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-800">Saved <span class="text-brand-600">Project Manager</span></p>
+                                    <p class="text-xs text-slate-400">Yesterday</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-full">Saved</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Sidebar -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- Profile Completion -->
+                <div class="bg-white rounded-2xl border border-slate-100 p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-brand-500 rounded-bl-full opacity-10"></div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 text-white flex items-center justify-center text-xl">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900">Profile Strength</h3>
+                            <p class="text-xs text-slate-500">Complete your profile to get seen</p>
+                        </div>
+                    </div>
+                    <div class="flex items-end justify-between mb-2">
+                        <span class="text-2xl font-bold text-brand-600">{{ profile_completion }}%</span>
+                        {% if profile_completion < 100 %}
+                            <a href="{% url 'jobs:create_job_seeker_profile' %}" class="text-xs font-bold text-slate-500 hover:text-brand-500 underline">Update</a>
+                        {% endif %}
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-gradient-to-r from-brand-500 to-amber-500 h-full rounded-full" style="width: {{ profile_completion }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center hover:shadow-sm transition-shadow">
+                        <div class="text-2xl font-bold text-slate-900">{{ total_applications }}</div>
+                        <div class="text-xs text-slate-400 font-medium">Applications</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center hover:shadow-sm transition-shadow">
+                        <div class="text-2xl font-bold text-slate-900">{{ saved_jobs }}</div>
+                        <div class="text-xs text-slate-400 font-medium">Saved Jobs</div>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="bg-white rounded-2xl border border-slate-100 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-900">Your Skills</h3>
+                        <a href="{% url 'jobs:create_job_seeker_profile' %}" class="text-xs text-brand-500 font-bold">Edit</a>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        {% if profile.skills %}
+                            {% for skill in profile.skills %}
+                                <span class="px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:border-brand-500 hover:text-brand-600 cursor-pointer transition-colors">
+                                    {{ skill }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-xs text-slate-400">No skills added yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Account & Security (Premium Section) -->
+                <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                    <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-brand-50 to-amber-50">
+                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                            <i class="bi bi-shield-lock text-brand-500"></i> Account & Security
+                        </h3>
+                    </div>
+                    <div class="divide-y divide-slate-50">
+                        <!-- Change Password -->
+                        <a href="{% url 'jobs:change_password' %}" class="flex items-center gap-3 p-3 hover:bg-brand-50 transition-colors group">
+                            <i class="bi bi-key text-slate-400 group-hover:text-brand-600 w-5 text-center"></i>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-brand-600">Change Password</span>
+                            <i class="bi bi-chevron-right text-xs text-slate-300 ml-auto"></i>
+                        </a>
+                        
+                        <!-- Edit Profile -->
+                        <a href="{% url 'jobs:create_job_seeker_profile' %}" class="flex items-center gap-3 p-3 hover:bg-brand-50 transition-colors group">
+                            <i class="bi bi-pencil-square text-slate-400 group-hover:text-brand-600 w-5 text-center"></i>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-brand-600">Edit Profile</span>
+                            <i class="bi bi-chevron-right text-xs text-slate-300 ml-auto"></i>
+                        </a>
+
+                        <!-- Notification Settings -->
+                        <a href="#" class="flex items-center gap-3 p-3 hover:bg-brand-50 transition-colors group">
+                            <i class="bi bi-bell text-slate-400 group-hover:text-brand-600 w-5 text-center"></i>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-brand-600">Notification Preferences</span>
+                            <i class="bi bi-chevron-right text-xs text-slate-300 ml-auto"></i>
+                        </a>
+
+                        <!-- Privacy Settings -->
+                        <a href="#" class="flex items-center gap-3 p-3 hover:bg-brand-50 transition-colors group">
+                            <i class="bi bi-lock text-slate-400 group-hover:text-brand-600 w-5 text-center"></i>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-brand-600">Privacy & Visibility</span>
+                            <i class="bi bi-chevron-right text-xs text-slate-300 ml-auto"></i>
+                        </a>
+
+                        <!-- Delete Account (danger) -->
+                        <a href="#" class="flex items-center gap-3 p-3 hover:bg-rose-50 transition-colors group">
+                            <i class="bi bi-trash text-slate-400 group-hover:text-rose-600 w-5 text-center"></i>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-rose-600">Delete Account</span>
+                            <i class="bi bi-chevron-right text-xs text-slate-300 ml-auto"></i>
+                        </a>
+
+                        <!-- Logout (with POST form) -->
+                        <form action="{% url 'jobs:logout' %}" method="post" class="block">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex items-center gap-3 p-3 hover:bg-rose-50 transition-colors group">
+                                <i class="bi bi-box-arrow-right text-slate-400 group-hover:text-rose-600 w-5 text-center"></i>
+                                <span class="text-sm font-medium text-slate-700 group-hover:text-rose-600">Logout</span>
+                                <i class="bi bi-chevron-right text-xs text-slate-300 ml-auto"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

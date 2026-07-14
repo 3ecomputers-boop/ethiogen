@@ -1,0 +1,457 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Dashboard | MoyaJobs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed', 100: '#ffedd5', 500: '#f97316',
+                            600: '#ea580c', 900: '#7c2d12',
+                        },
+                        slate: { 850: '#151f32', 900: '#0f172a', }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(249, 115, 22, 0.4)',
+                        'card': '0 10px 40px -10px rgba(0,0,0,0.04)',
+                        'card-hover': '0 20px 50px -12px rgba(0,0,0,0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.80);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        html.dark .glass {
+            background: rgba(15, 23, 42, 0.80);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-link:hover { background-color: #fff7ed; color: #f97316; }
+        .sidebar-link.active { 
+            background-color: #fff7ed; 
+            color: #f97316; 
+            font-weight: 600; 
+            position: relative;
+            padding-left: 1.25rem;
+        }
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 15%;
+            bottom: 15%;
+            width: 4px;
+            background: #f97316;
+            border-radius: 0 4px 4px 0;
+        }
+        html.dark .sidebar-link { color: #94a3b8; }
+        html.dark .sidebar-link:hover { background-color: #1e293b; color: #f97316; }
+        html.dark .sidebar-link.active { background-color: rgba(249, 115, 22, 0.15); color: #f97316; }
+
+        .modal-bg {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .modal-box {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-active .modal-bg { opacity: 1; }
+        .modal-active .modal-box { transform: scale(1); opacity: 1; }
+
+        .lock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.125rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .lock-badge.locked {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .lock-badge.unlocked {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        html.dark .lock-badge.locked {
+            background: #78350f;
+            color: #fbbf24;
+        }
+        html.dark .lock-badge.unlocked {
+            background: #064e3b;
+            color: #34d399;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass shadow-sm">
+        <div class="container mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="{% url 'jobs:home' %}" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow transform group-hover:scale-105 transition-transform">
+                    <i class="bi bi-stars text-xl"></i>
+                </div>
+                <span class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Moya<span class="text-brand-500">Jobs</span></span>
+            </a>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                    <div class="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                        {{ user.first_name|default:user.username|make_list|first|upper }}
+                    </div>
+                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 pr-1">{{ user.get_full_name|default:user.username }}</span>
+                </div>
+                
+                <a href="{% url 'jobs:home' %}" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all">
+                    <i class="bi bi-grid-3x3-gap"></i> Marketplace
+                </a>
+
+                <form action="{% url 'jobs:logout' %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-sm font-semibold hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors flex items-center gap-2">
+                        <i class="bi bi-box-arrow-left"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="flex pt-20">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200/60 dark:border-slate-700/60 h-[calc(100vh-5rem)] sticky top-20 overflow-y-auto hidden md:flex flex-col justify-between shadow-sm">
+            <div class="p-4 space-y-1">
+                <p class="px-4 pt-2 pb-3 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Menu</p>
+                
+                <a href="{% url 'jobs:employer_dashboard' %}" class="sidebar-link active">
+                    <i class="bi bi-bookmark-star text-lg"></i>
+                    <span>My Shortlist</span>
+                    <span class="ml-auto bg-brand-500 text-white text-xs font-bold rounded-lg px-2 py-0.5 min-w-[1.5rem] text-center" id="cartCountBadge">0</span>
+                </a>
+                
+                <a href="{% url 'jobs:add_job' %}" class="sidebar-link">
+                    <i class="bi bi-plus-circle text-lg"></i>
+                    <span>Post a Job</span>
+                </a>
+                
+                <a href="{% url 'jobs:client_dashboard' %}" class="sidebar-link">
+                    <i class="bi bi-building text-lg"></i>
+                    <span>My Postings</span>
+                </a>
+                
+                <a href="{% url 'jobs:client_profile' %}" class="sidebar-link">
+                    <i class="bi bi-person-badge text-lg"></i>
+                    <span>Company Profile</span>
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-chat-dots text-lg"></i>
+                    <span>Messages</span>
+                </a>
+                
+                <div class="pt-6 mt-4 border-t border-slate-100 dark:border-slate-700/60">
+                    <p class="px-4 pb-3 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Account</p>
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-gear text-lg"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-8 lg:p-10 max-w-5xl mx-auto w-full">
+            <!-- Dashboard Header -->
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-12 h-12 rounded-2xl bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-sm">
+                        <i class="bi bi-person-check text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Your Shortlist</h1>
+                        <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm">Review and manage the talents you've selected. Pay to unlock contact details.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-200/50 dark:border-slate-700/50 p-6 relative overflow-hidden group hover:shadow-card-hover transition-all">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-brand-500 rounded-bl-full opacity-5 -mr-4 -mt-4 group-hover:scale-110 transition-transform"></div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Total Candidates Selected</p>
+                    <p class="text-4xl font-black text-slate-900 dark:text-white" id="totalCount">0</p>
+                </div>
+                
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-200/50 dark:border-slate-700/50 p-6 relative overflow-hidden group hover:shadow-card-hover transition-all">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500 rounded-bl-full opacity-5 -mr-4 -mt-4 group-hover:scale-110 transition-transform"></div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Estimated Combined Rate</p>
+                            <p class="text-4xl font-black text-brand-500 dark:text-brand-400" id="totalPrice">0 ETB</p>
+                        </div>
+                        <button id="clearCartBtn" class="p-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors" title="Clear Shortlist">
+                            <i class="bi bi-trash3 text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Items Container -->
+            <div id="cartItemsContainer" class="space-y-4 mb-8"></div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden flex-col items-center justify-center py-20 px-4 text-center bg-white dark:bg-slate-800 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 shadow-sm">
+                <div class="w-20 h-20 bg-slate-50 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center mb-5 border border-slate-100 dark:border-slate-600">
+                    <i class="bi bi-people text-4xl text-slate-300 dark:text-slate-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Your Shortlist is Empty</h3>
+                <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-sm leading-relaxed">Browse the marketplace and add talents to your shortlist. They'll appear here for easy management.</p>
+                <a href="{% url 'jobs:home' %}" class="inline-flex items-center gap-2 px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-brand-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                    <i class="bi bi-search"></i> Browse Candidates
+                </a>
+            </div>
+
+            <!-- Proceed to Checkout -->
+            <div id="proceedWrapper" class="mt-8 flex justify-end">
+                <a href="{% url 'jobs:checkout' %}" class="group px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-sm hover:bg-brand-500 dark:hover:bg-brand-500 dark:hover:text-white transition-all shadow-md flex items-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="bi bi-shield-lock text-lg"></i> 
+                    <span>Proceed to Checkout</span> 
+                    <i class="bi bi-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Confirm Clear Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-bg absolute inset-0" onclick="closeModal()"></div>
+        <div class="modal-box relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-100 dark:border-slate-700 z-10">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-rose-50 dark:bg-rose-950/30 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="bi bi-exclamation-triangle text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Clear Shortlist?</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">This will remove all selected talents from your dashboard. This action cannot be undone.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeModal()" class="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirmClearBtn" class="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+                        Yes, Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const CSRF_TOKEN = "{{ csrf_token }}";
+        const UPDATE_SESSION_URL = "{% url 'jobs:update_session_state' %}";
+        const PAY_URL_BASE = "{% url 'jobs:pay_for_contact' 0 %}".replace('0', '');
+        
+        let cart = {{ cart|safe }};
+        const workers = {{ cart_workers|safe }};
+        const paidStatus = {{ paid_status|safe }};
+
+        // Sync session with server
+        async function syncSession() {
+            try {
+                const response = await fetch(UPDATE_SESSION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN
+                    },
+                    body: JSON.stringify({ cart: cart })
+                });
+                if (!response.ok) throw new Error('Network payload rejection');
+                return await response.json();
+            } catch (err) {
+                console.error('State Synchronization Error:', err);
+                throw err;
+            }
+        }
+
+        // Render cart items
+        function renderCart() {
+            const container = document.getElementById('cartItemsContainer');
+            const emptyState = document.getElementById('emptyState');
+            const totalCount = document.getElementById('totalCount');
+            const totalPrice = document.getElementById('totalPrice');
+            const badge = document.getElementById('cartCountBadge');
+            const proceedWrapper = document.getElementById('proceedWrapper');
+
+            if (!cart || cart.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                totalCount.textContent = '0';
+                totalPrice.textContent = '0 ETB';
+                badge.textContent = '0';
+                proceedWrapper.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+            proceedWrapper.classList.remove('hidden');
+
+            let total = 0;
+            let html = '';
+
+            cart.forEach(id => {
+                const worker = workers.find(w => w.id === id);
+                if (!worker) return;
+                
+                total += worker.price || 0;
+                const userInit = worker.name ? worker.name.charAt(0).toUpperCase() : '?';
+                const isPaid = paidStatus[worker.id] || false;
+                
+                html += `
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group">
+                        <div class="flex items-center gap-4">
+                            <div class="relative flex-shrink-0">
+                                <img src="${worker.image}" 
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-16 h-16 rounded-xl bg-gradient-to-tr from-brand-500 to-amber-500 flex items-center justify-center text-white font-bold text-xl shadow-sm\'>${userInit}</div>';" 
+                                     class="w-16 h-16 rounded-xl object-cover border border-slate-100 dark:border-slate-700" 
+                                     alt="${worker.name}">
+                                ${worker.verified ? '<div class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-500 border-2 border-white dark:border-slate-800 rounded-full flex items-center justify-center" title="Verified Profile"><i class="bi bi-patch-check-fill text-white text-[9px]"></i></div>' : ''}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 dark:text-white text-lg leading-snug group-hover:text-brand-500 transition-colors">${worker.name}</h4>
+                                <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">${worker.role}</p>
+                                <div class="flex flex-wrap items-center gap-2 mt-2">
+                                    <span class="text-[11px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md uppercase tracking-wider">${worker.category}</span>
+                                    <span class="text-xs text-slate-400 flex items-center gap-1 font-medium"><i class="bi bi-geo-alt"></i>${worker.location}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
+                            <div class="text-left md:text-right">
+                                <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Demanded Rate</div>
+                                <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">${worker.price.toLocaleString()} <span class="text-xs font-bold text-slate-400">ETB</span></div>
+                                <div class="text-xs font-semibold text-brand-500 dark:text-brand-400 mt-0.5 capitalize">${worker.duration || 'Fixed project rate'}</div>
+                            </div>
+                            ${ isPaid ? `
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="lock-badge unlocked"><i class="bi bi-unlock"></i> Unlocked</span>
+                                    <div class="text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-end gap-1">
+                                        <span><i class="bi bi-envelope"></i> ${worker.email || 'worker@example.com'}</span>
+                                        <span class="mx-0.5">|</span>
+                                        <span><i class="bi bi-phone"></i> ${worker.phone || '+251 9XX XXX XXX'}</span>
+                                    </div>
+                                    <button class="text-xs text-brand-600 font-bold hover:underline">Contact Now</button>
+                                </div>
+                            ` : `
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="lock-badge locked"><i class="bi bi-lock"></i> Locked</span>
+                                    <a href="${PAY_URL_BASE}${worker.id}/" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center gap-1">
+                                        <i class="bi bi-credit-card"></i> Pay to Unlock
+                                    </a>
+                                </div>
+                            ` }
+                            <button class="remove-from-cart p-2 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all" data-id="${worker.id}" title="Remove Candidate">
+                                <i class="bi bi-trash text-lg pointer-events-none"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            totalCount.textContent = cart.length;
+            totalPrice.textContent = total.toLocaleString() + ' ETB';
+            badge.textContent = cart.length;
+
+            // Reattach remove handlers
+            document.querySelectorAll('.remove-from-cart').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const id = parseInt(this.dataset.id);
+                    cart = cart.filter(item => item !== id);
+                    renderCart();
+                    try { await syncSession(); } catch(e) {}
+                });
+            });
+        }
+
+        // Modal controls
+        function openModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => modal.classList.add('modal-active'), 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('modal-active');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 250);
+        }
+
+        // Clear cart button
+        document.getElementById('clearCartBtn').addEventListener('click', function() {
+            if (cart.length === 0) return;
+            openModal();
+        });
+
+        document.getElementById('confirmClearBtn').addEventListener('click', async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = "Clearing...";
+            
+            cart = [];
+            renderCart();
+            try {
+                await syncSession();
+            } catch(e) { console.error(e); }
+            
+            btn.disabled = false;
+            btn.textContent = "Yes, Clear All";
+            closeModal();
+        });
+
+        // Initial render
+        document.addEventListener('DOMContentLoaded', renderCart);
+    </script>
+</body>
+</html>
