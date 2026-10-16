@@ -1,0 +1,87 @@
+/*
+ * Ethiogen stylesheet source.
+ *
+ * Built to ../../static/css/tailwind.css so the pages do not depend on
+ * https://cdn.tailwindcss.com. That CDN compiles Tailwind IN THE BROWSER,
+ * so the UI renders completely unstyled if the request is blocked --
+ * ad-blockers, locked-down office networks and offline machines all break
+ * it silently. A prebuilt stylesheet cannot fail that way.
+ *
+ * Build:  npm run build
+ * Watch:  npm run watch
+ *
+ * Everything the old runtime `tailwind.config` blocks defined now lives in
+ * @theme below, so the prebuilt CSS is identical to what the CDN produced.
+ */
+
+@import "tailwindcss";
+
+/* The only two templates that use Tailwind. Paths are relative to THIS
+   file (tools/tailwind/), and are scanned at build time. */
+@source "../../jobs/templates/miniapp/index.html";
+@source "../../tenants/templates/tenants/**/*.html";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* brand */
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-brand-800: #9a3412;
+  --color-brand-900: #7c2d12;
+
+  /* accent */
+  --color-accent-50: #eff6ff;
+  --color-accent-100: #dbeafe;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
+
+  /* success */
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+
+  /* animation */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  /* shadows */
+  --shadow-glow: 0 0 30px -5px rgba(249, 115, 22, 0.5);
+  --shadow-glow-lg: 0 0 40px -5px rgba(249, 115, 22, 0.6);
+  --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover: 0 25px 60px -12px rgba(0, 0, 0, 0.15);
+  --shadow-sheet: 0 -10px 50px -10px rgba(0, 0, 0, 0.3);
+  --shadow-inner-glow: inset 0 2px 10px rgba(255, 255, 255, 0.3);
+}
+
+@layer components {
+  /* Used by the mini app's hidden-by-default panels. */
+  [x-cloak] {
+    display: none !important;
+  }
+}
+
+@layer utilities {
+  /*
+   * pb-safe was referenced by the mini app's bottom navigation bar but was
+   * never defined -- with the runtime CDN it silently did nothing, so the bar
+   * sat under the iOS home indicator. Defined here so the prebuilt CSS
+   * actually does what the markup always intended.
+   */
+  .pb-safe {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+}

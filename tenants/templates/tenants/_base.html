@@ -5,20 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="{% favicon_url %}" />
   <title>{% block title %}Workspace{% endblock %} &middot; Ethiogen</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <script>
-    tailwind.config = {
-      theme: { extend: {
-        fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
-        colors: {
-          brand: { 50:'#fff7ed',100:'#ffedd5',200:'#fed7aa',300:'#fdba74',400:'#fb923c',
-                   500:'#f97316',600:'#ea580c',700:'#c2410c',800:'#9a3412',900:'#7c2d12' }
-        }
-      }}
-    }
-  </script>
   <style>
     [x-cloak]{display:none}
     body{background:#f8fafc}
