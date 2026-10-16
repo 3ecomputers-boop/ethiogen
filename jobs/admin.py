@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, GroupAdmin
 from django.urls import path
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -63,7 +64,7 @@ class ClientProfileInline(admin.StackedInline):
 
 
 # ============================================================================
-# USER ADMIN (Central Hub)
+# USER ADMIN (Central Hub with RBAC)
 # ============================================================================
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -71,32 +72,52 @@ class CustomUserAdmin(BaseUserAdmin):
     
     list_display = (
         'username', 'email', 'first_name', 'last_name', 
-        'user_type_badge', 'is_verified_badge', 'is_active', 'date_joined'
+        'user_role', 'user_type_badge', 'is_verified_badge', 'is_active', 'is_staff', 'date_joined'
     )
     list_filter = ('is_active', 'is_staff', 'is_superuser', 'groups')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     
+    # Enhanced Fieldsets for RBAC
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Personal Info', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Roles & Access Control (RBAC)', {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+            'description': '⚠️ <b>RBAC:</b> Assign users to <b>Groups</b> (Roles) to grant specific model permissions. <br>🔒 <b>is_staff</b> is strictly required to access the admin panel.'
+        }),
+        ('Important Dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    
+    # Simplified Add Form for creating new admin users with roles
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'is_staff', 'is_active', 'groups'),
+        }),
+    )
+
+    @admin.display(description='RBAC Role')
+    def user_role(self, obj):
+        if obj.is_superuser:
+            return mark_safe('<span style="color: #ef4444; font-weight:bold; background: #fee2e2; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Super Admin</span>')
+        groups = obj.groups.all()
+        if groups:
+            badges = [
+                f'<span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px;">{g.name}</span>' 
+                for g in groups
+            ]
+            return mark_safe("".join(badges))
+        return mark_safe('<span style="color: #94a3b8; font-size: 11px;">No Role Assigned</span>')
+
     @admin.display(description='Type')
     def user_type_badge(self, obj):
         if hasattr(obj, 'job_seeker_profile'):
-            return mark_safe(
-                '<span style="background: #3b82f6; color: white; padding: 3px 8px; '
-                'border-radius: 4px; font-size: 11px;">Job Seeker</span>'
-            )
+            return mark_safe('<span style="background: #3b82f6; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Job Seeker</span>')
         elif hasattr(obj, 'client_profile'):
-            return mark_safe(
-                '<span style="background: #10b981; color: white; padding: 3px 8px; '
-                'border-radius: 4px; font-size: 11px;">Client</span>'
-            )
+            return mark_safe('<span style="background: #10b981; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Client</span>')
         elif obj.is_staff:
-            return mark_safe(
-                '<span style="background: #f59e0b; color: white; padding: 3px 8px; '
-                'border-radius: 4px; font-size: 11px;">Admin</span>'
-            )
-        return mark_safe(
-            '<span style="background: #6b7280; color: white; padding: 3px 8px; '
-            'border-radius: 4px; font-size: 11px;">Unknown</span>'
-        )
+            return mark_safe('<span style="background: #f59e0b; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Admin</span>')
+        return mark_safe('<span style="background: #6b7280; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px;">Unknown</span>')
     
     @admin.display(description='Verified')
     def is_verified_badge(self, obj):
@@ -191,6 +212,28 @@ class CustomUserAdmin(BaseUserAdmin):
             format_html('✓ Client created!<br>Username: <b>{}</b><br>Password: <b>{}</b>', username, password)
         )
         return redirect('admin:jobs_clientprofile_changelist')
+
+
+# ============================================================================
+# ENHANCED GROUP ADMIN (For RBAC Role Management)
+# ============================================================================
+
+# Unregister default Group to register our enhanced version
+admin.site.unregister(Group)
+
+from django.contrib import admin
+from django.contrib.auth.models import Group
+
+@admin.register(Group)
+class CustomGroupAdmin(admin.ModelAdmin):
+    # ✅ Only use fields that actually exist on the Group model
+    list_display = ('name',) 
+    
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'permissions')
+        }),
+    )
 
 
 # ============================================================================
@@ -413,3 +456,5 @@ class BookingAdmin(admin.ModelAdmin):
 # ============================================================================
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
+# Registers the jobs models that previously had no admin page.
+from . import admin_missing  # noqa: E402,F401

@@ -11,3 +11,11 @@ media/
 .vscode/
 node_modules/
 staticfiles/
+.pg_app_password
+pg_import.json
+cookies.txt
+*.pid
+*.log
+jobs/posted_jobs.json
+jobs/posted_tenders.json
+posted_jobs.json

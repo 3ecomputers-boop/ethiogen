@@ -1,0 +1,51 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}Plans{% endblock %}
+{% block heading %}Plans{% endblock %}
+{% block nav_list %}text-slate-600 hover:bg-slate-100{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-slate-900">Plans</h1>
+    <p class="text-sm text-slate-500 mt-1">Edit prices and limits in the Django admin.</p>
+  </div>
+  <a href="{{ admin_url }}" class="px-3 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold">Edit plans</a>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {% for plan in plans %}
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-slate-900">{{ plan.name }}</h2>
+        {% if not plan.is_active %}
+          <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-500">inactive</span>
+        {% endif %}
+      </div>
+      <p class="mt-2">
+        <span class="text-2xl font-extrabold text-slate-900">{{ plan.price_per_month }}</span>
+        <span class="text-xs text-slate-500"> ETB/mo</span>
+      </p>
+      <p class="text-xs text-slate-400">{{ plan.get_billing_cycle_display|lower }}</p>
+
+      <dl class="mt-4 space-y-1.5 text-xs text-slate-600">
+        <div class="flex justify-between"><dt>Job posts</dt>
+          <dd class="font-medium">{% if plan.job_post_limit %}{{ plan.job_post_limit }}{% else %}unlimited{% endif %}</dd></div>
+        <div class="flex justify-between"><dt>Seats</dt>
+          <dd class="font-medium">{% if plan.seat_limit %}{{ plan.seat_limit }}{% else %}unlimited{% endif %}</dd></div>
+        <div class="flex justify-between"><dt>Subscribers</dt>
+          <dd class="font-medium">{{ plan.subscriber_total }}</dd></div>
+      </dl>
+
+      {% if plan.applies_to %}
+        <p class="mt-3 text-xs text-slate-400">
+          For: {% for t in plan.applies_to %}{{ t|cut:"_"|title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </p>
+      {% else %}
+        <p class="mt-3 text-xs text-slate-400">All organization types</p>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p class="text-slate-500">No plans defined.</p>
+  {% endfor %}
+</div>
+{% endblock %}

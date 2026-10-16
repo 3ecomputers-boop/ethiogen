@@ -1,4 +1,5 @@
 {% load static %}
+{% load ethiogen_tags %}
 <!doctype html>
 <html class="no-js" lang="zxx">
     <head>
@@ -8,7 +9,9 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="manifest" href="site.webmanifest">
-		<link rel="shortcut icon" type="image/x-icon" href="{% static 'assets/img/favicon.ico' %}">
+        <!-- Logo and favicon come from Billing -> Integration settings -->
+		<!-- Logo and favicon come from Billing -> Integration settings -->
+		<link rel="shortcut icon" type="image/png" href="{% favicon_url %}">
 
 		<!-- CSS here -->
             <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}">
@@ -32,7 +35,7 @@
             <div class="preloader-inner position-relative">
                 <div class="preloader-circle"></div>
                 <div class="preloader-img pere-text">
-                    <img src="{% static 'assets/img/logo/logo.png' %}" alt="">
+                    {% brand_logo height=40 show_caption=False css_class="mx-auto" %}
                 </div>
             </div>
         </div>
@@ -45,9 +48,9 @@
                 <div class="container">
                     <div class="row align-items-center">
                         <div class="col-lg-3 col-md-2">
-                            <!-- Logo -->
+                            <!-- Logo: drawn from Billing -> Integration settings -->
                             <div class="logo">
-                                <a href="index.html"><img src="{% static 'assets/img/logo/moya_logo.JPG' %}" width="150px" alt=""></a>
+                                {% brand_logo height=54 link_url="/" %}
                             </div>  
                         </div>
                         <div class="col-lg-9 col-md-9">
@@ -55,26 +58,38 @@
                                 <!-- Main-menu -->
                                 <div class="main-menu">
                                     <nav class="d-none d-lg-block">
+                                        {% comment %}
+                                        The {% url ... as var %} form sets the
+                                        variable to an empty string when a name
+                                        cannot be reversed, instead of raising
+                                        NoReverseMatch and 500-ing the whole page.
+                                        A broken menu link should not take the
+                                        site down.
+                                        {% endcomment %}
+                                        {% url 'home' as u_home %}
+                                        {% url 'list_jobs' as u_jobs %}
+                                        {% url 'browse_job_seekers' as u_seekers %}
+                                        {% url 'employers' as u_employers %}
+                                        {% url 'freelancingjobs' as u_freelance %}
                                         <ul id="navigation">
-                                            <li><a href="{% url 'home' %}">Home</a></li>
-                                            <li><a href="{% url 'list_jobs' %}">Jobs </a></li>
-                                            <li><a href="{% url 'browse_job_seekers' %}">Job seeker</a></li>
-                                            <li><a href="{% url 'employers' %}">Employer</a></li>
-                                            <li><a href="{% url 'freelancingjobs' %} ">Freelance</a></li>
+                                            <li><a href="{{ u_home|default:'#' }}">Home</a></li>
+                                            <li><a href="{{ u_jobs|default:'#' }}">Jobs </a></li>
+                                            <li><a href="{{ u_seekers|default:'#' }}">Job seeker</a></li>
+                                            <li><a href="{{ u_employers|default:'#' }}">Employer</a></li>
+                                            <li><a href="{{ u_freelance|default:'#' }} ">Freelance</a></li>
                                         </ul>
                                     </nav>
                                 </div>          
                                 <!-- Header-btn -->
                                 <div class="header-btn d-none f-right d-lg-block">
-                                    {% if user.is_authenticated %}
-                                    <p>Welcome, {{ username }}!</p>
-                                    <a href="{% url 'logout' %}">Logout</a> 
+                                    {% url 'logout' as u_logout %}{% url 'register' as u_register %}{% url 'login' as u_login %}
+                                {% if user.is_authenticated %}
+                                <p>Welcome, {{ username }}!</p>
+                                <a href="{{ u_logout|default:'#' }}">Logout</a> 
                                 {% else %}
-                                <a href="{% url 'register' %}" class="btn head-btn1">Register</a>
-                                    <a href="{% url 'login' %}" class="btn head-btn2">Login</a>
-       
-
-{% endif %}
+                                <a href="{{ u_register|default:'#' }}" class="btn head-btn1">Register</a>
+                                <a href="{{ u_login|default:'#' }}" class="btn head-btn2">Login</a>
+                                {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -170,9 +185,9 @@
                <!--  -->
                <div class="row footer-wejed justify-content-between">
                     <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
-                        <!-- logo -->
+                        <!-- logo: drawn from Billing -> Integration settings -->
                         <div class="footer-logo mb-20">
-                        <a href="index.html"><img src="assets/img/logo/logo2_footer.png" alt=""></a>
+                        {% brand_logo height=46 link_url="/" %}
                         </div>
                     </div>
                     <div class="col-xl-3 col-lg-3 col-md-4 col-sm-5">

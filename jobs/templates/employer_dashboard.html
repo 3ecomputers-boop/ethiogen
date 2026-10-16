@@ -283,7 +283,7 @@
     <!-- JavaScript -->
     <script>
         const CSRF_TOKEN = "{{ csrf_token }}";
-        const UPDATE_SESSION_URL = "{% url 'jobs:update_session_state' %}";
+        const UPDATE_SESSION_URL = "{% url 'jobs:update_session' %}";
         const PAY_URL_BASE = "{% url 'jobs:pay_for_contact' 0 %}".replace('0', '');
         
         let cart = {{ cart|safe }};

@@ -1,0 +1,137 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}{{ organization.name }}{% endblock %}
+{% block heading %}{{ organization.name }}{% endblock %}
+{% block tab_detail %}border-brand-500 text-brand-700 font-semibold{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+  <div>
+    <div class="flex items-center gap-2">
+      <h1 class="text-2xl font-extrabold text-slate-900">{{ organization.name }}</h1>
+      {% if organization.is_verified %}
+        <i class="bi bi-patch-check-fill text-brand-500 text-xl" title="Verified"></i>
+      {% endif %}
+    </div>
+    <p class="text-sm text-slate-500 mt-1">
+      {{ organization.get_organization_type_display }}
+      {% if organization.city %}&middot; {{ organization.city }}{% endif %}
+      &middot; you are <span class="font-medium text-slate-700">{{ role }}</span>
+    </p>
+  </div>
+  <div class="flex gap-2">
+    {% if can_manage %}
+      <a href="{% url 'tenants:workspace_members' organization.slug %}"
+         class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50">Manage team</a>
+    {% endif %}
+    <a href="{% url 'tenants:workspace_billing' organization.slug %}"
+       class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50">Plan &amp; billing</a>
+  </div>
+</div>
+
+{% if not can_publish %}
+  <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-5 flex items-start gap-3">
+    <i class="bi bi-exclamation-triangle text-amber-500 text-lg mt-0.5"></i>
+    <div>
+      <h2 class="font-semibold text-amber-900">Publishing is paused</h2>
+      <p class="text-sm text-amber-800 mt-1">{{ publish_reason }}</p>
+      <a href="{% url 'tenants:workspace_billing' organization.slug %}"
+         class="inline-block mt-3 text-sm font-semibold text-amber-900 underline">See plans</a>
+    </div>
+  </div>
+{% endif %}
+
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Job posts</p>
+    <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ stats.job_posts }}</p>
+    <p class="text-xs text-slate-400 mt-1">{{ stats.open_job_posts }} open</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Channel posts</p>
+    <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ stats.channel_posts }}</p>
+    <p class="text-xs text-slate-400 mt-1">published to Telegram</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Applicants</p>
+    <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ stats.applicants }}</p>
+    <p class="text-xs text-slate-400 mt-1">across your posts</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Team</p>
+    <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ stats.members }}</p>
+    <p class="text-xs text-slate-400 mt-1">active members</p>
+  </div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3">
+  <div class="lg:col-span-1 space-y-4">
+    {% include 'tenants/_quota_meter.html' %}
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <h3 class="text-sm font-semibold text-slate-700">Current plan</h3>
+      {% if quota.has_plan %}
+        <p class="mt-2 font-bold text-slate-900">{{ quota.plan }}</p>
+        <p class="text-xs text-slate-500 mt-1">
+          {% if quota.days_remaining < 0 %}No expiry
+          {% else %}{{ quota.days_remaining }} day{{ quota.days_remaining|pluralize }} left{% endif %}
+          &middot; {{ quota.seats_used }}/{{ quota.seat_limit|default:"∞" }} seats
+        </p>
+      {% else %}
+        <p class="mt-2 text-sm text-rose-600 font-semibold">No active plan</p>
+      {% endif %}
+      <a href="{% url 'tenants:workspace_billing' organization.slug %}"
+         class="mt-4 inline-block text-sm font-semibold text-brand-600 hover:text-brand-700">Manage plan &rarr;</a>
+    </div>
+  </div>
+
+  <div class="lg:col-span-2 space-y-6">
+    <div class="bg-white rounded-xl border border-slate-200">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-bold text-slate-900">Recent posts</h2>
+        <a href="{% url 'tenants:workspace_jobs' organization.slug %}"
+           class="text-sm font-semibold text-brand-600 hover:text-brand-700">View all</a>
+      </div>
+      {% if recent_posts %}
+        <ul class="divide-y divide-slate-100">
+          {% for p in recent_posts %}
+            <li class="px-5 py-3 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-medium text-slate-800 truncate">{{ p.title }}</p>
+                <p class="text-xs text-slate-500">
+                  {{ p.created_at|date:"j M Y" }}
+                  {% if p.location %}&middot; {{ p.location }}{% endif %}
+                </p>
+              </div>
+              <span class="shrink-0 text-xs px-2 py-1 rounded-full font-medium
+                {% if p.status == 'published' %}bg-emerald-50 text-emerald-700
+                {% else %}bg-rose-50 text-rose-700{% endif %}">{{ p.status }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="px-5 py-8 text-sm text-slate-500 text-center">No posts yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200">
+      <div class="px-5 py-4 border-b border-slate-100">
+        <h2 class="font-bold text-slate-900">Recent activity</h2>
+      </div>
+      {% if recent_activity %}
+        <ul class="divide-y divide-slate-100">
+          {% for log in recent_activity %}
+            <li class="px-5 py-3 text-sm flex items-baseline justify-between gap-3">
+              <span class="text-slate-700 min-w-0 truncate">
+                <b>{{ log.user.username|default:"System" }}</b>
+                <span class="text-slate-500">{{ log.action|cut:"_"|title }}</span>
+              </span>
+              <span class="shrink-0 text-xs text-slate-400">{{ log.created_at|timesince }} ago</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="px-5 py-8 text-sm text-slate-500 text-center">No activity recorded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

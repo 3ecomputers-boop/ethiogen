@@ -1,7 +1,5 @@
-"""
-Jobs App Models
-Complete model definitions for the MoyaJobs platform.
-"""
+# jobs/models.py
+# Complete – includes all models used by the bot and the Django app
 
 import random
 import string
@@ -121,12 +119,19 @@ class JobSeekerProfile(models.Model):
         related_name='job_seekers'
     )
     bio = models.TextField(blank=True)
-    profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    profile_picture = models.ImageField(
+        upload_to="profile_pictures/",
+        blank=True,
+        null=True
+    )
 
     # Location
     country = CountryField(blank=True)
     city = models.CharField(max_length=100, blank=True)
     location = models.CharField(max_length=255, blank=True, help_text="Full location string")
+    portfolio_url = models.URLField(blank=True, null=True, help_text="Link to your online portfolio")
+    linkedin_url = models.URLField(blank=True, null=True, help_text="LinkedIn profile URL")
+    certifications = models.JSONField(default=list, blank=True, help_text="List of certifications")
 
     # Professional Details
     category = models.ForeignKey(
@@ -544,3 +549,121 @@ class TalentAccess(models.Model):
     def __str__(self):
         status = "Paid" if self.paid else "Locked"
         return f"{self.employer.user.username} → {self.talent.name} ({status})"
+
+
+# ============================================================================
+# NEW MODELS REQUIRED BY THE BOT (added 2026-08-01)
+# ============================================================================
+
+class JobPost(models.Model):
+    """Job posted by a client (used by the Telegram bot)."""
+    client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name='job_posts')
+    # Which tenant owns this posting. Nullable so pre-tenancy rows and
+    # standalone client posts keep working; when set, the row is private to
+    # that organization and must be read through tenants.services.scope().
+    organization = models.ForeignKey(
+        'tenants.Organization', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='job_posts',
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    budget = models.DecimalField(max_digits=12, decimal_places=2)
+    location = models.CharField(max_length=255)
+    deadline = models.DateField()
+    is_active = models.BooleanField(default=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[('open', 'Open'), ('closed', 'Closed'), ('filled', 'Filled')],
+        default='open'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['client', 'is_active'])]
+
+
+class JobApplication(models.Model):
+    """Application from a job seeker to a job post."""
+    job = models.ForeignKey(JobPost, on_delete=models.CASCADE, related_name='applications')
+    job_seeker = models.ForeignKey(JobSeekerProfile, on_delete=models.CASCADE, related_name='applications')
+    cover_letter = models.TextField(blank=True)
+    bid_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected'), ('hired', 'Hired')],
+        default='pending'
+    )
+    applied_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('job', 'job_seeker')
+        ordering = ['-applied_at']
+
+    def __str__(self):
+        return f"{self.job_seeker.user.username} - {self.job.title}"
+
+
+class FavoriteWorker(models.Model):
+    """Client's favorite job seekers."""
+    client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name='favorites')
+    job_seeker = models.ForeignKey(JobSeekerProfile, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('client', 'job_seeker')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.client.user.username} -> {self.job_seeker.user.username}"
+
+
+class WorkerVerification(models.Model):
+    """Verification status and details for a job seeker."""
+    job_seeker = models.OneToOneField(JobSeekerProfile, on_delete=models.CASCADE, related_name='verification')
+    is_verified = models.BooleanField(default=False)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    # you can add more fields like document, etc.
+
+    def __str__(self):
+        return f"{self.job_seeker.user.username} - {'Verified' if self.is_verified else 'Unverified'}"
+
+
+class WorkerAvailability(models.Model):
+    """Availability schedule for a job seeker."""
+    job_seeker = models.OneToOneField(JobSeekerProfile, on_delete=models.CASCADE, related_name='availability')
+    is_available = models.BooleanField(default=True)
+    available_from = models.DateField(null=True, blank=True)
+    available_until = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.job_seeker.user.username} - {'Available' if self.is_available else 'Unavailable'}"
+
+
+class WorkerPortfolio(models.Model):
+    """Portfolio items of a job seeker."""
+    job_seeker = models.ForeignKey(JobSeekerProfile, on_delete=models.CASCADE, related_name='portfolio_items')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='portfolio/', blank=True, null=True)
+    link = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.job_seeker.user.username} - {self.title}"
+        
+class ScrapedContent(models.Model):
+    url = models.URLField(unique=True)
+    content_hash = models.CharField(max_length=64)  # SHA256 or MD5
+    last_updated = models.DateTimeField(auto_now=True)
+    last_posted = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.url

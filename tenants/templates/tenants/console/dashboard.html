@@ -1,0 +1,126 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}Console{% endblock %}
+{% block heading %}Platform console{% endblock %}
+{% block nav_list %}text-slate-600 hover:bg-slate-100{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-slate-900">Platform console</h1>
+    <p class="text-sm text-slate-500 mt-1">Every tenant on the platform.</p>
+  </div>
+  <nav class="flex gap-2 text-sm">
+    <a href="{% url 'tenants:console_organizations' %}" class="px-3 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50">Organizations</a>
+    <a href="{% url 'tenants:console_plans' %}" class="px-3 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50">Plans</a>
+    <a href="/admin/" class="px-3 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50">Django admin</a>
+  </nav>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Organizations</p>
+    <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ totals.organizations }}</p>
+    <p class="text-xs text-slate-400 mt-1">{{ totals.active }} active &middot; {{ totals.verified }} verified</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Monthly recurring revenue</p>
+    <p class="mt-1 text-2xl font-extrabold text-emerald-600">{{ totals.mrr }} ETB</p>
+    <p class="text-xs text-slate-400 mt-1">{{ totals.paying }} paying &middot; {{ totals.trialing }} trialing</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Members</p>
+    <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ totals.members }}</p>
+    <p class="text-xs text-slate-400 mt-1">active memberships</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm text-slate-500">Job posts</p>
+    <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ totals.job_posts }}</p>
+    <p class="text-xs text-slate-400 mt-1">across all tenants</p>
+  </div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-bold text-slate-900">Newest organizations</h2>
+      <a href="{% url 'tenants:console_organizations' %}" class="text-sm font-semibold text-brand-600">View all</a>
+    </div>
+    <ul class="divide-y divide-slate-100">
+      {% for o in recent_orgs %}
+        <li class="px-5 py-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <a href="{% url 'tenants:console_organization_detail' o.pk %}"
+               class="font-medium text-slate-800 hover:text-brand-600 truncate block">{{ o.name }}</a>
+            <p class="text-xs text-slate-500">{{ o.get_organization_type_display }} &middot; {{ o.created_at|date:"j M Y" }}</p>
+          </div>
+          <span class="shrink-0 text-xs px-2 py-1 rounded-full font-medium
+            {% if o.status == 'active' %}bg-emerald-50 text-emerald-700
+            {% elif o.status == 'pending' %}bg-amber-50 text-amber-700
+            {% else %}bg-slate-100 text-slate-600{% endif %}">{{ o.status }}</span>
+        </li>
+      {% empty %}
+        <li class="px-5 py-8 text-sm text-slate-500 text-center">No organizations yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100">
+      <h2 class="font-bold text-slate-900">Expiring within 14 days</h2>
+    </div>
+    {% if expiring_soon %}
+      <ul class="divide-y divide-slate-100">
+        {% for s in expiring_soon %}
+          <li class="px-5 py-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="font-medium text-slate-800 truncate">{{ s.organization.name }}</p>
+              <p class="text-xs text-slate-500">{{ s.plan.name }} &middot; {{ s.get_status_display }}</p>
+            </div>
+            <span class="shrink-0 text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium">
+              {{ s.ends_at|date:"j M" }}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="px-5 py-8 text-sm text-slate-500 text-center">Nothing expiring soon.</p>
+    {% endif %}
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <h2 class="font-bold text-slate-900 mb-3">By type</h2>
+    <ul class="space-y-2 text-sm">
+      {% for row in by_type %}
+        <li class="flex items-center justify-between">
+          <span class="text-slate-600">{{ row.organization_type|cut:"_"|title }}</span>
+          <span class="font-semibold text-slate-800">{{ row.n }}</span>
+        </li>
+      {% empty %}
+        <li class="text-slate-500">No data.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100">
+      <h2 class="font-bold text-slate-900">Recent audit trail</h2>
+    </div>
+    {% if recent_audit %}
+      <ul class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+        {% for log in recent_audit %}
+          <li class="px-5 py-2.5 text-xs flex items-baseline justify-between gap-3">
+            <span class="text-slate-700 min-w-0 truncate">
+              <b>{{ log.user.username|default:"system" }}</b>
+              <span class="text-slate-500">{{ log.action }}</span>
+              <span class="text-slate-400">@ {{ log.organization.name|truncatechars:24 }}</span>
+            </span>
+            <span class="shrink-0 text-slate-400">{{ log.created_at|timesince }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="px-5 py-8 text-sm text-slate-500 text-center">No activity.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 {% load static %}
+{% load ethiogen_tags %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moya Jobs | Premium Talent Marketplace</title>
+    <title>Ethiogen | Premium Talent Marketplace</title>
+    <link rel="shortcut icon" type="image/png" href="{% favicon_url %}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -172,10 +174,15 @@
     <nav class="fixed top-0 w-full z-40 glass shadow-sm transition-all duration-300" id="navbar">
         <div class="container mx-auto px-4 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
+                <!-- Logo: drawn from Billing -> Integration settings -->
+                {% brand_logo height=44 link_url="/" %}
+                <!-- Alternatively, keep the icon + text if image not available -->
+                <!--
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow">
                     <i class="bi bi-stars text-xl"></i>
                 </div>
-                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Moya<span class="text-brand-500">Jobs</span></span>
+                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ethiogen</span>
+                -->
             </div>
              <div class="hidden md:flex items-center gap-8">
                 <a href="#" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-500 font-medium transition-colors" data-i18n="nav_find">Find Talent</a>
@@ -798,7 +805,10 @@
         <div class="container mx-auto px-4">
             <div class="flex flex-col md:flex-row justify-between items-center gap-8">
                 <div class="text-center md:text-left">
-                    <div class="mb-4"><span class="text-2xl font-bold text-white tracking-tight">Moya<span class="text-brand-500">Jobs</span></span></div>
+                    <div class="mb-4 flex items-center gap-2">
+                        <!-- Logo in footer: same source as the header -->
+                        {% brand_logo height=38 link_url="/" %}
+                    </div>
                     <p class="text-slate-500 text-sm max-w-xs" data-i18n="footer_desc">Connecting talent with opportunity across Ethiopia and beyond.</p>
                 </div>
                 <div class="flex items-center gap-4">
@@ -807,7 +817,7 @@
                     <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all group"><i class="bi bi-facebook text-lg group-hover:scale-110 transition-transform"></i></a>
                 </div>
             </div>
-            <div class="border-t border-slate-800 mt-8 pt-8 text-center text-slate-500 text-sm">© 2026 Moya Jobs.</div>
+            <div class="border-t border-slate-800 mt-8 pt-8 text-center text-slate-500 text-sm">© 2026 Ethiogen.</div>
         </div>
     </footer>
 
@@ -818,7 +828,7 @@
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"><i class="bi bi-robot"></i></div>
                     <div>
-                        <div class="font-bold text-sm">Moya AI Assistant</div>
+                        <div class="font-bold text-sm">Ethiogen AI Assistant</div>
                         <div class="text-xs opacity-80 flex items-center gap-1"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Online</div>
                     </div>
                 </div>
@@ -828,7 +838,7 @@
                 <div class="flex gap-2">
                     <div class="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="bi bi-robot text-sm"></i></div>
                     <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 dark:text-slate-200 max-w-[80%]">
-                        Hello! 👋 I'm Moya AI. How can I help you find the perfect talent today?
+                        Hello! 👋 I'm Ethiogen AI. How can I help you find the perfect talent today?
                     </div>
                 </div>
             </div>
@@ -857,8 +867,15 @@
 
     <!-- ========== REFINED JAVASCRIPT ========== -->
     <script>
+        // --- Helper: avatar from name ---
+        function getAvatarUrl(name) {
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=128`;
+        }
+
         // --- INJECTED FROM DJANGO ---
         const talents = {{ talents_json|safe }};
+        // Add this line after the talents definition
+        const DEFAULT_AVATAR = "{% static 'images/default-avatar.png' %}";
         let cart = {{ initial_cart|safe }} || [];
         let wishlist = {{ initial_wishlist|safe }} || [];
         let compareList = {{ initial_compare|safe }} || [];
@@ -1120,7 +1137,7 @@
                 if (!worker) return '';
                 return `
                     <div class="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
-                        <img src="${worker.image}" class="w-12 h-12 rounded-full object-cover">
+                        <img src="${getAvatarUrl(worker.name)}" class="w-12 h-12 rounded-full object-cover">
                         <div class="flex-grow">
                             <h4 class="font-bold text-slate-900 dark:text-white text-sm">${worker.name}</h4>
                             <p class="text-xs text-slate-500 dark:text-slate-400">${worker.role}</p>
@@ -1180,7 +1197,7 @@
             const worker = talents.find(t => t.id === id);
             const shareData = {
                 title: `${worker.name} - ${worker.role}`,
-                text: `Check out ${worker.name}, ${worker.role} on MoyaJobs`,
+                text: `Check out ${worker.name}, ${worker.role} on Ethiogen`,
                 url: window.location.href.split('#')[0] + `#talent-${id}`
             };
             try {
@@ -1204,7 +1221,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'moyajobs-shortlist.csv';
+            link.download = 'ethiogen-shortlist.csv';
             link.click();
         }
 
@@ -1434,7 +1451,7 @@
                         ${matchBadge}
                         <div class="${isGrid ? 'text-center' : 'flex items-center gap-4'}">
                             <div class="relative">
-                                <img src="${t.image}" class="${isGrid ? 'w-20 h-20' : 'w-16 h-16'} rounded-full object-cover border-4 border-slate-50 dark:border-slate-700 shadow-sm" alt="${t.name}">
+                                <img src="${getAvatarUrl(t.name)}" class="${isGrid ? 'w-20 h-20' : 'w-16 h-16'} rounded-full object-cover border-4 border-slate-50 dark:border-slate-700 shadow-sm" alt="${t.name}">
                                 <span class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full"></span>
                             </div>
                             <div class="${isGrid ? 'mt-4' : ''}">
@@ -1543,7 +1560,7 @@
                     const item = document.createElement('div');
                     item.className = "flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700";
                     item.innerHTML = `
-                        <img src="${worker.image}" class="w-12 h-12 rounded-full object-cover">
+                        <img src="${getAvatarUrl(worker.name)}" class="w-12 h-12 rounded-full object-cover">
                         <div class="flex-grow"><h4 class="font-bold text-slate-900 dark:text-white text-sm">${worker.name}</h4><p class="text-xs text-slate-500 dark:text-slate-400">${worker.role}</p></div>
                         <div class="text-right">
                             <div class="font-bold text-slate-900 dark:text-white text-sm">${worker.price.toLocaleString()}</div>
@@ -1601,7 +1618,7 @@
                     const item = document.createElement('div');
                     item.className = "flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700";
                     item.innerHTML = `
-                        <img src="${worker.image}" class="w-12 h-12 rounded-full object-cover">
+                        <img src="${getAvatarUrl(worker.name)}" class="w-12 h-12 rounded-full object-cover">
                         <div class="flex-grow"><h4 class="font-bold text-slate-900 dark:text-white text-sm">${worker.name}</h4><p class="text-xs text-slate-500 dark:text-slate-400">${worker.role}</p></div>
                         <div class="text-right">
                             <div class="font-bold text-slate-900 dark:text-white text-sm">${worker.price.toLocaleString()}</div>
@@ -1674,7 +1691,7 @@
 
             let html = `<thead><tr class="border-b border-slate-200 dark:border-slate-700">
                 <th class="py-3 pl-4"></th>
-                ${workers.map(w => `<th class="py-3 text-center"><img src="${w.image}" class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-brand-500"><div class="font-bold text-slate-900 dark:text-white">${w.name}</div></th>`).join('')}
+                ${workers.map(w => `<th class="py-3 text-center"><img src="${getAvatarUrl(w.name)}" class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-brand-500"><div class="font-bold text-slate-900 dark:text-white">${w.name}</div></th>`).join('')}
             </tr></thead><tbody>`;
 
             html +=
@@ -1726,7 +1743,7 @@
                         <div class="absolute top-4 left-4 ${tierColor} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                             Tier ${worker.tier} Verified
                         </div>
-                        <img src="${worker.image}" class="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-xl mb-4">
+                        <img src="${getAvatarUrl(worker.name)}" class="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-xl mb-4">
                         <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">${worker.name}</h2>
                         <p class="text-brand-600 dark:text-brand-400 font-semibold mb-2">${worker.role}</p>
                         <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4">

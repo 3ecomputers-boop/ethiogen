@@ -4,131 +4,582 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Your Profile | MoyaJobs</title>
+    <title>{% if form.instance.pk %}Edit{% else %}Create{% endif %} Profile | MoyaJobs</title>
+
+    <!-- Tailwind & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            500: '#f97316', // MoyaJobs Orange
-                            600: '#ea580c',
-                        }
-                    }
+                        brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c' }
+                    },
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
                 }
             }
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+        /* Smooth scroll for sidebar links */
+        html { scroll-behavior: smooth; }
+        .section-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-title i { color: #f97316; }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.75rem;
+            outline: none;
+            transition: all 0.2s;
+            background: white;
+        }
+        .input-field:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+        }
+        .input-field.is-invalid {
+            border-color: #ef4444;
+        }
+        .field-error {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .field-error::before { content: "⚠"; }
+
+        /* Sidebar navigation */
+        .nav-sidebar {
+            position: sticky;
+            top: 2rem;
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.06);
+        }
+        .nav-sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            color: #475569;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .nav-sidebar a:hover {
+            background: #f1f5f9;
+            color: #f97316;
+        }
+        .nav-sidebar a i { font-size: 1.25rem; width: 1.5rem; text-align: center; }
+        .nav-sidebar a.active {
+            background: #fff7ed;
+            color: #f97316;
+            font-weight: 700;
+        }
+
+        /* File upload area */
+        .file-upload-wrapper {
+            border: 2px dashed #e2e8f0;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #f8fafc;
+        }
+        .file-upload-wrapper:hover,
+        .file-upload-wrapper.dragover {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-upload-preview {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #f97316;
+            margin: 0 auto 1rem;
+            display: none;
+        }
+        .file-upload-preview.show { display: block; }
+
+        /* Cropper modal */
+        .cropper-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .cropper-modal.active {
+            display: flex;
+        }
+        .cropper-box {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 90vw;
+            max-height: 90vh;
+            padding: 1.5rem;
+            overflow: auto;
+        }
+        .cropper-box img {
+            max-width: 100%;
+            display: block;
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-    <div class="container mx-auto px-4 py-12">
-        <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-3xl shadow-xl p-8">
-                <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <i class="bi bi-person-badge text-3xl text-brand-600"></i>
+<body>
+    <div class="container mx-auto px-4 py-8 lg:py-12">
+        <div class="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+            <!-- ====== SIDEBAR NAVIGATION ====== -->
+            <aside class="lg:w-1/4">
+                <div class="nav-sidebar">
+                    <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Profile Sections</h4>
+                    <a href="#section-basic" class="active" onclick="setActive(this)"><i class="bi bi-person"></i> Basic Info</a>
+                    <a href="#section-professional" onclick="setActive(this)"><i class="bi bi-briefcase"></i> Professional</a>
+                    <a href="#section-skills" onclick="setActive(this)"><i class="bi bi-tools"></i> Skills & Certifications</a>
+                    <a href="#section-social" onclick="setActive(this)"><i class="bi bi-link-45deg"></i> Social Links</a>
+                    <a href="#section-photo" onclick="setActive(this)"><i class="bi bi-image"></i> Profile Photo</a>
+                    <div class="mt-6 pt-6 border-t border-slate-100">
+                        <a href="{% url 'jobs:home' %}" class="text-slate-400 hover:text-slate-600"><i class="bi bi-arrow-left"></i> Cancel</a>
                     </div>
-                    <h1 class="text-3xl font-bold text-slate-900 mb-2">Complete Your Profile</h1>
-                    <p class="text-slate-500">Tell us about yourself to get started</p>
                 </div>
+            </aside>
 
-                <form method="post" enctype="multipart/form-data" class="space-y-6">
-                    {% csrf_token %}
-                    
-                    {% if form.non_field_errors %}
-                    <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 mb-6">
-                        {% for error in form.non_field_errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    <!-- Title & Location -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Professional Title</label>
-                            {{ form.title|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
-                            {% if form.title.errors %}
-                                <p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>
-                            {% endif %}
+            <!-- ====== MAIN FORM ====== -->
+            <main class="lg:w-3/4">
+                <div class="bg-white rounded-3xl shadow-xl p-6 lg:p-10">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-brand-100 rounded-2xl flex items-center justify-center">
+                            <i class="bi bi-person-badge text-2xl text-brand-600"></i>
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Location (City, Country)</label>
-                            {{ form.location|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
-                            {% if form.location.errors %}
-                                <p class="text-red-500 text-xs mt-1">{{ form.location.errors.0 }}</p>
-                            {% endif %}
+                            <h1 class="text-3xl font-bold text-slate-900">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Your Profile</h1>
+                            <p class="text-slate-500 text-sm">Fill in your details to connect with employers</p>
                         </div>
                     </div>
 
-                    <!-- Bio -->
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Professional Bio</label>
-                        {{ form.bio|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all h-32 resize-none" }}
-                        {% if form.bio.errors %}
-                            <p class="text-red-500 text-xs mt-1">{{ form.bio.errors.0 }}</p>
+                    <form method="post" enctype="multipart/form-data" class="space-y-6" id="profileForm" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Non-field errors -->
+                        {% if form.non_field_errors %}
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600">
+                            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                        </div>
                         {% endif %}
-                    </div>
 
-                    <!-- Rate & Experience -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Hourly Rate (ETB)</label>
-                            {{ form.hourly_rate|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
-                            {% if form.hourly_rate.errors %}
-                                <p class="text-red-500 text-xs mt-1">{{ form.hourly_rate.errors.0 }}</p>
+                        <!-- ============================================================ -->
+                        <!-- SECTION 1: BASIC INFO -->
+                        <!-- ============================================================ -->
+                        <section id="section-basic" class="section-card">
+                            <h2 class="section-title"><i class="bi bi-person"></i> Basic Information</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">Professional Title <span class="text-red-500">*</span></label>
+                                    {{ form.title|add_class:"input-field" }}
+                                    {% if form.title.errors %}<div class="field-error">{{ form.title.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.location.id_for_label }}" class="form-label">Location <span class="text-red-500">*</span></label>
+                                    {{ form.location|add_class:"input-field" }}
+                                    {% if form.location.errors %}<div class="field-error">{{ form.location.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.country.id_for_label }}" class="form-label">Country</label>
+                                    {{ form.country|add_class:"input-field" }}
+                                    {% if form.country.errors %}<div class="field-error">{{ form.country.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                                    {{ form.city|add_class:"input-field" }}
+                                    {% if form.city.errors %}<div class="field-error">{{ form.city.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <label for="{{ form.bio.id_for_label }}" class="form-label">Bio <span class="text-red-500">*</span></label>
+                                {{ form.bio|add_class:"input-field h-32 resize-none" }}
+                                {% if form.bio.errors %}<div class="field-error">{{ form.bio.errors.0 }}</div>{% endif %}
+                                <p class="text-xs text-slate-400 mt-1">Briefly describe your expertise and experience.</p>
+                            </div>
+                        </section>
+
+                        <!-- ============================================================ -->
+                        <!-- SECTION 2: PROFESSIONAL -->
+                        <!-- ============================================================ -->
+                        <section id="section-professional" class="section-card">
+                            <h2 class="section-title"><i class="bi bi-briefcase"></i> Professional Details</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="{{ form.hourly_rate.id_for_label }}" class="form-label">Hourly Rate (ETB) <span class="text-red-500">*</span></label>
+                                    {{ form.hourly_rate|add_class:"input-field" }}
+                                    {% if form.hourly_rate.errors %}<div class="field-error">{{ form.hourly_rate.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.years_of_experience.id_for_label }}" class="form-label">Years of Experience <span class="text-red-500">*</span></label>
+                                    {{ form.years_of_experience|add_class:"input-field" }}
+                                    {% if form.years_of_experience.errors %}<div class="field-error">{{ form.years_of_experience.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.profession.id_for_label }}" class="form-label">Profession</label>
+                                    {{ form.profession|add_class:"input-field" }}
+                                    {% if form.profession.errors %}<div class="field-error">{{ form.profession.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                                    {{ form.category|add_class:"input-field" }}
+                                    {% if form.category.errors %}<div class="field-error">{{ form.category.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ============================================================ -->
+                        <!-- SECTION 3: SKILLS & CERTIFICATIONS -->
+                        <!-- ============================================================ -->
+                        <section id="section-skills" class="section-card">
+                            <h2 class="section-title"><i class="bi bi-tools"></i> Skills & Certifications</h2>
+                            <div>
+                                <label for="{{ form.skills.id_for_label }}" class="form-label">Skills <span class="text-red-500">*</span></label>
+                                {{ form.skills|add_class:"input-field" }}
+                                {% if form.skills.errors %}<div class="field-error">{{ form.skills.errors.0 }}</div>{% endif %}
+                                <p class="text-xs text-slate-400 mt-1">{{ form.skills.help_text }}</p>
+                            </div>
+                            <div class="mt-4">
+                                <label for="{{ form.certifications.id_for_label }}" class="form-label">Certifications</label>
+                                {{ form.certifications|add_class:"input-field" }}
+                                {% if form.certifications.errors %}<div class="field-error">{{ form.certifications.errors.0 }}</div>{% endif %}
+                                <p class="text-xs text-slate-400 mt-1">{{ form.certifications.help_text }}</p>
+                            </div>
+                        </section>
+
+                        <!-- ============================================================ -->
+                        <!-- SECTION 4: SOCIAL LINKS -->
+                        <!-- ============================================================ -->
+                        <section id="section-social" class="section-card">
+                            <h2 class="section-title"><i class="bi bi-link-45deg"></i> Social & Portfolio Links</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="{{ form.portfolio_url.id_for_label }}" class="form-label">Portfolio URL</label>
+                                    {{ form.portfolio_url|add_class:"input-field" }}
+                                    {% if form.portfolio_url.errors %}<div class="field-error">{{ form.portfolio_url.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.linkedin_url.id_for_label }}" class="form-label">LinkedIn URL</label>
+                                    {{ form.linkedin_url|add_class:"input-field" }}
+                                    {% if form.linkedin_url.errors %}<div class="field-error">{{ form.linkedin_url.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ============================================================ -->
+                        <!-- SECTION 5: PROFILE PHOTO (with cropping) -->
+                        <!-- ============================================================ -->
+                        <section id="section-photo" class="section-card">
+                            <h2 class="section-title"><i class="bi bi-image"></i> Profile Photo</h2>
+                            <div class="file-upload-wrapper" id="fileUploadWrapper">
+                                <div class="flex flex-col items-center">
+                                    <img id="imagePreview" class="file-upload-preview" src="#" alt="Profile preview">
+                                    <i class="bi bi-cloud-upload text-4xl text-slate-300 mb-2"></i>
+                                    <p class="text-slate-600 font-medium">Click or drag to upload</p>
+                                    <p class="text-xs text-slate-400">PNG, JPG, WEBP (max 5MB)</p>
+                                    {{ form.profile_picture|add_class:"input-field" }}
+                                    <button type="button" id="cropBtn" class="mt-3 hidden px-4 py-2 bg-brand-500 text-white rounded-lg font-bold text-sm hover:bg-brand-600 transition-all">
+                                        <i class="bi bi-crop"></i> Crop Image
+                                    </button>
+                                    <button type="button" id="removeImageBtn" class="mt-2 hidden text-sm text-red-500 hover:text-red-700 font-semibold">
+                                        <i class="bi bi-x-circle"></i> Remove image
+                                    </button>
+                                    {% if form.instance.profile_picture %}
+                                        <div class="mt-2 text-sm text-slate-500">
+                                            Current: <a href="{{ form.instance.profile_picture.url }}" target="_blank" class="text-brand-500 hover:underline">{{ form.instance.profile_picture.name }}</a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if form.profile_picture.errors %}
+                                <div class="field-error">{{ form.profile_picture.errors.0 }}</div>
                             {% endif %}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Years of Experience</label>
-                            {{ form.years_of_experience|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
-                            {% if form.years_of_experience.errors %}
-                                <p class="text-red-500 text-xs mt-1">{{ form.years_of_experience.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
+                            <p class="text-xs text-slate-400 mt-2">After uploading, use the "Crop Image" button to adjust your profile picture.</p>
+                        </section>
 
-                    <!-- Skills -->
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Skills</label>
-                        <p class="text-xs text-slate-400 mb-2">Separate skills with a comma (e.g., Python, Django, React)</p>
-                        {{ form.skills|add_class:"w-full p-3 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all" }}
-                        {% if form.skills.errors %}
-                            <p class="text-red-500 text-xs mt-1">{{ form.skills.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- Profile Picture -->
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Profile Picture</label>
-                        <div class="relative">
-                            {{ form.profile_picture|add_class:"block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer" }}
+                        <!-- ====== SUBMIT ====== -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-end">
+                            <a href="{% url 'jobs:job_seeker_dashboard' %}" class="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors text-center">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="px-8 py-3 bg-brand-500 text-white rounded-xl font-bold hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2">
+                                <span>Save Profile</span>
+                                <i class="bi bi-check-circle-fill"></i>
+                            </button>
                         </div>
-                        {% if form.profile_picture.errors %}
-                            <p class="text-red-500 text-xs mt-1">{{ form.profile_picture.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="w-full bg-brand-500 text-white py-4 rounded-xl font-bold hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transform hover:-translate-y-1">
-                        <span>Save Profile</span>
-                        <i class="bi bi-check-circle-fill"></i>
-                    </button>
-                    
-                    <div class="text-center mt-4">
-                        <a href="{% url 'jobs:home' %}" class="text-slate-400 text-sm hover:text-brand-500 transition-colors">Cancel and go back</a>
-                    </div>
-                </form>
+    <!-- ====== CROPPER MODAL ====== -->
+    <div class="cropper-modal" id="cropperModal">
+        <div class="cropper-box">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-900">Crop Profile Picture</h3>
+                <button type="button" id="closeCropper" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            <div>
+                <img id="cropperImage" src="" alt="Crop target">
+            </div>
+            <div class="flex gap-3 mt-4 justify-end">
+                <button type="button" id="cancelCrop" class="px-4 py-2 border border-slate-200 rounded-lg font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="button" id="confirmCrop" class="px-4 py-2 bg-brand-500 text-white rounded-lg font-semibold hover:bg-brand-600">Apply Crop</button>
             </div>
         </div>
     </div>
+
+    <!-- Cropper.js JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script>
+        (function() {
+            'use strict';
+
+            // ---- DOM refs ----
+            const wrapper = document.getElementById('fileUploadWrapper');
+            const fileInput = wrapper.querySelector('input[type="file"]');
+            const preview = document.getElementById('imagePreview');
+            const cropBtn = document.getElementById('cropBtn');
+            const removeBtn = document.getElementById('removeImageBtn');
+            const cropperModal = document.getElementById('cropperModal');
+            const cropperImage = document.getElementById('cropperImage');
+            const closeCropper = document.getElementById('closeCropper');
+            const cancelCrop = document.getElementById('cancelCrop');
+            const confirmCrop = document.getElementById('confirmCrop');
+
+            let cropper = null;
+            let currentFile = null;
+
+            // ---- Show preview when file selected ----
+            fileInput.addEventListener('change', function(e) {
+                const file = this.files[0];
+                if (file) {
+                    currentFile = file;
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        preview.src = event.target.result;
+                        preview.classList.add('show');
+                        cropBtn.classList.remove('hidden');
+                        removeBtn.classList.remove('hidden');
+                        wrapper.style.borderColor = '#f97316';
+                        wrapper.style.background = '#fff7ed';
+                        // Enable crop button
+                        cropBtn.disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    resetPreview();
+                }
+            });
+
+            // ---- Remove image ----
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fileInput.value = '';
+                currentFile = null;
+                resetPreview();
+                fileInput.dispatchEvent(new Event('change'));
+            });
+
+            function resetPreview() {
+                preview.src = '#';
+                preview.classList.remove('show');
+                cropBtn.classList.add('hidden');
+                removeBtn.classList.add('hidden');
+                wrapper.style.borderColor = '#e2e8f0';
+                wrapper.style.background = '#f8fafc';
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            }
+
+            // ---- Drag-and-drop ----
+            wrapper.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            wrapper.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+            wrapper.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+            wrapper.addEventListener('click', function(e) {
+                if (e.target.closest('#cropBtn') || e.target.closest('#removeImageBtn')) return;
+                fileInput.click();
+            });
+
+            // ---- Open Cropper ----
+            cropBtn.addEventListener('click', function() {
+                if (!preview.src || preview.src === '#') return;
+                // Show modal and set image source
+                cropperImage.src = preview.src;
+                cropperModal.classList.add('active');
+                // Initialize cropper after image loads
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: true,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            });
+
+            // ---- Close cropper ----
+            function closeCropperModal() {
+                cropperModal.classList.remove('active');
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            }
+            closeCropper.addEventListener('click', closeCropperModal);
+            cancelCrop.addEventListener('click', closeCropperModal);
+            cropperModal.addEventListener('click', function(e) {
+                if (e.target === this) closeCropperModal();
+            });
+
+            // ---- Confirm crop ----
+            confirmCrop.addEventListener('click', function() {
+                if (!cropper) return;
+                const canvas = cropper.getCroppedCanvas({
+                    width: 400,
+                    height: 400,
+                    imageSmoothingQuality: 'high',
+                });
+                // Convert to blob
+                canvas.toBlob(function(blob) {
+                    // Replace the file in the input with cropped version
+                    const croppedFile = new File([blob], currentFile.name, {
+                        type: currentFile.type,
+                        lastModified: Date.now(),
+                    });
+                    // Update file input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    fileInput.files = dataTransfer.files;
+                    // Update preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                        preview.classList.add('show');
+                    };
+                    reader.readAsDataURL(croppedFile);
+                    // Close cropper
+                    closeCropperModal();
+                    // Show toast or feedback
+                    showToast('Image cropped successfully!');
+                }, currentFile.type);
+            });
+
+            // ---- Toast helper ----
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 transition-all transform translate-y-20 opacity-0';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-20', 'opacity-0');
+                });
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 2500);
+            }
+
+            // ---- Sidebar active link ----
+            window.setActive = function(el) {
+                document.querySelectorAll('.nav-sidebar a').forEach(a => a.classList.remove('active'));
+                el.classList.add('active');
+            };
+
+            // ---- Auto-highlight section on scroll ----
+            const sections = document.querySelectorAll('.section-card');
+            const navLinks = document.querySelectorAll('.nav-sidebar a');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+                        });
+                    }
+                });
+            }, { threshold: 0.3 });
+            sections.forEach(section => observer.observe(section));
+
+            // ---- Mark invalid fields ----
+            document.querySelectorAll('.field-error').forEach(err => {
+                const input = err.closest('.section-card')?.querySelector('.input-field');
+                if (input) input.classList.add('is-invalid');
+            });
+
+        })();
+    </script>
 </body>
 </html>

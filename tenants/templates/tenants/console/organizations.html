@@ -1,0 +1,95 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}Organizations{% endblock %}
+{% block heading %}Organizations{% endblock %}
+{% block nav_list %}text-slate-600 hover:bg-slate-100{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-slate-900">Organizations</h1>
+    <p class="text-sm text-slate-500 mt-1">{{ rows|length }} match{{ rows|length|pluralize:"es" }}.</p>
+  </div>
+  <a href="{% url 'tenants:console_dashboard' %}" class="px-3 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm hover:bg-slate-50">Back to console</a>
+</div>
+
+<form method="get" class="bg-white rounded-xl border border-slate-200 p-4 mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+  <input name="q" value="{{ filters.q }}" placeholder="Search name, email, city"
+         class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+  <select name="status" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+    <option value="">Any status</option>
+    {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="type" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+    <option value="">Any type</option>
+    {% for value, label in type_choices %}
+      <option value="{{ value }}" {% if filters.type == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="plan" class="rounded-lg border-slate-300 px-3 py-2 text-sm">
+    <option value="">Any plan</option>
+    {% for p in plans %}
+      <option value="{{ p.slug }}" {% if filters.plan == p.slug %}selected{% endif %}>{{ p.name }}</option>
+    {% endfor %}
+  </select>
+  <div class="sm:col-span-2 lg:col-span-4 flex gap-3">
+    <button class="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold">Filter</button>
+    <a href="{% url 'tenants:console_organizations' %}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm hover:bg-slate-50">Clear</a>
+  </div>
+</form>
+
+<div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+      <tr>
+        <th class="px-5 py-3 text-left font-semibold">Organization</th>
+        <th class="px-5 py-3 text-left font-semibold">Type</th>
+        <th class="px-5 py-3 text-left font-semibold">Plan</th>
+        <th class="px-5 py-3 text-left font-semibold">Usage</th>
+        <th class="px-5 py-3 text-left font-semibold">Members</th>
+        <th class="px-5 py-3 text-left font-semibold">Status</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for row in rows %}
+        <tr class="hover:bg-slate-50">
+          <td class="px-5 py-3">
+            <a href="{% url 'tenants:console_organization_detail' row.organization.pk %}"
+               class="font-medium text-slate-800 hover:text-brand-600">{{ row.organization.name }}</a>
+            <p class="text-xs text-slate-500">{{ row.organization.email|default:"no email" }}</p>
+          </td>
+          <td class="px-5 py-3 text-slate-600">{{ row.organization.get_organization_type_display }}</td>
+          <td class="px-5 py-3">
+            {% if row.subscription %}
+              <span class="text-slate-700">{{ row.subscription.plan.name }}</span>
+              <p class="text-xs text-slate-400">{{ row.subscription.get_status_display }}</p>
+            {% else %}
+              <span class="text-rose-600 text-xs font-medium">none</span>
+            {% endif %}
+          </td>
+          <td class="px-5 py-3 text-slate-600">
+            {% if row.quota.job_post_limit %}
+              {{ row.quota.job_posts_used }}/{{ row.quota.job_post_limit }}
+            {% else %}
+              {{ row.quota.job_posts_used }}/&infin;
+            {% endif %}
+          </td>
+          <td class="px-5 py-3 text-slate-600">{{ row.role_count }}</td>
+          <td class="px-5 py-3">
+            <span class="text-xs px-2 py-1 rounded-full font-medium
+              {% if row.organization.status == 'active' %}bg-emerald-50 text-emerald-700
+              {% elif row.organization.status == 'pending' %}bg-amber-50 text-amber-700
+              {% else %}bg-slate-100 text-slate-600{% endif %}">{{ row.organization.status }}</span>
+            {% if row.organization.is_verified %}
+              <i class="bi bi-patch-check-fill text-brand-500 ml-1" title="Verified"></i>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="px-5 py-12 text-center text-slate-500">No organizations match.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

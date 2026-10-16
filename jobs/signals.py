@@ -8,6 +8,10 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=JobSeekerProfile)
 def sync_talent_on_verification(sender, instance, created, **kwargs):
+    """
+    Sync JobSeekerProfile to Talent on verification.
+    Only updates if profile has a picture OR talent doesn't have one.
+    """
     # Only proceed if the profile is verified and active
     if not (instance.is_verified and instance.is_active):
         return
@@ -15,7 +19,7 @@ def sync_talent_on_verification(sender, instance, created, **kwargs):
     # Build default values
     image_url = (
         instance.profile_picture.url
-        if instance.profile_picture and hasattr(instance.profile_picture, 'url')
+        if instance.profile_picture and hasattr(instance.profile_picture, 'url') and instance.profile_picture.name
         else '/static/images/default-avatar.png'
     )
     category_name = instance.category.name if instance.category else 'General'
@@ -34,14 +38,14 @@ def sync_talent_on_verification(sender, instance, created, **kwargs):
             'role': instance.title or 'Professional',
             'location': instance.location or 'Addis Ababa',
             'bio': instance.bio or 'Experienced professional.',
-            'image': image_url,
+            'image': image_url if instance.profile_picture and instance.profile_picture.name else None,
             'category': category_name,
             'experience': instance.years_of_experience or 0,
             'education': "Bachelor's degree",
             'skills': instance.skills if isinstance(instance.skills, list) else [],
             'certifications': [],
             'languages': ['English'],
-            'price': price,                     # ← crucial, prevents NOT NULL error
+            'price': price,
             'duration': 'Monthly',
             'type': 'Full-time',
             'available_from': 7,
@@ -64,14 +68,18 @@ def sync_talent_on_verification(sender, instance, created, **kwargs):
         talent.role = instance.title or 'Professional'
         talent.location = instance.location or 'Addis Ababa'
         talent.bio = instance.bio or 'Experienced professional.'
-        talent.image = image_url
+        
+        # ✅ ONLY update image if profile has a picture
+        if instance.profile_picture and instance.profile_picture.name:
+            talent.image = instance.profile_picture
+        
         talent.category = category_name
         talent.experience = instance.years_of_experience or 0
         talent.skills = instance.skills if isinstance(instance.skills, list) else []
         talent.price = price
         talent.rating = float(instance.average_rating) if instance.average_rating else 4.0
         talent.verified = instance.is_verified
-        # ... update other fields as needed
         talent.save()
-
-    logger.info(f"{'Created' if created else 'Updated'} Talent for {instance.user.username}")
+        logger.info(f"Updated Talent for {instance.user.username}")
+    else:
+        logger.info(f"Created Talent for {instance.user.username}")

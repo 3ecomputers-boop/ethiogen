@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.urls import path
 from django.shortcuts import redirect
 from django.contrib import messages
-from django.utils.html import format_html
+from django.utils.html import mark_safe
 
 # Import your custom user and profiles
 from accounts.models import User
@@ -74,21 +74,21 @@ class CustomUserAdmin(BaseUserAdmin):
     
     def user_type_badge(self, obj):
         if hasattr(obj, 'job_seeker_profile'):
-            return format_html(
+            return mark_safe(
                 '<span style="background: #3b82f6; color: white; padding: 3px 8px; '
                 'border-radius: 4px; font-size: 11px;">Job Seeker</span>'
             )
         elif hasattr(obj, 'client_profile'):
-            return format_html(
+            return mark_safe(
                 '<span style="background: #10b981; color: white; padding: 3px 8px; '
                 'border-radius: 4px; font-size: 11px;">Client</span>'
             )
         elif obj.is_staff:
-            return format_html(
+            return mark_safe(
                 '<span style="background: #f59e0b; color: white; padding: 3px 8px; '
                 'border-radius: 4px; font-size: 11px;">Admin</span>'
             )
-        return format_html(
+        return mark_safe(
             '<span style="background: #6b7280; color: white; padding: 3px 8px; '
             'border-radius: 4px; font-size: 11px;">Unknown</span>'
         )
@@ -96,10 +96,10 @@ class CustomUserAdmin(BaseUserAdmin):
     
     def is_verified_badge(self, obj):
         if hasattr(obj, 'job_seeker_profile') and obj.job_seeker_profile.is_verified:
-            return format_html('<span style="color: #10b981; font-weight:bold;">✓</span>')
+            return mark_safe('<span style="color: #10b981; font-weight:bold;">✓</span>')
         elif hasattr(obj, 'client_profile') and obj.client_profile.is_verified:
-            return format_html('<span style="color: #10b981; font-weight:bold;">✓</span>')
-        return format_html('<span style="color: #ef4444;">✗</span>')
+            return mark_safe('<span style="color: #10b981; font-weight:bold;">✓</span>')
+        return mark_safe('<span style="color: #ef4444;">✗</span>')
     is_verified_badge.short_description = 'Verified'
 
     def save_formset(self, request, form, formset, change):
@@ -201,3 +201,24 @@ except admin.sites.NotRegistered:
     pass
 
 admin.site.register(get_user_model(), CustomUserAdmin)
+
+# ============================================================================
+# Role -- the platform role taxonomy (super_admin / admin / employer /
+# job_seeker). Users reference it via a FK, so it needs to be manageable
+# here or a bad edit can silently strip everyone's permissions.
+# ============================================================================
+from accounts.models import Role  # noqa: E402
+
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'user_count', 'created_at')
+    search_fields = ('name', 'description')
+    ordering = ('name',)
+    readonly_fields = ('created_at',)
+
+    @admin.display(description='users')
+    def user_count(self, obj):
+        # User.role is declared with related_name='users', not the
+        # default 'user_set'.
+        return obj.users.count()

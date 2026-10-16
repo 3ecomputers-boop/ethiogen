@@ -1,0 +1,74 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}Jobs{% endblock %}
+{% block heading %}Jobs{% endblock %}
+{% block tab_jobs %}border-brand-500 text-brand-700 font-semibold{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-extrabold text-slate-900">Jobs</h1>
+    <p class="text-sm text-slate-500 mt-1">
+      {% if can_publish %}You have job posts left this period.
+      {% else %}Publishing is paused until the plan is active.{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100">
+      <h2 class="font-bold text-slate-900">Job listings</h2>
+      <p class="text-xs text-slate-500">Visible on the public job board</p>
+    </div>
+    {% if job_posts %}
+      <ul class="divide-y divide-slate-100">
+        {% for j in job_posts %}
+          <li class="px-5 py-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-semibold text-slate-800">{{ j.title }}</p>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  {{ j.location }} &middot; posted {{ j.created_at|date:"j M Y" }}
+                  {% if j.applicant_total %}&middot; {{ j.applicant_total }} applicant{{ j.applicant_total|pluralize }}{% endif %}
+                </p>
+              </div>
+              <span class="shrink-0 text-xs px-2 py-1 rounded-full font-medium
+                {% if j.status == 'open' %}bg-emerald-50 text-emerald-700
+                {% else %}bg-slate-100 text-slate-600{% endif %}">{{ j.status }}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="px-5 py-10 text-sm text-slate-500 text-center">No job listings yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100">
+      <h2 class="font-bold text-slate-900">Channel posts</h2>
+      <p class="text-xs text-slate-500">Published to the Telegram channel</p>
+    </div>
+    {% if channel_posts %}
+      <ul class="divide-y divide-slate-100">
+        {% for p in channel_posts %}
+          <li class="px-5 py-4 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="font-medium text-slate-800 truncate">{{ p.title }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ p.created_at|date:"j M Y" }}
+                {% if p.applications.count %}&middot; {{ p.applications.count }} applicant{{ p.applications.count|pluralize }}{% endif %}
+              </p>
+            </div>
+            <span class="shrink-0 text-xs px-2 py-1 rounded-full font-medium
+              {% if p.status == 'published' %}bg-emerald-50 text-emerald-700
+              {% else %}bg-rose-50 text-rose-700{% endif %}">{{ p.status }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="px-5 py-10 text-sm text-slate-500 text-center">Nothing published yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

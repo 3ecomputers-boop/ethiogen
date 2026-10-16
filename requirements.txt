@@ -1,63 +1,67 @@
-annotated-types==0.7.0
-anyio==4.8.0
-asgiref==3.8.1
+# Core dependencies for the job_portal Django project.
+# Installed with:  python -m venv venv && venv\Scripts\pip install -r requirements.txt
+#
+# Optional/heavy extras (news transcription, scraping agent, file watcher)
+# live in requirements-optional.txt.
+
+# --- Web framework ---
+# Django 5.1.x is NOT compatible with Python 3.14. On 3.14 every admin
+# changelist raises:
+#   AttributeError: 'super' object has no attribute 'dicts'
+# from django/template/context.py __copy__ (it calls copy(super())).
+#
+# Upgraded 5.2 -> 6.0 (6.0.9) to match what production actually runs.
+# Pinned to the 6.0 line rather than 6.1 deliberately: 6.1 is a feature
+# release and combining a major upgrade with a feature release makes
+# regressions hard to attribute.
+#
+# Django 6 removed the no-argument form of format_html(); all such calls in
+# this codebase now use mark_safe() for static markup and format_html(.., ..)
+# for interpolated values.
+Django>=6.0.9,<6.1
+asgiref>=3.12,<4
+sqlparse==0.5.3
+tzdata==2025.1
+
+# --- Database driver ---
+# PyMySQL is registered as MySQLdb in job_portal/__init__.py.
+# Use this instead of mysqlclient, which needs a C toolchain to build.
+PyMySQL==1.2.3
+# PostgreSQL driver (psycopg 3). The [binary] extra ships prebuilt wheels,
+# so no libpq or C toolchain is needed on Windows or cPanel.
+psycopg[binary]==3.3.6
+
+# --- API ---
+# djangorestframework is installed and configured in settings.py, but the
+# existing endpoints (accounts/, billing/, tenants/) are plain Django
+# function views returning JsonResponse -- they do not use it yet.
+djangorestframework==3.18.3
+# Required for the Telegram mini app when it is served from a different
+# origin than the API. Deny-by-default: set CORS_ALLOWED_ORIGINS in the
+# environment.
+django-cors-headers==4.9.0
+
+# --- Configuration ---
+python-dotenv==1.0.1
+
+# --- HTTP / scraping (scrape_tenders, post_website_update, agent) ---
+requests==2.32.3
 beautifulsoup4==4.12.3
-cachetools==5.5.1
+soupsieve==2.6
+lxml>=5.3
 certifi==2025.1.31
 charset-normalizer==3.4.1
-colorama==0.4.6
-distro==1.9.0
-Django==5.1.5
-django-cors-headers==4.6.0
-django-crispy-forms==2.3
-djangorestframework==3.15.2
-docstring_parser==0.16
-google-api-core==2.24.1
-google-auth==2.38.0
-google-cloud-aiplatform==1.79.0
-google-cloud-bigquery==3.29.0
-google-cloud-core==2.4.1
-google-cloud-resource-manager==1.14.0
-google-cloud-storage==2.19.0
-google-crc32c==1.6.0
-google-resumable-media==2.7.2
-googleapis-common-protos==1.66.0
-grpc-google-iam-v1==0.14.0
-grpcio==1.70.0
-grpcio-status==1.70.0
-h11==0.14.0
-html2text==2024.2.26
-httpcore==1.0.7
-httpx==0.28.1
 idna==3.10
-jiter==0.8.2
-lxml==5.3.0
-Markdown==3.7
-mysqlclient==2.2.7
-numpy==2.2.2
-openai==1.61.0
-packaging==24.2
-pdfkit==1.0.0
-pillow==11.1.0
-proto-plus==1.26.0
-protobuf==5.29.3
-pyasn1==0.6.1
-pyasn1_modules==0.4.1
-pydantic==2.10.6
-pydantic_core==2.27.2
-python-dateutil==2.9.0.post0
-python-docx==1.1.2
-python-dotenv==1.0.1
-python-pptx==1.0.2
-requests==2.32.3
-rsa==4.9
-shapely==2.0.7
-six==1.17.0
-sniffio==1.3.1
-soupsieve==2.6
-sqlparse==0.5.3
-tqdm==4.67.1
-typing_extensions==4.12.2
-tzdata==2025.1
 urllib3==2.3.0
-XlsxWriter==3.2.2
+
+# --- Form fields (CountryField in jobs management commands) ---
+django-countries==7.6.1
+
+# --- Images ---
+# REQUIRED, not optional: jobs.JobSeekerProfile.profile_picture,
+# jobs.Talent.image and jobs.WorkerPortfolio.image are all ImageFields,
+# and Django refuses to run system checks without Pillow.
+Pillow>=11.1.0
+
+# --- Telegram bot (bot/bot.py, transcribe_news command) ---
+python-telegram-bot==22.8

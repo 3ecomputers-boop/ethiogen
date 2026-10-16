@@ -245,3 +245,29 @@ class ReviewForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         add_tailwind_classes(self.fields)
+
+# forms.py
+class JobSeekerProfileForm(forms.ModelForm):
+    class Meta:
+        model = JobSeekerProfile
+        exclude = ['user', 'is_active', 'created_at', 'updated_at', 
+                   'otp_code', 'otp_created_at', 'otp_attempts', 'otp_expires_at',
+                   'is_verified', 'email_verified', 'phone_verified']
+        widgets = {
+            'country': CountrySelectWidget(),
+            'certifications': forms.TextInput(attrs={'placeholder': 'e.g. AWS Certified, PMP'}),
+        }
+
+    def clean_certifications(self):
+        data = self.cleaned_data['certifications']
+        if isinstance(data, str):
+            # Convert comma-separated string to list
+            return [item.strip() for item in data.split(',') if item.strip()]
+        return data
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        add_tailwind_classes(self.fields)
+        # Override help text for skills and certifications
+        self.fields['skills'].help_text = 'Comma-separated list (e.g. Python, React)'
+        self.fields['certifications'].help_text = 'Comma-separated list'

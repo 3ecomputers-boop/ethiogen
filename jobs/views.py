@@ -77,20 +77,42 @@ User = get_user_model()
 # HELPER FUNCTIONS
 # ============================================================================
 
+# jobs/views.py
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from telegram import Update
+def some_view(request):
+    from .bot import application   # lazy import
+    # now use application
+
+@csrf_exempt
+async def telegram_webhook(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            update = Update.de_json(data, app.bot)
+            await app.process_update(update)
+            return JsonResponse({"ok": True})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Only POST allowed"}, status=405)
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
 def get_image_url(image_field):
     """
-    Safely get image URL whether it's an ImageField file or string URL.
-    
-    Args:
-        image_field: Django ImageField or string URL
-    
-    Returns:
-        str: Image URL or empty string
+    Safely get the URL from an ImageField or string URL.
+    Returns the URL if available, otherwise an empty string.
+    Does NOT check file existence on disk – that responsibility is left to
+    the template (e.g., onerror fallback).
     """
     if not image_field:
         return ''
 
-    # If it's a file field with url attribute (ImageField)
+    # If it's a Django FileField with a `url` attribute
     if hasattr(image_field, 'url'):
         try:
             return image_field.url
@@ -98,9 +120,11 @@ def get_image_url(image_field):
             logger.warning(f"Could not get image URL: {e}")
             return ''
 
-    # If it's already a string URL
+    # If it's already a string (e.g., a URL stored as text)
     if isinstance(image_field, str):
-        return image_field
+        stripped = image_field.strip()
+        if stripped and (stripped.startswith('/') or stripped.startswith('http')):
+            return stripped
 
     return ''
 
@@ -1252,18 +1276,39 @@ def api_job_seekers(request):
 # API: FETCH TALENTS (for front page marketplace)
 # ============================================================================
 
+from django.http import JsonResponse
+
 def api_talents(request):
-    """Return all talents for the front page marketplace."""
+    """
+    Return talents with proper category strings and IDs.
+    """
     talents = Talent.objects.all().order_by('-rating', '-reviews')
-    
     data = []
+    
     for t in talents:
+        # Get category name and ID safely
+        cat_obj = getattr(t, 'category', None)
+        
+        if isinstance(cat_obj, str):
+            # It's already a string (e.g., CharField)
+            cat_name = cat_obj
+            cat_id = None
+        elif cat_obj:
+            # It's a related object (e.g., ForeignKey)
+            cat_name = getattr(cat_obj, 'name', str(cat_obj))
+            cat_id = getattr(cat_obj, 'id', None)
+        else:
+            # It's None or empty
+            cat_name = ""
+            cat_id = None
+
         data.append({
             'id': t.id,
             'name': t.name,
-            'title': t.role,
-            'category': t.category,
-            'rate': t.price,
+            'role': t.role,
+            'category': cat_name,               # string for display
+            'category_id': cat_id,              # integer for filtering
+            'price': float(t.price) if t.price else 0,
             'duration': t.duration,
             'type': t.type,
             'location': t.location,
@@ -1271,14 +1316,22 @@ def api_talents(request):
             'reviews': t.reviews,
             'verified': t.verified,
             'skills': t.skills if isinstance(t.skills, list) else [],
-            'avatar': get_image_url(t.image),
+            'image': get_image_url(t.image),
+            'remote': t.remote,
+            'experience': t.experience,
+            'bio': t.bio,
+            'tier': t.tier,
+            'available_from': t.available_from,
+            'portfolio': t.portfolio,
+            'certifications': t.certifications,
+            'languages': t.languages,
+            'radius': t.radius,
+            'top': t.top,
+            'education': t.education,
+            'createdAt': t.created_at.isoformat() if t.created_at else None,
         })
-    
-    return JsonResponse({
-        'success': True,
-        'count': len(data),
-        'talents': data
-    })
+        
+    return JsonResponse({'success': True, 'talents': data})
 
 
 # ============================================================================
@@ -1286,24 +1339,21 @@ def api_talents(request):
 # ============================================================================
 
 @csrf_exempt
+
 @require_http_methods(["POST"])
 def api_register_seeker(request):
-    """Handle job seeker registration from the front page."""
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
 
-    required = ['first_name', 'last_name', 'email', 'password', 'phone', 'title']
+    required = ['first_name', 'last_name', 'email', 'password']
     for field in required:
         if not data.get(field):
             return JsonResponse({'success': False, 'message': f'{field} is required'}, status=400)
 
     if User.objects.filter(email=data['email']).exists():
-        return JsonResponse({
-            'success': False,
-            'message': 'An account with this email already exists.'
-        }, status=400)
+        return JsonResponse({'success': False, 'message': 'Account with this email already exists.'}, status=400)
 
     user = User.objects.create_user(
         username=data['email'],
@@ -1313,22 +1363,28 @@ def api_register_seeker(request):
         last_name=data['last_name'],
     )
 
-    raw_skills = data.get('skills', '')
-    if isinstance(raw_skills, str):
-        skills_list = [s.strip() for s in raw_skills.split(',') if s.strip()]
-    else:
-        skills_list = raw_skills
+    # Optional fields – default if missing
+    title = data.get('title', '')
+    phone = data.get('phone', '')
+    country = data.get('country', '')
+    city = data.get('city', '')
+    hourly_rate = data.get('rate', 0)
+    experience = _parse_experience(data.get('experience', '0-1'))
+    skills = data.get('skills', [])
+    if isinstance(skills, str):
+        skills = [s.strip() for s in skills.split(',') if s.strip()]
+    bio = data.get('bio', '')
 
-    JobSeekerProfile.objects.create(
+    profile = JobSeekerProfile.objects.create(
         user=user,
-        title=data.get('title', ''),
-        phone_number=data.get('phone', ''),
-        country=data.get('country', ''),
-        city=data.get('city', ''),
-        hourly_rate=data.get('rate', 0),
-        years_of_experience=_parse_experience(data.get('experience', '0-1')),
-        skills=skills_list,
-        bio=data.get('bio', ''),
+        title=title,
+        phone_number=phone,
+        country=country,
+        city=city,
+        hourly_rate=hourly_rate,
+        years_of_experience=experience,
+        skills=skills,
+        bio=bio,
         is_verified=False,
         email_verified=False,
         is_active=True,
@@ -1340,9 +1396,15 @@ def api_register_seeker(request):
     return JsonResponse({
         'success': True,
         'message': f'Account created for {user.get_full_name()}!',
-        'user_id': user.id,
+        'user': {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'role': 'job_seeker',
+            'profile_image': get_image_url(profile.profile_picture) if profile.profile_picture else None,
+        }
     })
-
 
 # ============================================================================
 # API: REGISTER EMPLOYER (from front page)
@@ -1564,9 +1626,9 @@ def update_talent(request, talent_id):
         if 'multipart/form-data' in content_type or 'application/x-www-form-urlencoded' in content_type:
             data = request.POST.dict()
             photo_file = request.FILES.get('photo')
-            logger.info(f"📤 FormData received for talent {talent_id}")
+            logger.info(f" FormData received for talent {talent_id}")
             if photo_file:
-                logger.info(f"📷 Photo: {photo_file.name}, size: {photo_file.size}")
+                logger.info(f"📷 Photo: {photo_file.name}, size: {photo_file.size}, type: {photo_file.content_type}")
         else:
             try:
                 raw_body = request.body.decode('utf-8')
@@ -1633,7 +1695,7 @@ def update_talent(request, talent_id):
                 setattr(talent, field, value)
                 updated_fields.append(field)
 
-        # Handle photo operations
+        # ✅ FIXED: Handle photo operations
         photo_removed = data.get('photo_removed', 'false')
         if isinstance(photo_removed, str):
             photo_removed = photo_removed.lower() in ('true', '1', 'yes')
@@ -1642,16 +1704,16 @@ def update_talent(request, talent_id):
             # Remove existing photo
             if talent.image:
                 try:
-                    if hasattr(talent.image, 'delete'):
-                        talent.image.delete(save=False)
+                    talent.image.delete(save=False)
+                    logger.info(f"🗑️ Deleted old image file for talent {talent_id}")
                 except Exception as e:
                     logger.warning(f"Could not delete old image: {e}")
             talent.image = None
             updated_fields.append('image')
-            logger.info(f"🗑️ Removed photo from talent {talent_id}")
+            logger.info(f"🗑️ Removed photo reference from talent {talent_id}")
         
         elif photo_file:
-            # Upload new photo
+            # ✅ FIXED: Upload new photo using proper Django file handling
             try:
                 if photo_file.size > 5 * 1024 * 1024:
                     return JsonResponse({
@@ -1666,19 +1728,27 @@ def update_talent(request, talent_id):
                         'message': f'Invalid file type. Allowed: {", ".join(allowed_types)}'
                     }, status=400)
                 
-                # Delete old image
-                if talent.image and hasattr(talent.image, 'delete'):
+                # Delete old image file
+                if talent.image:
                     try:
                         talent.image.delete(save=False)
+                        logger.info(f"🗑️ Deleted old image for talent {talent_id}")
                     except Exception as e:
                         logger.warning(f"Could not delete old image: {e}")
                 
-                talent.image = photo_file
+                # ✅ CRITICAL FIX: Use .save() method to properly save the file
+                talent.image.save(photo_file.name, photo_file, save=False)
                 updated_fields.append('image')
-                logger.info(f"✅ Photo uploaded for talent {talent_id}: {photo_file.name}")
+                logger.info(f"✅ Photo saved for talent {talent_id}: {talent.image.name}")
+                
+                # Verify file exists on disk
+                if hasattr(talent.image, 'path') and os.path.exists(talent.image.path):
+                    logger.info(f"✅ File exists on disk: {talent.image.path}")
+                else:
+                    logger.error(f" File NOT found on disk: {getattr(talent.image, 'path', 'No path')}")
                 
             except Exception as e:
-                logger.error(f"Error uploading photo for talent {talent_id}: {str(e)}")
+                logger.error(f"❌ Error uploading photo for talent {talent_id}: {str(e)}", exc_info=True)
                 return JsonResponse({
                     'success': False,
                     'message': f'Error uploading photo: {str(e)}'
@@ -1693,13 +1763,13 @@ def update_talent(request, talent_id):
                     ext = format_str.split('/')[-1]
                     data_file = ContentFile(base64.b64decode(imgstr), name=f'talent_{talent_id}.{ext}')
                     
-                    if talent.image and hasattr(talent.image, 'delete'):
+                    if talent.image:
                         try:
                             talent.image.delete(save=False)
                         except:
                             pass
                     
-                    talent.image = data_file
+                    talent.image.save(data_file.name, data_file, save=False)
                     updated_fields.append('image')
                     logger.info(f"✅ Base64 photo saved for talent {talent_id}")
             except Exception as e:
@@ -1709,27 +1779,22 @@ def update_talent(request, talent_id):
             # Handle image URL: try to download and save
             image_value = data['image']
             if isinstance(image_value, str) and image_value.startswith(('http://', 'https://')):
-                # Remove old image if exists
-                if talent.image and hasattr(talent.image, 'delete'):
+                if talent.image:
                     try:
                         talent.image.delete(save=False)
                     except:
                         pass
                 
-                # Download and save
                 success = save_image_from_url(talent, image_value)
                 if success:
                     updated_fields.append('image')
                     logger.info(f"✅ Image downloaded from URL for talent {talent_id}")
                 else:
-                    # If download fails, store the URL as a string (optional, but might break ImageField)
-                    # Instead, we'll set image to None and report warning
                     talent.image = None
-                    logger.warning(f"Could not download image from URL, set to None for talent {talent_id}")
-                    # Optionally store URL in a separate field if you have one
+                    logger.warning(f"Could not download image from URL for talent {talent_id}")
 
-        # Save talent
-        talent.save()
+        # ✅ CRITICAL: Save the talent instance
+        talent.save(update_fields=updated_fields if updated_fields else None)
         
         logger.info(
             f"Talent {talent.id} ({talent.name}) updated by {request.user.username}. "
@@ -1775,4 +1840,472 @@ def update_talent(request, talent_id):
             'success': False,
             'message': f'Server error: {str(e)}'
         }, status=500)
+# ============================================================================
+# API: UPLOAD TALENT PHOTO
+# ============================================================================
 
+@csrf_exempt
+@require_POST
+def api_upload_talent_photo(request):
+    """
+    Upload or update a talent's profile photo.
+    Accepts multipart/form-data with 'talent_id' and 'photo' fields.
+    """
+    talent_id = request.POST.get('talent_id', '')
+    photo_file = request.FILES.get('photo')
+
+    if not talent_id:
+        return JsonResponse({'success': False, 'message': 'Talent ID is required'}, status=400)
+
+    if not photo_file:
+        return JsonResponse({'success': False, 'message': 'Photo file is required'}, status=400)
+
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+    if photo_file.content_type not in allowed_types:
+        return JsonResponse({
+            'success': False,
+            'message': 'Only JPG, PNG, and WebP images are allowed'
+        }, status=400)
+
+    # Validate file size (max 5MB for talent photos)
+    if photo_file.size > 5 * 1024 * 1024:
+        return JsonResponse({
+            'success': False,
+            'message': 'Image must be under 5MB'
+        }, status=400)
+
+    try:
+        talent = Talent.objects.get(id=int(talent_id))
+    except (Talent.DoesNotExist, ValueError):
+        return JsonResponse({'success': False, 'message': 'Talent not found'}, status=404)
+
+    try:
+        # Delete old photo if exists
+        if talent.image:
+            try:
+                talent.image.delete(save=False)
+            except Exception:
+                pass
+
+        # Determine file extension
+        ext_map = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}
+        ext = ext_map.get(photo_file.content_type, 'jpg')
+        filename = f"talent_{talent.id}_{int(timezone.now().timestamp())}.{ext}"
+
+        # Save the new photo
+        talent.image.save(filename, photo_file, save=True)
+
+        photo_url = get_image_url(talent.image)
+
+        logger.info(f"Photo uploaded for talent {talent.id}: {filename}")
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Photo updated for {talent.name}',
+            'photo': photo_url,
+        })
+
+    except Exception as e:
+        logger.error(f"Photo upload error for talent {talent_id}: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': 'Failed to upload photo. Please try again.'
+        }, status=500)
+
+
+@csrf_exempt
+@require_POST
+def api_remove_talent_photo(request):
+    """Remove a talent's profile photo."""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+
+    talent_id = data.get('talent_id')
+    if not talent_id:
+        return JsonResponse({'success': False, 'message': 'Talent ID is required'}, status=400)
+
+    try:
+        talent = Talent.objects.get(id=int(talent_id))
+    except (Talent.DoesNotExist, ValueError):
+        return JsonResponse({'success': False, 'message': 'Talent not found'}, status=404)
+
+    if talent.image:
+        try:
+            talent.image.delete(save=False)
+        except Exception:
+            pass
+        talent.image = None
+        talent.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Photo removed from {talent.name}'
+    })
+
+
+# ============================================================================
+# API: BATCH FIX TALENT IMAGES (run once to fix URL-stored images)
+# ============================================================================
+
+@staff_member_required
+def api_fix_talent_images(request):
+    """
+    One-time utility: download images stored as URLs in the talent.image field
+    and save them as actual files. Run this if talents have URL strings instead
+    of uploaded files.
+    """
+    fixed = 0
+    errors = 0
+
+    for talent in Talent.objects.all():
+        # Check if image is stored as a URL string rather than a file
+        if talent.image and hasattr(talent.image, 'url'):
+            try:
+                # If .path doesn't exist, it might be a URL string stored in ImageField
+                talent.image.path
+                continue  # File exists, skip
+            except (NotImplementedError, ValueError, FileNotFoundError):
+                pass
+
+        # Check if image field contains a URL string
+        image_value = talent.image
+        if isinstance(image_value, str) and image_value.startswith('http'):
+            if save_image_from_url(talent, image_value):
+                fixed += 1
+            else:
+                errors += 1
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Fixed {fixed} images, {errors} errors',
+        'fixed': fixed,
+        'errors': errors,
+    })
+    
+# ============================================================================
+# TELEGRAM WEBHOOK
+# ============================================================================
+
+# jobs/views.py
+# jobs/views.py
+import json
+import asyncio
+import traceback
+import logging
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def telegram_webhook(request):
+    """Handle incoming Telegram webhook"""
+    
+    def make_response(data, status=200):
+        response = JsonResponse(data, status=status)
+        # Standard no-cache headers
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        # LiteSpeed-specific: tell LiteSpeed NOT to cache this
+        response['X-Litespeed-Cache-Control'] = 'no-cache'
+        return response
+    
+    if request.method != "POST":
+        return make_response({"error": "Only POST allowed"}, 405)
+    
+    try:
+        raw_body = request.body
+        logger.info(f"[WEBHOOK] Body length: {len(raw_body)}")
+        
+        if not raw_body:
+            logger.error("[WEBHOOK] Empty body")
+            return make_response({"ok": True})
+        
+        data = json.loads(raw_body)
+        logger.info(f"[WEBHOOK] update_id: {data.get('update_id')}")
+        
+        from .bot import application
+        from telegram import Update
+        
+        update = Update.de_json(data, application.bot)
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(application.process_update(update))
+        finally:
+            loop.close()
+            
+        return make_response({"ok": True})
+        
+    except Exception as e:
+        logger.error(f"[WEBHOOK ERROR] {str(e)}")
+        traceback.print_exc()
+        return make_response({"ok": True})
+        
+def mini_app(request):
+    """
+    Serve the Telegram Mini App HTML page.
+    This is loaded when users open the app from the bot's menu button.
+    """
+    return render(request, 'miniapp/index.html')
+    
+@csrf_exempt
+
+def api_login(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Only POST allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return JsonResponse({'success': False, 'error': 'Email and password required'}, status=400)
+
+    user = authenticate(request, username=email, password=password)
+    if user is None:
+        return JsonResponse({'success': False, 'error': 'Invalid credentials'}, status=401)
+
+    login(request, user)
+
+    role = 'job_seeker'
+    profile_image = None
+    if hasattr(user, 'client_profile'):
+        role = 'employer'
+    elif hasattr(user, 'job_seeker_profile'):
+        profile = user.job_seeker_profile
+        profile_image = get_image_url(profile.profile_picture) if profile.profile_picture else None
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Welcome back, {user.get_full_name()}!',
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': role,
+            'profile_image': profile_image,
+        }
+    })
+    
+def api_categories(request):
+    """
+    Return categories for filter chips.
+    If you have a Category model (e.g., JobCategory), use it.
+    Otherwise, extract distinct category names from Talent.
+    """
+    # Option 1: If you have a dedicated Category model (recommended)
+    if hasattr(settings, 'CATEGORY_MODEL') or 'JobCategory' in globals():
+        from .models import JobCategory
+        cats = JobCategory.objects.all()
+        data = [{'id': c.id, 'name': c.name} for c in cats]
+    else:
+        # Fallback: get distinct category strings from Talent
+        # If category is a ForeignKey, we need to get the name via the related object.
+        # We'll use a set to avoid duplicates.
+        categories = set()
+        for t in Talent.objects.select_related('category').all():
+            if t.category:
+                if hasattr(t.category, 'name'):
+                    categories.add((t.category.id, t.category.name))
+                else:
+                    categories.add((t.category, t.category))  # fallback
+        data = [{'id': cat_id, 'name': cat_name} for cat_id, cat_name in categories]
+        # If no categories, return empty list
+    return JsonResponse({'success': True, 'categories': data})
+    
+from django.contrib.auth.decorators import login_required
+
+
+@csrf_exempt
+def api_current_user(request):
+    """
+    Return the currently signed-in user as JSON.
+
+    Deliberately NOT wrapped in @login_required: that decorator redirects
+    anonymous callers to the HTML login page, which breaks JSON clients
+    such as the Telegram mini app. Return 401 with JSON instead.
+    """
+    user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({'authenticated': False, 'user': None}, status=401)
+
+    role = 'job_seeker'
+    profile_image = None
+    if hasattr(user, 'client_profile'):
+        role = 'employer'
+    elif hasattr(user, 'job_seeker_profile'):
+        profile = user.job_seeker_profile
+        profile_image = get_image_url(profile.profile_picture) if profile.profile_picture else None
+
+    return JsonResponse({
+        'authenticated': True,
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': role,
+            'profile_image': profile_image,
+        }
+    })
+    
+@csrf_exempt
+def api_logout(request):
+    from django.contrib.auth import logout as django_logout
+    django_logout(request)
+    return JsonResponse({'success': True, 'message': 'Logged out'})
+    
+@csrf_exempt
+@require_POST
+def api_toggle_verify(request, seeker_id):
+    """
+    Toggle verification status for a job seeker.
+    Expects: /api/job-seekers/<seeker_id>/toggle-verify/
+    """
+    try:
+        profile = JobSeekerProfile.objects.select_related('user').get(id=seeker_id)
+    except JobSeekerProfile.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Job seeker not found'}, status=404)
+    
+    profile.is_verified = not profile.is_verified
+    profile.save()
+    
+    status = 'verified' if profile.is_verified else 'unverified'
+    return JsonResponse({
+        'success': True,
+        'message': f'User {profile.user.get_full_name()} is now {status}.',
+        'verified': profile.is_verified
+    })
+    
+# jobs/views.py
+import json
+import logging
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from .models import JobSeekerProfile
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+@require_POST
+def verify_job_seeker(request):
+    """
+    Toggle or set the verification status of a job seeker.
+    Expects JSON: {"user_id": 123, "verified": true/false}
+    """
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
+
+    user_id = data.get('user_id')
+    verified = data.get('verified')
+
+    if user_id is None or verified is None:
+        return JsonResponse({'success': False, 'message': 'user_id and verified are required'}, status=400)
+
+    try:
+        profile = JobSeekerProfile.objects.select_related('user').get(user_id=user_id)
+    except JobSeekerProfile.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Job seeker not found'}, status=404)
+
+    # ✅ Actually update the database
+    profile.is_verified = bool(verified)
+    profile.save(update_fields=['is_verified'])
+
+    logger.info(f"Verification updated for user {profile.user.email}: is_verified={profile.is_verified}")
+
+    return JsonResponse({
+        'success': True,
+        'message': f'User {profile.user.get_full_name()} is now {"verified" if profile.is_verified else "unverified"}.',
+        'verified': profile.is_verified
+    })
+    
+# example in Django REST Framework / Views
+import os
+from django.http import JsonResponse
+
+def protected_api_view(request):
+    client_api_key = request.headers.get('X-Ethiogen-Api-Key')
+    server_api_key = os.getenv('ETHIOGEN_API_KEY')
+    
+    if not client_api_key or client_api_key != server_api_key:
+        return JsonResponse({'error': 'Unauthorized: Invalid API Key'}, status=401)
+        
+    # Process request if valid
+    return JsonResponse({'message': 'Authenticated successfully'})
+    
+# jobs/views.py - add this function
+
+@csrf_exempt
+def api_jobs(request):
+    """
+    JSON API endpoint for jobs list.
+    Returns all approved jobs with their details.
+    """
+    # Filter to show only approved jobs (adjust as needed)
+    jobs = Job.objects.filter(is_approved=True).order_by('-posted_date')
+    
+    data = []
+    for job in jobs:
+        data.append({
+            'id': job.id,
+            'title': job.title,
+            'company': job.company_name or 'Unknown Company',
+            'location': job.location or 'Remote',
+            'job_type': job.employment_type or 'Full-time',
+            'salary': str(job.salary) if job.salary else 'Negotiable',
+            'description': job.description,
+            'category': job.category or '',
+            'posted_date': job.posted_date.isoformat() if job.posted_date else None,
+            'is_approved': job.is_approved,
+            'experience_required': job.experience_required or 0,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'count': len(data),
+        'jobs': data
+    })
+
+
+@csrf_exempt
+def api_job_detail(request, job_id):
+    """
+    JSON API endpoint for single job detail.
+    """
+    try:
+        job = Job.objects.get(id=job_id)
+    except Job.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Job not found'}, status=404)
+    
+    return JsonResponse({
+        'success': True,
+        'job': {
+            'id': job.id,
+            'title': job.title,
+            'company': job.company_name or 'Unknown Company',
+            'location': job.location or 'Remote',
+            'job_type': job.employment_type or 'Full-time',
+            'salary': str(job.salary) if job.salary else 'Negotiable',
+            'description': job.description,
+            'category': job.category or '',
+            'posted_date': job.posted_date.isoformat() if job.posted_date else None,
+            'is_approved': job.is_approved,
+            'experience_required': job.experience_required or 0,
+            'employer_email': job.client.user.email if hasattr(job, 'client') else None,
+        }
+    })
+    

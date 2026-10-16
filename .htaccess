@@ -1,0 +1,58 @@
+# =========================================
+# Ethiogen Web Server Configuration
+# =========================================
+
+<IfModule mod_env.c>
+    # Load environment variables from .env if using mod_env
+    # Or use SetEnv for variables needed by WSGI/PHP scripts
+    SetEnv DJANGO_SETTINGS_MODULE "job_portal.settings"
+</IfModule>
+
+# --- Telegram Webhook: Disable ALL caching ---
+<IfModule mod_headers.c>
+    <LocationMatch "^/telegram-webhook/">
+        Header always set Cache-Control "no-cache, no-store, must-revalidate, private"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
+        Header always set Vary "*"
+    </LocationMatch>
+</IfModule>
+
+<IfModule LiteSpeed>
+    RewriteEngine On
+    RewriteRule ^telegram-webhook/ - [E=cache-control:no-cache]
+</IfModule>
+
+# --- Static Files: Efficient serving + long-term cache ---
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Serve static files directly from filesystem
+    RewriteRule ^static/(.*)$ /home/syorelig/ethiogen/job_portal/staticfiles/$1 [L]
+    
+    # Optional: Block access to sensitive files
+    RewriteRule ^\.env - [F,L]
+    RewriteRule ^.*\.sqlite3$ - [F,L]
+</IfModule>
+
+# --- Static file browser caching (1 year) ---
+<IfModule mod_expires.c>
+    <LocationMatch "^/static/">
+        ExpiresActive On
+        ExpiresDefault "access plus 1 year"
+    </LocationMatch>
+</IfModule>
+
+# --- Security Headers ---
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# --- WSGI/Django entry point (if using mod_wsgi) ---
+# <IfModule mod_wsgi.c>
+#     WSGIScriptAlias / /home/syorelig/ethiogen/job_portal/job_portal/wsgi.py
+#     WSGIDaemonProcess ethiogen python-home=/home/syorelig/ethiogen/venv python-path=/home/syorelig/ethiogen/job_portal
+#     WSGIProcessGroup ethiogen
+# </IfModule>

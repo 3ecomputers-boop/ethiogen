@@ -1,0 +1,92 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}Plan &amp; billing{% endblock %}
+{% block heading %}Plan &amp; billing{% endblock %}
+{% block tab_billing %}border-brand-500 text-brand-700 font-semibold{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-extrabold text-slate-900">Plan &amp; billing</h1>
+<p class="text-sm text-slate-500 mt-1">{{ organization.name }}</p>
+
+<div class="grid gap-6 lg:grid-cols-3 mt-6">
+  <div class="lg:col-span-1 space-y-4">
+    {% include 'tenants/_quota_meter.html' %}
+
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <h3 class="text-sm font-semibold text-slate-700">Seats</h3>
+      <p class="mt-2 text-2xl font-extrabold text-slate-900">
+        {{ quota.seats_used }}<span class="text-slate-400 text-base font-semibold">/{{ quota.seat_limit|default:"∞" }}</span>
+      </p>
+      <p class="mt-1 text-xs text-slate-500">Active members on this plan.</p>
+    </div>
+
+    {% if subscription %}
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="text-sm font-semibold text-slate-700">Subscription</h3>
+        <dl class="mt-3 space-y-2 text-sm">
+          <div class="flex justify-between"><dt class="text-slate-500">Status</dt>
+            <dd class="font-medium text-slate-800">{{ subscription.get_status_display }}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">Started</dt>
+            <dd class="font-medium text-slate-800">{{ subscription.starts_at|date:"j M Y" }}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">
+              {% if subscription.ends_at %}Ends{% else %}Renews{% endif %}</dt>
+            <dd class="font-medium text-slate-800">
+              {% if subscription.ends_at %}{{ subscription.ends_at|date:"j M Y" }}{% else %}automatically{% endif %}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">Auto-renew</dt>
+            <dd class="font-medium text-slate-800">{% if subscription.auto_renew %}On{% else %}Off{% endif %}</dd></div>
+        </dl>
+        {% if not can_manage_billing %}
+          <p class="mt-4 text-xs text-slate-500">Ask an owner or billing contact to change the plan.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="lg:col-span-2">
+    <h2 class="font-bold text-slate-900 mb-3">Available plans</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% for plan in plans %}
+        {% with current=subscription.plan_id %}
+          <div class="bg-white rounded-xl border p-5 flex flex-col
+                      {% if plan.id == current %}border-brand-500 ring-1 ring-brand-500{% else %}border-slate-200{% endif %}">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-slate-900">{{ plan.name }}</h3>
+              {% if plan.id == current %}
+                <span class="text-xs px-2 py-1 rounded-full bg-brand-50 text-brand-700 font-semibold">Current</span>
+              {% endif %}
+            </div>
+            {% if plan.description %}
+              <p class="text-xs text-slate-500 mt-1">{{ plan.description }}</p>
+            {% endif %}
+            <p class="mt-4">
+              <span class="text-2xl font-extrabold text-slate-900">{{ plan.price_per_month }}</span>
+              <span class="text-xs text-slate-500"> ETB/month</span>
+            </p>
+            {% if plan.billing_cycle == 'annual' %}
+              <p class="text-xs text-slate-400">{{ plan.price }} ETB billed annually</p>
+            {% endif %}
+            <ul class="mt-4 space-y-1.5 text-sm text-slate-600 flex-1">
+              <li><i class="bi bi-check2 text-emerald-600"></i>
+                {% if plan.job_post_limit %}{{ plan.job_post_limit }} job posts / month{% else %}Unlimited job posts{% endif %}</li>
+              <li><i class="bi bi-check2 text-emerald-600"></i>
+                {% if plan.seat_limit %}{{ plan.seat_limit }} team members{% else %}Unlimited members{% endif %}</li>
+              {% if plan.can_use_own_channel %}<li><i class="bi bi-check2 text-emerald-600"></i> Dedicated Telegram channel</li>{% endif %}
+              {% if plan.can_export_data %}<li><i class="bi bi-check2 text-emerald-600"></i> Export applicant data</li>{% endif %}
+            </ul>
+          </div>
+        {% endwith %}
+      {% empty %}
+        <p class="text-sm text-slate-500">No plans are available for {{ organization.get_organization_type_display|lower }} yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="mt-6 bg-white rounded-xl border border-slate-200 p-5">
+      <h3 class="text-sm font-semibold text-slate-700">Changing plan</h3>
+      <p class="mt-1 text-sm text-slate-600">
+        Plan changes are handled by our team so we can confirm the right price for your
+        organization type. Contact us with your workspace name
+        (<b>{{ organization.name }}</b>) and the plan you want.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

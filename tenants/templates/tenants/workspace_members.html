@@ -1,0 +1,123 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}Team{% endblock %}
+{% block heading %}Team{% endblock %}
+{% block tab_members %}border-brand-500 text-brand-700 font-semibold{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-extrabold text-slate-900">Team</h1>
+  <p class="text-sm text-slate-500 mt-1">
+    {{ quota.seats_used }}/{{ quota.seat_limit|default:"unlimited" }} seat{{ quota.seat_limit|pluralize }} used
+    {% if quota.plan %} on {{ quota.plan }}{% endif %}
+  </p>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3">
+  <div class="lg:col-span-2 space-y-6">
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+          <tr>
+            <th class="px-5 py-3 text-left font-semibold">Member</th>
+            <th class="px-5 py-3 text-left font-semibold">Role</th>
+            <th class="px-5 py-3 text-left font-semibold hidden sm:table-cell">Joined</th>
+            {% if can_manage %}<th class="px-5 py-3 text-right font-semibold">Actions</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for m in memberships %}
+            <tr class="{% if not m.is_active %}opacity-50{% endif %}">
+              <td class="px-5 py-3">
+                <p class="font-medium text-slate-800">{{ m.user.get_full_name|default:m.user.username }}</p>
+                <p class="text-xs text-slate-500">{{ m.user.email|default:"no email" }}</p>
+                {% if not m.is_active %}<span class="text-xs text-rose-600">inactive</span>{% endif %}
+              </td>
+              <td class="px-5 py-3">
+                {% if can_manage %}
+                  <form method="post" action="{% url 'tenants:workspace_change_role' organization.slug m.user_id %}"
+                        class="flex items-center gap-2">
+                    {% csrf_token %}
+                    <select name="role" class="text-xs rounded-lg border-slate-300 py-1">
+                      {% for value, label in role_choices %}
+                        <option value="{{ value }}" {% if value == m.role %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="text-xs px-2 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">Save</button>
+                  </form>
+                {% else %}
+                  <span class="text-slate-700">{{ m.get_role_display }}</span>
+                {% endif %}
+              </td>
+              <td class="px-5 py-3 text-slate-500 hidden sm:table-cell">{{ m.joined_at|date:"j M Y" }}</td>
+              {% if can_manage %}
+                <td class="px-5 py-3 text-right">
+                  {% if m.user_id != request.user.id %}
+                    <form method="post" action="{% url 'tenants:workspace_remove_member' organization.slug m.user_id %}"
+                          onsubmit="return confirm('Remove {{ m.user.username }} from this workspace?');">
+                      {% csrf_token %}
+                      <button class="text-xs text-rose-600 hover:text-rose-700 font-medium">Remove</button>
+                    </form>
+                  {% else %}
+                    <span class="text-xs text-slate-400">you</span>
+                  {% endif %}
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if can_manage and invitations %}
+      <div class="bg-white rounded-xl border border-slate-200">
+        <div class="px-5 py-4 border-b border-slate-100">
+          <h2 class="font-bold text-slate-900">Open invitations</h2>
+        </div>
+        <ul class="divide-y divide-slate-100">
+          {% for inv in invitations %}
+            <li class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
+              <span class="min-w-0 truncate">{{ inv.email }} <span class="text-slate-400">as {{ inv.get_role_display }}</span></span>
+              <span class="shrink-0 text-xs {% if inv.is_open %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                {% if inv.is_open %}expires {{ inv.expires_at|date:"j M" }}{% else %}expired{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if can_manage %}
+    <div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h2 class="font-bold text-slate-900">Invite someone</h2>
+        <p class="text-xs text-slate-500 mt-1">They join with the role you choose.</p>
+        <form method="post" action="{% url 'tenants:workspace_invite' organization.slug %}" class="mt-4 space-y-3">
+          {% csrf_token %}
+          <input type="email" name="email" required placeholder="name@company.com"
+                 class="w-full rounded-lg border-slate-300 text-sm px-3 py-2">
+          <select name="role" class="w-full rounded-lg border-slate-300 text-sm px-3 py-2">
+            {% for value, label in role_choices %}
+              {% if value != 'owner' %}<option value="{{ value }}">{{ label }}</option>{% endif %}
+            {% endfor %}
+          </select>
+          <button class="w-full px-4 py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold">
+            Send invitation
+          </button>
+        </form>
+      </div>
+
+      <div class="mt-4 bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="text-sm font-semibold text-slate-700">What each role can do</h3>
+        <ul class="mt-3 space-y-2 text-xs text-slate-600">
+          <li><b>Owner</b> &mdash; everything, including billing and team removal</li>
+          <li><b>Admin</b> &mdash; manage team and jobs</li>
+          <li><b>Recruiter</b> / <b>Hiring manager</b> &mdash; view and publish jobs</li>
+          <li><b>Billing</b> &mdash; manage the plan only</li>
+          <li><b>Viewer</b> &mdash; read-only</li>
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

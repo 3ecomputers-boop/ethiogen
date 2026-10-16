@@ -1,0 +1,64 @@
+{% extends 'tenants/_base.html' %}
+{% block title %}Create workspace{% endblock %}
+{% block heading %}Create workspace{% endblock %}
+
+{% block content %}
+<div class="max-w-xl">
+  <h1 class="text-2xl font-extrabold text-slate-900">Create a workspace</h1>
+  <p class="text-sm text-slate-500 mt-1">
+    A workspace holds your team, your plan and your job posts. You will be its owner.
+  </p>
+
+  <form method="post" class="mt-6 bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1" for="name">Organization name</label>
+      <input id="name" name="name" required maxlength="200" value="{{ request.POST.name|default:'' }}"
+             class="w-full rounded-lg border-slate-300 px-3 py-2 text-sm"
+             placeholder="e.g. Admas Construction PLC">
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1" for="organization_type">Type</label>
+      <select id="organization_type" name="organization_type"
+              class="w-full rounded-lg border-slate-300 px-3 py-2 text-sm">
+        {% for value, label in type_choices %}
+          <option value="{{ value }}" {% if value == 'construction_company' %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1" for="city">City</label>
+        <input id="city" name="city" value="{{ request.POST.city|default:'' }}"
+               class="w-full rounded-lg border-slate-300 px-3 py-2 text-sm" placeholder="Addis Ababa">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1" for="website">Website</label>
+        <input id="website" name="website" value="{{ request.POST.website|default:'' }}"
+               class="w-full rounded-lg border-slate-300 px-3 py-2 text-sm" placeholder="https://">
+      </div>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1" for="description">About</label>
+      <textarea id="description" name="description" rows="3"
+                class="w-full rounded-lg border-slate-300 px-3 py-2 text-sm"
+                placeholder="What your organization does.">{{ request.POST.description|default:'' }}</textarea>
+    </div>
+
+    {% if default_plan %}
+      <p class="text-xs text-slate-500 bg-slate-50 rounded-lg p-3">
+        You will start on a {{ default_plan.name }} trial
+        ({% if default_plan.job_post_limit %}{{ default_plan.job_post_limit }} job posts{% else %}unlimited posts{% endif %},
+        {{ default_plan.seat_limit|default:"unlimited" }} member{{ default_plan.seat_limit|pluralize }})
+        so you can post immediately.
+      </p>
+    {% endif %}
+
+    <div class="flex gap-3 pt-2">
+      <button class="px-5 py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold">Create workspace</button>
+      <a href="{% url 'tenants:workspace_list' %}"
+         class="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

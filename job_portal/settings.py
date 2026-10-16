@@ -12,20 +12,66 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 
+
+from dotenv import load_dotenv
+
+# Load .env file (cPanel path: /home/username/project/.env)
+load_dotenv()
+
+# Telegram settings
+# NOTE: .env defines TELEGRAM_BOT_TOKEN, but this used to read only
+# ETHIOGEN_BOT_TOKEN, so settings.TELEGRAM_BOT_TOKEN was always None.
+# Accept either name so both work.
+TELEGRAM_BOT_TOKEN = (
+    os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('ETHIOGEN_BOT_TOKEN')
+)
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '@your_channel_username')  # set in .env or hardcode
+WHISPER_MODEL = os.getenv('WHISPER_MODEL', 'base')     # optional
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Static files (CSS, JavaScript, Images)
 
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),  # This is what makes {% static %} work
+]
+
+# collectstatic was never configured because this line was commented out.
+# With STATIC_ROOT unset, `collectstatic` has nowhere to write and, more
+# importantly, the web server has no directory to serve /static/ from.
+# With DEBUG=False Django does NOT serve static files itself, so the admin's
+# CSS and JS 404 and the whole panel renders unstyled.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Django's default adds a content hash to collected filenames. The admin
+# already versions its own assets with ?v=, so hashed names just mean stale
+# files after a deploy.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$wc006o3f#4baa7@lv5m5qaz0^^!0uadk1m-1$0x@b(8a*x9*p'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or (
+    'django-insecure-$wc006o3f#4baa7@lv5m5qaz0^^!0uadk1m-1$0x@b(8a*x9*p'
+    'dev-only-insecure-fallback'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Defaults to OFF. Set DJANGO_DEBUG=1 in .env for local development.
+# Leaving this True on cPanel exposes tracebacks and every setting -- secrets
+# included -- to anyone who triggers an error.
+DEBUG = os.getenv('DJANGO_DEBUG', '').strip().lower() in ('1', 'true', 'yes', 'on')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -42,10 +88,16 @@ INSTALLED_APPS = [
     'jobs',
     'freelancer',
     'users',
+   
+  
     'employers',
     'borker_network',
+    'billing',
+    'tenants',
     'django_countries',
-    
+    'rest_framework',
+    'corsheaders',
+
 ]
 
 from django.utils.translation import gettext_lazy as _
@@ -58,6 +110,10 @@ LANGUAGES = [
 ]
 
 MIDDLEWARE = [
+    # CorsMiddleware must sit ABOVE CommonMiddleware, otherwise
+    # CommonMiddleware can emit a redirect before the CORS headers are
+    # attached and the browser rejects the response.
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',  # required for language switching
@@ -66,7 +122,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-   
+
 ]
 
 ROOT_URLCONF = 'job_portal.urls'
@@ -93,12 +149,35 @@ WSGI_APPLICATION = 'job_portal.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+#
+# SQLite by default so a fresh clone runs with no services. Set DB_ENGINE to
+# postgresql (plus the DB_* variables) to switch. See docs/POSTGRES.md.
+DB_ENGINE = (os.getenv('DB_ENGINE') or 'sqlite').strip().lower()
+
+if DB_ENGINE in ('postgres', 'postgresql', 'psql'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME') or 'ethiogen',
+            'USER': os.getenv('DB_USER') or 'postgres',
+            'PASSWORD': os.getenv('DB_PASSWORD') or '',
+            'HOST': os.getenv('DB_HOST') or '127.0.0.1',
+            'PORT': os.getenv('DB_PORT') or '5432',
+            'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
+            'OPTIONS': {},
+        }
     }
-}
+    if os.getenv('DB_SSLMODE'):
+        DATABASES['default']['OPTIONS']['sslmode'] = os.getenv('DB_SSLMODE')
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            # Seconds SQLite waits on a locked table before raising.
+            'OPTIONS': {'timeout': 20},
+        }
+    }
 
 
 # Password validation
@@ -117,6 +196,62 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+
+# ======================================================================
+# Django REST Framework
+# ======================================================================
+# The existing API endpoints (billing/, tenants/, accounts/) are plain
+# Django function views returning JsonResponse. They are NOT DRF views and
+# are unaffected by anything set here. This block configures DRF for new
+# work only.
+#
+# SessionAuthentication only: the mini app and the Django templates both
+# ride on the existing session cookie. Do not add TokenAuthentication here
+# without a revocation story.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    # The browser app is same-origin and CSRF-protected, so DRF's default
+    # SessionAuthentication behaviour (enforce CSRF) is left on.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+
+# ======================================================================
+# CORS
+# ======================================================================
+# Needed for the Telegram mini app when it is served from a different
+# origin than the API. Same-origin browsing (the Django templates) is
+# unaffected.
+#
+# Set CORS_ALLOWED_ORIGINS in the environment, comma separated. It is
+# deliberately empty by default: an empty allowlist denies everything,
+# which is the safe default for a cookie-authenticated API.
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in (os.getenv('CORS_ALLOWED_ORIGINS') or '').split(',')
+    if origin.strip()
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF_TRUSTED_ORIGINS must be kept in step with the above, or a
+# cross-origin POST will pass CORS and then fail the CSRF check.
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in (os.getenv('CSRF_TRUSTED_ORIGINS') or '').split(',')
+    if origin.strip()
 ]
 
 
@@ -142,17 +277,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 # URL for serving static files
-STATIC_URL = '/static/'
+from pathlib import Path
+import os
 
-# Directories to look for additional static files
-STATICFILES_DIRS = [
-    BASE_DIR / "static",  # Ensure this path points to the 'static' folder
-]
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Directory where static files will be collected for production
-STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+
 
 
 # Default primary key field type
@@ -181,3 +314,35 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 AUTH_USER_MODEL = 'accounts.User'
 OWNER_EMAIL = '3ecomputers@gmail.com'  # change to your email
+
+
+# ======================================================================
+# Telegram channel distribution + subscription billing  (billing app)
+# ======================================================================
+# The bot must be an administrator of the target channel/group, otherwise
+# sendMessage will fail with CHAT_ADMIN_REQUIRED.
+TELEGRAM_CHANNEL_ID = os.getenv('ETHIOGEN_UPDATE_GROUP_ID', '')
+TELEGRAM_CHANNEL_USERNAME = os.getenv('ETHIOGEN_CHANNEL_USERNAME', 'ethiogenjob').lstrip('@')
+
+# What one subscription costs and how long it lasts.
+BILLING_CURRENCY = 'ETB'
+BILLING_SUBSCRIPTION_PRICE = os.getenv('BILLING_SUBSCRIPTION_PRICE', '500.00')
+BILLING_SUBSCRIPTION_DAYS = int(os.getenv('BILLING_SUBSCRIPTION_DAYS', '30'))
+
+# Manual-transfer details shown to the user when they upload a receipt.
+BILLING_BANK_NAME = os.getenv('BILLING_BANK_NAME', 'Ethiogen — Commercial Bank of Ethiopia')
+BILLING_BANK_ACCOUNT_NAME = os.getenv('BILLING_BANK_ACCOUNT_NAME', 'Ethiogen PLC')
+BILLING_BANK_ACCOUNT_NUMBER = os.getenv('BILLING_BANK_ACCOUNT_NUMBER', '1000123456789012')
+BILLING_TELEBIRR_PHONE = os.getenv('BILLING_TELEBIRR_PHONE', '+251911000000')
+BILLING_TELEBIRR_NAME = os.getenv('BILLING_TELEBIRR_NAME', 'Ethiogen PLC')
+
+# Chapa (https://chapa.co) — leave the secret blank to run manual-only.
+CHAPA_PUBLIC_KEY = os.getenv('CHAPA_PUBLIC_KEY', '')
+CHAPA_SECRET_KEY = os.getenv('CHAPA_SECRET_KEY', '')
+CHAPA_API_BASE = os.getenv('CHAPA_API_BASE', 'https://api.chapa.co/v1')
+# When Chapa reports a successful payment we trust it and activate at once.
+# Set to 0 if you want every payment reviewed in the admin too.
+CHAPA_AUTO_APPROVE = os.getenv('CHAPA_AUTO_APPROVE', '1') not in ('0', 'false', 'False')
+
+# Used to build the return_url handed to Chapa.
+BILLING_SITE_URL = os.getenv('BILLING_SITE_URL', 'https://ethiogen.com')

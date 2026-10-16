@@ -1412,7 +1412,7 @@
 
         @media (min-width: 1024px) {
             .quick-grid {
-                grid-template-columns: repeat(6, 1fr);
+                grid-template-columns: repeat(5, 1fr);
             }
         }
 
@@ -2015,10 +2015,7 @@
                 <i class="bi bi-envelope-fill"></i>
                 <span class="nav-label">Messages</span>
             </a>
-            <a href="/admin/" class="nav-item">
-                <i class="bi bi-gear-fill"></i>
-                <span class="nav-label">Django Admin</span>
-            </a>
+        
             <a href="#" class="nav-item" onclick="navigateTo('settings')">
                 <i class="bi bi-sliders"></i>
                 <span class="nav-label">Settings</span>
@@ -2154,6 +2151,88 @@
                     </button>
                 </div>
             </div>
+            
+            <!-- ── EDIT JOB SEEKER SLIDE PANEL ── -->
+<div class="panel-overlay" id="editSeekerOverlay" onclick="closeEditSeeker()"></div>
+<div class="slide-panel" id="editSeekerPanel">
+    <div class="panel-header">
+        <h2><i class="bi bi-pencil-fill"></i> Edit Job Seeker</h2>
+        <button class="close-btn" onclick="closeEditSeeker()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="panel-body">
+        <form id="editSeekerForm" novalidate>
+            <input type="hidden" id="editSeekerId" value="">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editSeekerFirstName">First Name *</label>
+                    <input type="text" id="editSeekerFirstName" class="bf-input" placeholder="John" required />
+                </div>
+                <div class="form-group">
+                    <label for="editSeekerLastName">Last Name *</label>
+                    <input type="text" id="editSeekerLastName" class="bf-input" placeholder="Doe" required />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="editSeekerEmail">Email Address *</label>
+                <input type="email" id="editSeekerEmail" class="bf-input" placeholder="john.doe@example.com" required />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editSeekerRole">Role / Profession *</label>
+                    <input type="text" id="editSeekerRole" class="bf-input" placeholder="e.g. Software Engineer" required />
+                </div>
+                <div class="form-group">
+                    <label for="editSeekerPhone">Phone Number</label>
+                    <input type="tel" id="editSeekerPhone" class="bf-input" placeholder="+251 9XX XXX XXX" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editSeekerCity">City</label>
+                    <input type="text" id="editSeekerCity" class="bf-input" placeholder="Addis Ababa" />
+                </div>
+                <div class="form-group">
+                    <label for="editSeekerCountry">Country</label>
+                    <input type="text" id="editSeekerCountry" class="bf-input" placeholder="Ethiopia" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="editSeekerBio">Short Bio</label>
+                <textarea id="editSeekerBio" class="bf-input" rows="2" placeholder="Brief summary of skills and experience..." style="resize:vertical;min-height:56px;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="editSeekerSkills">Skills <span class="hint">(comma separated)</span></label>
+                <input type="text" id="editSeekerSkills" class="bf-input" placeholder="Python, React, AWS" />
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label style="margin-bottom: 0.75rem;">Account Options</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                    <label class="form-check">
+                        <input type="checkbox" id="editSeekerActive" />
+                        <span>Active Account</span>
+                    </label>
+                    <label class="form-check">
+                        <input type="checkbox" id="editSeekerVerified" />
+                        <span>Verified</span>
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="panel-footer">
+        <button class="btn btn-secondary" onclick="closeEditSeeker()">Cancel</button>
+        <button class="btn btn-primary" id="saveSeekerBtn" onclick="saveSeeker()">
+            <i class="bi bi-check-circle"></i> Update Seeker
+        </button>
+    </div>
+</div>
 
             <!-- ── HEADER ── -->
             <header class="dash-header">
@@ -2415,9 +2494,7 @@
                     <i class="bi bi-person-plus-fill"></i>
                     <span>Add Job Seeker</span>
                 </div>
-                <a href="/admin/" class="quick-action">
-                    <i class="bi bi-gear"></i> <span>Django Admin</span>
-                </a>
+                <!-- Django Admin button has been removed as requested -->
                 <a href="{% url 'jobs:list_jobs' %}" class="quick-action">
                     <i class="bi bi-briefcase"></i> <span>Jobs</span>
                 </a>
@@ -3017,7 +3094,7 @@
     }
 
     function editSeeker(id) {
-        showToast('Edit functionality coming soon!', 'info');
+        openEditSeeker(id);
     }
 
     function deleteSeeker(id, name) {
@@ -3191,13 +3268,108 @@
                             <button class="action-btn danger" title="Delete" onclick="deleteSeeker(${s.id}, '${s.full_name}')">
                                 <i class="bi bi-trash"></i>
                             </button>
+                            <button class="action-btn" title="Edit" onclick="editSeeker(${s.id})">
+    <i class="bi bi-pencil"></i>
+</button>
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
     }
-
+    
+        // ================================================================
+    //  EDIT JOB SEEKER - SLIDE PANEL
+    // ================================================================
+    // ================================================================
+//  EDIT JOB SEEKER - using cached data
+// ================================================================
+    function openEditSeeker(id) {
+        // Find the seeker in our cached list
+        const seeker = allSeekers.find(s => s.id === id);
+        if (!seeker) {
+            showToast('Seeker data not found. Please refresh the list.', 'error');
+            return;
+        }
+    
+        document.getElementById('editSeekerOverlay').classList.add('open');
+        document.getElementById('editSeekerPanel').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    
+        // Populate form
+        document.getElementById('editSeekerId').value = seeker.id;
+        document.getElementById('editSeekerFirstName').value = seeker.first_name || '';
+        document.getElementById('editSeekerLastName').value = seeker.last_name || '';
+        document.getElementById('editSeekerEmail').value = seeker.email || '';
+        document.getElementById('editSeekerRole').value = seeker.title || seeker.role || '';
+        document.getElementById('editSeekerPhone').value = seeker.phone || '';
+        document.getElementById('editSeekerCity').value = seeker.city || '';
+        document.getElementById('editSeekerCountry').value = seeker.country || '';
+        document.getElementById('editSeekerBio').value = seeker.bio || '';
+        document.getElementById('editSeekerSkills').value = Array.isArray(seeker.skills) ? seeker.skills.join(', ') : (seeker.skills || '');
+        document.getElementById('editSeekerActive').checked = seeker.is_active !== false;
+        document.getElementById('editSeekerVerified').checked = seeker.is_verified || false;
+    }
+    
+    function closeEditSeeker() {
+        document.getElementById('editSeekerOverlay').classList.remove('open');
+        document.getElementById('editSeekerPanel').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    
+    function saveSeeker() {
+        const id = document.getElementById('editSeekerId').value;
+        if (!id) return;
+    
+        const btn = document.getElementById('saveSeekerBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Saving...';
+    
+        const data = {
+            first_name: document.getElementById('editSeekerFirstName').value.trim(),
+            last_name: document.getElementById('editSeekerLastName').value.trim(),
+            email: document.getElementById('editSeekerEmail').value.trim(),
+            role: document.getElementById('editSeekerRole').value.trim(),
+            phone: document.getElementById('editSeekerPhone').value.trim(),
+            city: document.getElementById('editSeekerCity').value.trim(),
+            country: document.getElementById('editSeekerCountry').value.trim(),
+            bio: document.getElementById('editSeekerBio').value.trim(),
+            skills: document.getElementById('editSeekerSkills').value.split(',').map(s => s.trim()).filter(Boolean),
+            is_active: document.getElementById('editSeekerActive').checked,
+            is_verified: document.getElementById('editSeekerVerified').checked,
+        };
+    
+        fetch(`/api/job-seekers/${id}/update/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify(data),
+        })
+        .then(res => {
+            if (!res.ok) return res.json().then(err => { throw new Error(err.message || `HTTP ${res.status}`); });
+            return res.json();
+        })
+        .then(result => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Seeker';
+            if (result.success) {
+                showToast(result.message || 'Job seeker updated successfully!', 'success');
+                closeEditSeeker();
+                fetchJobSeekers(); // refresh the list
+            } else {
+                showToast(result.message || 'Update failed.', 'error');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Seeker';
+            showToast('Error: ' + err.message, 'error');
+            console.error('Update seeker error:', err);
+        });
+    }
+        
     function showSeekersEmpty(message) {
         document.getElementById('seekersLoading').style.display = 'none';
         document.getElementById('seekersTableWrapper').style.display = 'none';
@@ -3398,8 +3570,8 @@
             if (document.getElementById('addSeekerPanel').classList.contains('open')) {
                 closeAddSeeker();
             }
-            if (document.getElementById('editTalentPanel').classList.contains('open')) {
-                closeEditTalent();
+            if (document.getElementById('editSeekerPanel').classList.contains('open')) {
+                closeEditSeeker();
             }
         }
         if (e.ctrlKey && e.shiftKey && e.key === 'N') {
@@ -3411,17 +3583,34 @@
     // ================================================================
     //  FETCH & RENDER TALENTS
     // ================================================================
+    // ================================================================
+//  FETCH & RENDER TALENTS (improved)
+// ================================================================
     let allTalents = [];
-
+    
     async function fetchTalents() {
         try {
-            const response = await fetch('/api/talents/');
+            const response = await fetch('/api/talents/?t=' + Date.now());
             const data = await response.json();
-
             document.getElementById('talentsLoading').style.display = 'none';
-
-            if (data.success && data.talents.length > 0) {
-                allTalents = data.talents;
+    
+            // Normalise response: array, { talents }, { results }, { data }, etc.
+            let talents = [];
+            if (Array.isArray(data)) {
+                talents = data;
+            } else if (data.success && Array.isArray(data.talents)) {
+                talents = data.talents;
+            } else if (data.results && Array.isArray(data.results)) {
+                talents = data.results;
+            } else if (data.data && Array.isArray(data.data)) {
+                talents = data.data;
+            } else {
+                // Fallback: check if data itself is an object with numeric keys (unlikely)
+                talents = [];
+            }
+    
+            if (talents.length > 0) {
+                allTalents = talents;
                 renderTalentsTable(allTalents);
                 document.getElementById('talentsTableWrapper').style.display = 'block';
                 document.getElementById('talentsEmpty').style.display = 'none';
@@ -3433,40 +3622,51 @@
             console.error('Fetch talents error:', err);
             document.getElementById('talentsLoading').style.display = 'none';
             document.getElementById('talentsEmpty').style.display = 'block';
-            document.getElementById('talentsEmpty').querySelector('p').textContent = 'Failed to load talents.';
+            const emptyP = document.getElementById('talentsEmpty').querySelector('p');
+            if (emptyP) emptyP.textContent = 'Failed to load talents. Please check API endpoint /api/talents/';
         }
     }
-
+    
     function renderTalentsTable(talents) {
-    const tbody = document.getElementById('talentsTableBody');
-    tbody.innerHTML = talents.map(t => `
-    <tr>
-        <td>
-            <div class="seeker-avatar" style="width:40px;height:40px;font-size:0.75rem;">
-                ${t.avatar ? `<img src="${t.avatar}" alt="${t.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none">${t.name.charAt(0).toUpperCase()}</span>` : t.name.charAt(0).toUpperCase()}
-            </div>
-        </td>
-        <td><strong>${t.name}</strong></td>
-        <td>${t.title}</td>
-        <td>${t.category}</td>
-        <td>${t.rate.toLocaleString()}</td>
-        <td>${t.rating} ⭐</td>
-        <td><span class="status-badge ${t.verified ? 'verified' : 'unverified'}">${t.verified ? 'Verified' : 'Unverified'}</span></td>
-        <td>
-            <div class="action-btns">
-                <!-- ✅ UPDATED: Now calls viewTalent() -->
-                <button class="action-btn" title="View Profile" onclick="viewTalent(${t.id})">
-                    <i class="bi bi-eye"></i>
-                </button>
-                <button class="action-btn" title="Edit" onclick="openEditTalent(${t.id})">
-                    <i class="bi bi-pencil"></i>
-                </button>
-            </div>
-        </td>
-    </tr>
-    `).join('');
-}
-
+        const tbody = document.getElementById('talentsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = talents.map(t => {
+            // Normalise field names
+            const name = t.name || t.full_name || 'Unknown';
+            const title = t.title || t.role || '—';
+            const category = t.category || '—';
+            const price = t.rate || t.price || 0;
+            const rating = t.rating || 0;
+            const verified = t.verified || t.is_verified || false;
+            const avatar = t.avatar || t.image || t.photo || '';
+            const id = t.id || 0;
+            return `
+            <tr>
+                <td>
+                    <div class="seeker-avatar" style="width:40px;height:40px;font-size:0.75rem;">
+                        ${avatar ? `<img src="${avatar}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none">${name.charAt(0).toUpperCase()}</span>` : name.charAt(0).toUpperCase()}
+                    </div>
+                </td>
+                <td><strong>${name}</strong></td>
+                <td>${title}</td>
+                <td>${category}</td>
+                <td>${Number(price).toLocaleString()}</td>
+                <td>${Number(rating).toFixed(1)} ⭐</td>
+                <td><span class="status-badge ${verified ? 'verified' : 'unverified'}">${verified ? 'Verified' : 'Unverified'}</span></td>
+                <td>
+                    <div class="action-btns">
+                        <button class="action-btn" title="View Profile" onclick="viewTalent(${id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="action-btn" title="Edit" onclick="openEditTalent(${id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
     function refreshTalents() {
         document.getElementById('talentsLoading').style.display = 'block';
         document.getElementById('talentsTableWrapper').style.display = 'none';
@@ -3554,134 +3754,232 @@
     }
 
     function saveTalent() {
-    const btn = document.getElementById('saveTalentBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Saving...';
-
-    const id = document.getElementById('editTalentId').value;
-    const data = {
-        name: document.getElementById('editTalentName').value.trim(),
-        role: document.getElementById('editTalentRole').value.trim(),
-        category: document.getElementById('editTalentCategory').value.trim(),
-        price: parseFloat(document.getElementById('editTalentPrice').value) || 0,
-        rating: parseFloat(document.getElementById('editTalentRating').value) || 0,
-        reviews: parseInt(document.getElementById('editTalentReviews').value) || 0,
-        location: document.getElementById('editTalentLocation').value.trim(),
-        duration: document.getElementById('editTalentDuration').value.trim(),
-        bio: document.getElementById('editTalentBio').value.trim(),
-        skills: document.getElementById('editTalentSkills').value.split(',').map(s => s.trim()).filter(Boolean),
-        languages: document.getElementById('editTalentLanguages').value.split(',').map(s => s.trim()).filter(Boolean),
-        image: document.getElementById('editTalentImageUrl').value.trim(),
-        photo_data: document.getElementById('editTalentPhotoData').value,
-        photo_removed: document.getElementById('editTalentPhotoRemoved').value === 'true',
-        verified: document.getElementById('editTalentVerified').checked,
-        top: document.getElementById('editTalentTop').checked,
-        remote: document.getElementById('editTalentRemote').checked,
-        experience: parseInt(document.getElementById('editTalentExperience').value) || 0,
-        tier: parseInt(document.getElementById('editTalentTier').value) || 1,
-    };
-
-    // Determine request method and format
-    let requestOptions = {
-        method: 'PUT',
-        headers: {
-            'X-CSRFToken': getCsrfToken(),
-        },
-    };
-
-    // If we have a file, use FormData
-    if (currentPhotoFile) {
-        const formData = new FormData();
-        
-        // Add all data fields
-        Object.keys(data).forEach(key => {
-            if (key === 'photo_data') return; // Skip base64 data when using file
-            
-            let value = data[key];
-            
-            // Convert arrays and objects to JSON strings for FormData
-            if (Array.isArray(value) || typeof value === 'object') {
-                value = JSON.stringify(value);
-            } else if (typeof value === 'boolean') {
-                value = value.toString();
-            }
-            
-            formData.append(key, value);
-        });
-        
-        // Add the file
-        formData.append('photo', currentPhotoFile);
-        
-        requestOptions.body = formData;
-        // Don't set Content-Type header - browser will set it with boundary
-    } else {
-        // Use JSON
-        requestOptions.headers['Content-Type'] = 'application/json';
-        requestOptions.body = JSON.stringify(data);
-    }
-
-    fetch(`/api/talent/${id}/update/`, requestOptions)
-        .then(response => {
-            // Check if response is OK
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.message || `HTTP ${response.status}: ${response.statusText}`);
-                });
-            }
-            return response.json();
-        })
-        .then(result => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
-
-            if (result.success) {
-                showToast(result.message, 'success');
-                closeEditTalent();
-                refreshTalents();
-            } else {
-                showToast(result.message || 'Update failed.', 'error');
-            }
-        })
-        .catch(err => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
-            
-            console.error('Update talent error:', err);
-            
-            // Show more specific error message
-            if (err.message.includes('Failed to fetch')) {
-                showToast('Network error: Cannot connect to server. Please check your connection.', 'error');
-            } else if (err.message.includes('403')) {
-                showToast('Permission denied: You need staff access to update talents.', 'error');
-            } else if (err.message.includes('404')) {
-                showToast('Talent not found. It may have been deleted.', 'error');
-            } else if (err.message.includes('400')) {
-                showToast(`Bad request: ${err.message}`, 'error');
-            } else {
-                showToast(`Error: ${err.message}`, 'error');
-            }
-        });
-}
-    function handleSaveResponse(result) {
         const btn = document.getElementById('saveTalentBtn');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Saving...';
 
-        if (result.success) {
-            showToast(result.message, 'success');
-            closeEditTalent();
-            refreshTalents();
+        const id = document.getElementById('editTalentId').value;
+        const data = {
+            name: document.getElementById('editTalentName').value.trim(),
+            role: document.getElementById('editTalentRole').value.trim(),
+            category: document.getElementById('editTalentCategory').value.trim(),
+            price: parseFloat(document.getElementById('editTalentPrice').value) || 0,
+            rating: parseFloat(document.getElementById('editTalentRating').value) || 0,
+            reviews: parseInt(document.getElementById('editTalentReviews').value) || 0,
+            location: document.getElementById('editTalentLocation').value.trim(),
+            duration: document.getElementById('editTalentDuration').value.trim(),
+            bio: document.getElementById('editTalentBio').value.trim(),
+            skills: document.getElementById('editTalentSkills').value.split(',').map(s => s.trim()).filter(Boolean),
+            languages: document.getElementById('editTalentLanguages').value.split(',').map(s => s.trim()).filter(Boolean),
+            image: document.getElementById('editTalentImageUrl').value.trim(),
+            photo_data: document.getElementById('editTalentPhotoData').value,
+            photo_removed: document.getElementById('editTalentPhotoRemoved').value === 'true',
+            verified: document.getElementById('editTalentVerified').checked,
+            top: document.getElementById('editTalentTop').checked,
+            remote: document.getElementById('editTalentRemote').checked,
+            experience: parseInt(document.getElementById('editTalentExperience').value) || 0,
+            tier: parseInt(document.getElementById('editTalentTier').value) || 1,
+        };
+
+        // Determine request method and format
+        let requestOptions = {
+            method: 'PUT',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+            },
+        };
+
+        // If we have a file, use FormData
+        if (currentPhotoFile) {
+            const formData = new FormData();
+            
+            // Add all data fields
+            Object.keys(data).forEach(key => {
+                if (key === 'photo_data') return; // Skip base64 data when using file
+                
+                let value = data[key];
+                
+                // Convert arrays and objects to JSON strings for FormData
+                if (Array.isArray(value) || typeof value === 'object') {
+                    value = JSON.stringify(value);
+                } else if (typeof value === 'boolean') {
+                    value = value.toString();
+                }
+                
+                formData.append(key, value);
+            });
+            
+            // Add the file
+            formData.append('photo', currentPhotoFile);
+            
+            requestOptions.body = formData;
+            // Don't set Content-Type header - browser will set it with boundary
         } else {
-            showToast(result.message || 'Update failed.', 'error');
+            // Use JSON
+            requestOptions.headers['Content-Type'] = 'application/json';
+            requestOptions.body = JSON.stringify(data);
         }
+
+        fetch(`/api/talent/${id}/update/`, requestOptions)
+            .then(response => {
+                // Check if response is OK
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || `HTTP ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(result => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
+
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    closeEditTalent();
+                    refreshTalents();
+                } else {
+                    showToast(result.message || 'Update failed.', 'error');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
+                
+                console.error('Update talent error:', err);
+                
+                // Show more specific error message
+                if (err.message.includes('Failed to fetch')) {
+                    showToast('Network error: Cannot connect to server. Please check your connection.', 'error');
+                } else if (err.message.includes('403')) {
+                    showToast('Permission denied: You need staff access to update talents.', 'error');
+                } else if (err.message.includes('404')) {
+                    showToast('Talent not found. It may have been deleted.', 'error');
+                } else if (err.message.includes('400')) {
+                    showToast(`Bad request: ${err.message}`, 'error');
+                } else {
+                    showToast(`Error: ${err.message}`, 'error');
+                }
+            });
     }
 
-    function handleSaveError(err) {
-        const btn = document.getElementById('saveTalentBtn');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Talent';
-        showToast('Network error. Please try again.', 'error');
-        console.error(err);
+    // ================================================================
+    //  VIEW TALENT FUNCTIONS
+    // ================================================================
+    let currentViewTalentId = null;
+
+    function viewTalent(id) {
+        currentViewTalentId = id;
+        document.getElementById('viewTalentPanel').classList.add('open');
+        document.getElementById('viewTalentOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        
+        const body = document.getElementById('viewTalentBody');
+        body.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div class="spinner" style="margin: 0 auto 1rem; border-top-color: var(--moya-orange);"></div>
+                <p style="color: var(--slate-400);">Loading talent details...</p>
+            </div>
+        `;
+
+        fetch(`/api/talent/${id}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const t = data.talent;
+                    const skillsHtml = t.skills && t.skills.length > 0 
+                        ? t.skills.map(sk => `<span style="display:inline-block; padding:4px 10px; background:var(--slate-100); border-radius:9999px; font-size:0.75rem; font-weight:600; color:var(--slate-700); margin:2px;">${sk}</span>`).join('') 
+                        : '<span style="color:var(--slate-400);">None</span>';
+                    
+                    const langsHtml = t.languages && t.languages.length > 0 
+                        ? t.languages.map(l => `<span style="display:inline-block; padding:4px 10px; background:var(--blue-soft); border-radius:9999px; font-size:0.75rem; font-weight:600; color:var(--blue); margin:2px;">${l}</span>`).join('') 
+                        : '<span style="color:var(--slate-400);">None</span>';
+
+                    body.innerHTML = `
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <div style="width: 100px; height: 100px; border-radius: 1rem; background: var(--slate-100); margin: 0 auto 1rem; overflow: hidden; border: 3px solid var(--surface); box-shadow: var(--shadow-md);">
+                                ${t.image ? `<img src="${t.image}" alt="${t.name}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` : ''}
+                                <div style="width:100%; height:100%; display:${t.image ? 'none' : 'flex'}; align-items:center; justify-content:center; font-size:2rem; color:var(--slate-400); background:var(--slate-100);">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--slate-900); margin: 0;">${t.name}</h3>
+                            <p style="color: var(--slate-500); margin: 0.25rem 0 0;">${t.role}</p>
+                            <div style="margin-top: 0.75rem; display: flex; justify-content: center; gap: 0.5rem;">
+                                ${t.verified ? '<span class="status-badge verified">Verified</span>' : '<span class="status-badge unverified">Unverified</span>'}
+                                ${t.top ? '<span class="status-badge" style="background: var(--purple-soft); color: var(--purple);">Top Talent</span>' : ''}
+                                ${t.remote ? '<span class="status-badge" style="background: var(--blue-soft); color: var(--blue);">Remote</span>' : ''}
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
+                                <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Category</div>
+                                <div style="font-weight: 600; color: var(--slate-900);">${t.category || '—'}</div>
+                            </div>
+                            <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
+                                <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Price</div>
+                                <div style="font-weight: 600; color: var(--slate-900);">${t.price ? t.price.toLocaleString() + ' ETB' : '—'}</div>
+                            </div>
+                            <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
+                                <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Rating</div>
+                                <div style="font-weight: 600; color: var(--slate-900);">${t.rating} ⭐ (${t.reviews} reviews)</div>
+                            </div>
+                            <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
+                                <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Experience</div>
+                                <div style="font-weight: 600; color: var(--slate-900);">${t.experience} Years (Tier ${t.tier})</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.5rem;">Bio</div>
+                            <p style="color: var(--slate-700); font-size: 0.875rem; line-height: 1.6;">${t.bio || 'No bio provided.'}</p>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.5rem;">Skills</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">${skillsHtml}</div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.5rem;">Languages</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">${langsHtml}</div>
+                        </div>
+
+                        <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
+                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Location & Duration</div>
+                            <div style="font-weight: 600; color: var(--slate-900); font-size: 0.875rem;">
+                                <i class="bi bi-geo-alt-fill" style="color: var(--moya-orange);"></i> ${t.location || 'Not specified'} 
+                                <span style="margin: 0 0.5rem; color: var(--slate-300);">|</span> 
+                                <i class="bi bi-clock-fill" style="color: var(--moya-orange);"></i> ${t.duration || 'Not specified'}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    body.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Failed to load talent data.</p></div>`;
+                }
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                body.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Network error loading talent details.</p></div>`;
+            });
+    }
+
+    function closeViewTalent() {
+        document.getElementById('viewTalentPanel').classList.remove('open');
+        document.getElementById('viewTalentOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+        currentViewTalentId = null;
+    }
+
+    function editFromView() {
+        if (currentViewTalentId) {
+            closeViewTalent();
+            // Small delay to allow close animation to start before opening edit
+            setTimeout(() => {
+                openEditTalent(currentViewTalentId);
+            }, 300);
+        }
     }
 
     // ================================================================
@@ -3690,123 +3988,82 @@
     document.addEventListener('DOMContentLoaded', function() {
         startAutoRefresh();
     });
-
-// ================================================================
-//  VIEW TALENT FUNCTIONS
-// ================================================================
-let currentViewTalentId = null;
-
-function viewTalent(id) {
-    currentViewTalentId = id;
-    document.getElementById('viewTalentPanel').classList.add('open');
-    document.getElementById('viewTalentOverlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
     
-    const body = document.getElementById('viewTalentBody');
-    body.innerHTML = `
-        <div style="text-align: center; padding: 2rem;">
-            <div class="spinner" style="margin: 0 auto 1rem; border-top-color: var(--moya-orange);"></div>
-            <p style="color: var(--slate-400);">Loading talent details...</p>
-        </div>
-    `;
-
-    fetch(`/api/talent/${id}/`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const t = data.talent;
-                const skillsHtml = t.skills && t.skills.length > 0 
-                    ? t.skills.map(sk => `<span style="display:inline-block; padding:4px 10px; background:var(--slate-100); border-radius:9999px; font-size:0.75rem; font-weight:600; color:var(--slate-700); margin:2px;">${sk}</span>`).join('') 
-                    : '<span style="color:var(--slate-400);">None</span>';
-                
-                const langsHtml = t.languages && t.languages.length > 0 
-                    ? t.languages.map(l => `<span style="display:inline-block; padding:4px 10px; background:var(--blue-soft); border-radius:9999px; font-size:0.75rem; font-weight:600; color:var(--blue); margin:2px;">${l}</span>`).join('') 
-                    : '<span style="color:var(--slate-400);">None</span>';
-
-                body.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 1.5rem;">
-                        <div style="width: 100px; height: 100px; border-radius: 1rem; background: var(--slate-100); margin: 0 auto 1rem; overflow: hidden; border: 3px solid var(--surface); box-shadow: var(--shadow-md);">
-                            ${t.image ? `<img src="${t.image}" alt="${t.name}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` : ''}
-                            <div style="width:100%; height:100%; display:${t.image ? 'none' : 'flex'}; align-items:center; justify-content:center; font-size:2rem; color:var(--slate-400); background:var(--slate-100);">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
-                        </div>
-                        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--slate-900); margin: 0;">${t.name}</h3>
-                        <p style="color: var(--slate-500); margin: 0.25rem 0 0;">${t.role}</p>
-                        <div style="margin-top: 0.75rem; display: flex; justify-content: center; gap: 0.5rem;">
-                            ${t.verified ? '<span class="status-badge verified">Verified</span>' : '<span class="status-badge unverified">Unverified</span>'}
-                            ${t.top ? '<span class="status-badge" style="background: var(--purple-soft); color: var(--purple);">Top Talent</span>' : ''}
-                            ${t.remote ? '<span class="status-badge" style="background: var(--blue-soft); color: var(--blue);">Remote</span>' : ''}
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                        <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Category</div>
-                            <div style="font-weight: 600; color: var(--slate-900);">${t.category || '—'}</div>
-                        </div>
-                        <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Price</div>
-                            <div style="font-weight: 600; color: var(--slate-900);">${t.price ? t.price.toLocaleString() + ' ETB' : '—'}</div>
-                        </div>
-                        <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Rating</div>
-                            <div style="font-weight: 600; color: var(--slate-900);">${t.rating} ⭐ (${t.reviews} reviews)</div>
-                        </div>
-                        <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
-                            <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Experience</div>
-                            <div style="font-weight: 600; color: var(--slate-900);">${t.experience} Years (Tier ${t.tier})</div>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 1.5rem;">
-                        <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.5rem;">Bio</div>
-                        <p style="color: var(--slate-700); font-size: 0.875rem; line-height: 1.6;">${t.bio || 'No bio provided.'}</p>
-                    </div>
-
-                    <div style="margin-bottom: 1.5rem;">
-                        <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.5rem;">Skills</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">${skillsHtml}</div>
-                    </div>
-
-                    <div style="margin-bottom: 1.5rem;">
-                        <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.5rem;">Languages</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">${langsHtml}</div>
-                    </div>
-
-                    <div style="background: var(--slate-50); padding: 1rem; border-radius: 0.75rem;">
-                        <div style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--slate-400); margin-bottom: 0.25rem;">Location & Duration</div>
-                        <div style="font-weight: 600; color: var(--slate-900); font-size: 0.875rem;">
-                            <i class="bi bi-geo-alt-fill" style="color: var(--moya-orange);"></i> ${t.location || 'Not specified'} 
-                            <span style="margin: 0 0.5rem; color: var(--slate-300);">|</span> 
-                            <i class="bi bi-clock-fill" style="color: var(--moya-orange);"></i> ${t.duration || 'Not specified'}
-                        </div>
-                    </div>
-                `;
-            } else {
-                body.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Failed to load talent data.</p></div>`;
-            }
-        })
-        .catch(err => {
-            console.error('Fetch error:', err);
-            body.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Network error loading talent details.</p></div>`;
-        });
+    function toggleVerification(id, currentStatus) {
+    const newStatus = !currentStatus;
+    const action = newStatus ? 'verify' : 'unverify';
+    
+    if (!confirm(`Are you sure you want to ${action} this job seeker?`)) return;
+    
+    // Show loading state on the button
+    const btn = document.querySelector(`button[onclick*="toggleVerification(${id}"]`);
+    if (btn) {
+        btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;"></span>';
+        btn.disabled = true;
+    }
+    
+    fetch('/api/admin/verify-job-seeker/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            user_id: id,
+            verified: newStatus
+        }),
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => { throw new Error(err.message || 'Server error'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        // Reset button
+        if (btn) {
+            btn.innerHTML = '<i class="bi bi-patch-check"></i>';
+            btn.disabled = false;
+        }
+        
+        if (data.success) {
+            showToast(data.message || `Job seeker ${action}ed successfully!`, 'success');
+            // ✅ Force a fresh fetch with cache-busting
+            fetchJobSeekers();
+        } else {
+            showToast(data.message || 'Failed to update verification status.', 'error');
+        }
+    })
+    .catch(err => {
+        if (btn) {
+            btn.innerHTML = '<i class="bi bi-patch-check"></i>';
+            btn.disabled = false;
+        }
+        showToast('Error: ' + err.message, 'error');
+        console.error('Toggle verification error:', err);
+    });
 }
 
-function closeViewTalent() {
-    document.getElementById('viewTalentPanel').classList.remove('open');
-    document.getElementById('viewTalentOverlay').classList.remove('open');
-    document.body.style.overflow = '';
-    currentViewTalentId = null;
-}
-
-function editFromView() {
-    if (currentViewTalentId) {
-        closeViewTalent();
-        // Small delay to allow close animation to start before opening edit
-        setTimeout(() => {
-            openEditTalent(currentViewTalentId);
-        }, 300);
+// Updated fetchJobSeekers with cache-busting
+async function fetchJobSeekers() {
+    try {
+        const response = await fetch('/api/job-seekers/?t=' + Date.now()); // ✅ cache busting
+        const data = await response.json();
+        
+        if (data.success) {
+            allSeekers = data.seekers;
+            renderSeekersTable(allSeekers);
+            document.getElementById('seekersLoading').style.display = 'none';
+            document.getElementById('seekersTableWrapper').style.display = 'block';
+            document.getElementById('seekersPagination').style.display = 'flex';
+            document.getElementById('seekerTotalCount').textContent = data.count;
+            document.getElementById('seekerShowCount').textContent = data.count;
+        } else {
+            showSeekersEmpty('Failed to load job seekers.');
+        }
+    } catch (err) {
+        console.error('Fetch error:', err);
+        showSeekersEmpty('Network error loading job seekers.');
     }
 }
 </script>
