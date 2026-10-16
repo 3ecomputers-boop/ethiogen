@@ -23,7 +23,7 @@ class NotificationHandler(FileSystemEventHandler):
         if key in self.last_notification and now - self.last_notification[key] < 60:
             return  # rate limit
 
-        subject = f"[MoyaJobs] File System Alert: {event_type}"
+        subject = f"[Ethiogen] File System Alert: {event_type}"
         message = f"""
         File system change detected on your Django project.
 

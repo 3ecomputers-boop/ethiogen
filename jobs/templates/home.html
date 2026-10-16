@@ -943,9 +943,31 @@
             }
         };
 
+        // --- Brand rename migration (moya_* -> ethiogen_*) ---
+        // Copies any pre-rename key to its new name once, so carts, wishlists
+        // and saved searches survive the rename instead of silently resetting.
+        (function migrateBrandKeys() {
+            const map = {
+                    "moya_cart": "ethiogen_cart",
+                    "moya_wishlist": "ethiogen_wishlist",
+                    "moya_compare": "ethiogen_compare",
+                    "moya_recent": "ethiogen_recent",
+                    "moya_lang": "ethiogen_lang",
+                    "moya_filters": "ethiogen_filters",
+                    "moya_saved_searches": "ethiogen_saved_searches",
+                    "moyaTheme": "ethiogenTheme"
+        };
+            for (const [oldKey, newKey] of Object.entries(map)) {
+                if (localStorage.getItem(newKey) === null &&
+                    localStorage.getItem(oldKey) !== null) {
+                    localStorage.setItem(newKey, localStorage.getItem(oldKey));
+                }
+            }
+        })();
+
         // --- Global State ---
         let currentView = 'grid';
-        let savedSearches = JSON.parse(localStorage.getItem('moya_saved_searches') || '[]');
+        let savedSearches = JSON.parse(localStorage.getItem('ethiogen_saved_searches') || '[]');
         let visibleCount = 6;
         let activeHireTalent = null;
         let currentPhotoFile = null;
@@ -959,13 +981,13 @@
 
         // --- Persistence ---
         function saveState() {
-            localStorage.setItem('moya_cart', JSON.stringify(cart));
-            localStorage.setItem('moya_wishlist', JSON.stringify(wishlist));
-            localStorage.setItem('moya_compare', JSON.stringify(compareList));
-            localStorage.setItem('moya_recent', JSON.stringify(recentlyViewed));
-            localStorage.setItem('moya_lang', currentLang);
-            localStorage.setItem('moya_filters', JSON.stringify(filterState));
-            localStorage.setItem('moya_saved_searches', JSON.stringify(savedSearches));
+            localStorage.setItem('ethiogen_cart', JSON.stringify(cart));
+            localStorage.setItem('ethiogen_wishlist', JSON.stringify(wishlist));
+            localStorage.setItem('ethiogen_compare', JSON.stringify(compareList));
+            localStorage.setItem('ethiogen_recent', JSON.stringify(recentlyViewed));
+            localStorage.setItem('ethiogen_lang', currentLang);
+            localStorage.setItem('ethiogen_filters', JSON.stringify(filterState));
+            localStorage.setItem('ethiogen_saved_searches', JSON.stringify(savedSearches));
 
             fetch(DJANGO_URLS.update_session, {
                 method: 'POST',
@@ -982,7 +1004,7 @@
 
         function loadState() {
             try {
-                const savedFilters = JSON.parse(localStorage.getItem('moya_filters'));
+                const savedFilters = JSON.parse(localStorage.getItem('ethiogen_filters'));
                 if (savedFilters) filterState = { ...filterState, ...savedFilters };
             } catch (e) { console.error('Failed to load state', e); }
         }

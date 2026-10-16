@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Moya Jobs | Premium Talent Marketplace</title>
+    <title>Ethiogen | Premium Talent Marketplace</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -384,7 +384,7 @@
     <!-- ===== MOBILE NAV ===== -->
     <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
         <div class="flex items-center justify-between mb-8">
-            <span class="text-xl font-bold text-brand-500">Moya<span class="text-slate-900 dark:text-white">Jobs</span></span>
+            <span class="text-xl font-bold text-brand-500">Ethio<span class="text-slate-900 dark:text-white">gen</span></span>
             <button id="closeMobileNav" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-colors" aria-label="Close menu">
                 <i class="bi bi-x-lg text-xl"></i>
             </button>
@@ -409,11 +409,11 @@
     <!-- ===== NAVIGATION ===== -->
     <nav class="fixed top-0 w-full z-40 glass shadow-sm transition-all duration-300" id="navbar" role="navigation" aria-label="Main navigation">
         <div class="container mx-auto px-4 h-20 flex items-center justify-between">
-            <a href="#" onclick="navigateTo('marketplace'); return false;" class="flex items-center gap-3 no-underline" aria-label="MoyaJobs home">
+            <a href="#" onclick="navigateTo('marketplace'); return false;" class="flex items-center gap-3 no-underline" aria-label="Ethiogen home">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow">
                     <i class="bi bi-stars text-xl"></i>
                 </div>
-                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Moya<span class="text-brand-500">Jobs</span></span>
+                <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ethio<span class="text-brand-500">gen</span></span>
             </a>
 
             <div class="hidden md:flex items-center gap-8">
@@ -960,7 +960,7 @@
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Company Name *</label>
                             <div class="relative">
                                 <i class="bi bi-building absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" name="er_company" required class="form-input pl-11" placeholder="Moya Construction PLC" data-validate="name" />
+                                <input type="text" name="er_company" required class="form-input pl-11" placeholder="Ethiogen Construction PLC" data-validate="name" />
                             </div>
                             <div class="form-error" data-error="er_company">Please enter your company name</div>
                         </div>
@@ -1126,6 +1126,29 @@
     <!-- ======================== JAVASCRIPT ======================== -->
     <!-- ============================================================ -->
 <script>
+    /* ===== Brand rename migration (moya_* -> ethiogen_*) ===== */
+    /* Copies any pre-rename key to its new name once, so saved theme, cart,
+       wishlist and saved searches survive the rename instead of silently
+       resetting for everyone who already used the site. */
+    (function migrateBrandKeys() {
+        const map = {
+            "moya_cart": "ethiogen_cart",
+            "moya_wishlist": "ethiogen_wishlist",
+            "moya_compare": "ethiogen_compare",
+            "moya_recent": "ethiogen_recent",
+            "moya_lang": "ethiogen_lang",
+            "moya_filters": "ethiogen_filters",
+            "moya_saved_searches": "ethiogen_saved_searches",
+            "moyaTheme": "ethiogenTheme"
+        };
+        for (const [oldKey, newKey] of Object.entries(map)) {
+            if (localStorage.getItem(newKey) === null &&
+                localStorage.getItem(oldKey) !== null) {
+                localStorage.setItem(newKey, localStorage.getItem(oldKey));
+            }
+        }
+    })();
+
     /* ===== Page Navigation (keep existing) ===== */
     const pageMap = {
         marketplace: { el: 'mainContent', type: 'div' },
@@ -1171,9 +1194,9 @@
     function setTheme(dark) {
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
         themeIcon.className = dark ? 'bi bi-sun' : 'bi bi-moon-stars';
-        localStorage.setItem('moyaTheme', dark ? 'dark' : 'light');
+        localStorage.setItem('ethiogenTheme', dark ? 'dark' : 'light');
     }
-    const savedTheme = localStorage.getItem('moyaTheme');
+    const savedTheme = localStorage.getItem('ethiogenTheme');
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) setTheme(true);
     themeToggle.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
     mobileThemeToggle.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));

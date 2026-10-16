@@ -1,7 +1,7 @@
 """
 Jobs App Views
 Handles job seeker registration, OTP verification, dashboard, marketplace functionality,
-talent management, and API endpoints for the MoyaJobs platform.
+talent management, and API endpoints for the Ethiogen platform.
 """
 
 # ============================================================================
@@ -202,12 +202,12 @@ def _send_otp_email(email, first_name, otp):
     Returns:
         bool: True if email sent successfully, False otherwise
     """
-    subject = 'Your MoyaJobs Verification Code'
+    subject = 'Your Ethiogen Verification Code'
 
     plain_message = f"""
 Hi {first_name},
 
-Welcome to MoyaJobs! Your verification code is:
+Welcome to Ethiogen! Your verification code is:
 
     {otp}
 
@@ -216,17 +216,17 @@ This code will expire in 10 minutes.
 If you didn't request this, please ignore this email.
 
 Best regards,
-The MoyaJobs Team
+The Ethiogen Team
     """
 
     html_message = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #f97316, #f59e0b); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">MoyaJobs</h1>
+            <h1 style="color: white; margin: 0;">Ethiogen</h1>
         </div>
         <div style="padding: 30px; background: #f8fafc;">
             <h2 style="color: #0f172a;">Hi {first_name},</h2>
-            <p style="color: #475569;">Welcome to MoyaJobs! Use this code to verify your email:</p>
+            <p style="color: #475569;">Welcome to Ethiogen! Use this code to verify your email:</p>
             <div style="background: white; padding: 20px; text-align: center; border-radius: 12px; margin: 20px 0;">
                 <h1 style="color: #f97316; font-size: 48px; letter-spacing: 8px; margin: 0;">{otp}</h1>
             </div>
