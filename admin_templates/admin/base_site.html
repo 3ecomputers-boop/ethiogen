@@ -6,64 +6,28 @@
 
 {% block branding %}
 <div id="site-name">
-    <a href="{% url 'admin:index' %}" class="flex items-center gap-2 text-xl font-bold tracking-tight">
+    <a href="{% url 'admin:index' }}">
         {% comment %}Header is #0f172a, so the bright (dark-background) variant.{% endcomment %}
-        {% brand_logo height=32 show_caption=False variant="dark" %}
-        <span class="text-white">Ethio<span class="text-brand-300">gen</span> Admin</span>
+        {% brand_logo height=30 show_caption=False variant="dark" css_class="eth-brand-mark" %}
+        <span class="eth-brand-text">Ethio<em>gen</em> Admin</span>
     </a>
 </div>
 {% endblock %}
 
+{% comment %}
+The skin used to be a large inline <style> block using `!important`
+background overrides. Django 5.2+ ships a light/dark toggle driven by
+data-theme on <html>, and the !important rules beat it, so switching theme
+left the header and the action buttons wrong.
+
+It now lives in static/css/ethiogen-admin.css and is expressed with custom
+properties that carry a dark set, with no !important anywhere, so Django's
+own dark_mode.css still wins where it should.
+{% endcomment %}
 {% block extrastyle %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'css/ethiogen-admin.css' %}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<style>
-    /* Brand colors */
-    :root {
-        --primary: #f97316;
-        --secondary: #ea580c;
-        --link-fg: #ea580c;
-        --link-hover-color: #7c2d12;
-        --header-color: #0f172a;
-        --header-bg: #0f172a;
-        --breadcrumbs-bg: #fff7ed;
-        --breadcrumbs-fg: #7c2d12;
-        --button-bg: #f97316;
-        --button-hover-bg: #ea580c;
-        --default-button-bg: #0f172a;
-        --default-button-hover-bg: #1e293b;
-    }
-    #header {
-        background: #0f172a !important;
-        color: white;
-    }
-    #branding h1 {
-        font-weight: 700;
-    }
-    .module h2, .module caption {
-        background: #fff7ed;
-        color: #7c2d12;
-    }
-    a:link, a:visited {
-        color: #ea580c;
-    }
-    a:hover {
-        color: #7c2d12;
-    }
-    .button, input[type="submit"], input[type="button"], .submit-row input {
-        background: #f97316;
-        color: white;
-    }
-    .button:hover, input[type="submit"]:hover, input[type="button"]:hover {
-        background: #ea580c;
-    }
-    .default {
-        background: #0f172a !important;
-    }
-    .default:hover {
-        background: #1e293b !important;
-    }
-</style>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
@@ -74,12 +38,12 @@ ModelAdmins, so Django's admin index builds no link to them. Without this
 sidebar there is no way to reach /admin/ecosystem/ by clicking.
 
 Django's own admin/index.html also defines a nav-sidebar block, so this one
-only shows on the changelist pages -- the index carries its own links in
-the content block instead.
+only shows on the changelist pages -- the index carries its own links in the
+content block instead.
 {% endcomment %}
 {% block nav-sidebar %}
 {% if platform.is_superuser %}
-<div class="module platform-nav" style="margin: 12px;">
+<div class="module eth-platform">
     <h2>Ethiogen Platform</h2>
     <ul>
         {% if platform.ecosystem %}

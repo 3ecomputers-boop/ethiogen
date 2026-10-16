@@ -1,70 +1,79 @@
 {% extends "admin/index.html" %}
 {% load static %}
 
-{% block content %}
 {% comment %}
-These tiles previously read `total_users` / `total_jobs`, which the admin
-index view never puts in the context -- so they always rendered 0. The
-counts now come from tenants.context_processors.platform_admin.
+These tiles previously read `total_users` / `total_jobs`, which the admin index
+view never puts in the context -- so they always rendered 0. The counts come
+from tenants.context_processors.platform_admin.
 
-`default_if_none`, not `default`: `default` also replaces 0, which would
-blank the count whenever the table is legitimately empty.
+`default_if_none`, not `default`: `default` also replaces 0, which would blank
+the count whenever the table is legitimately empty.
 
-NB this must be a {% comment %} block, not {# ... #}: a Django {# #}
-comment is single-line only, so a multi-line one leaks its own text into
-the rendered page.
+This used to be marked up with Tailwind utilities (bg-white, p-6, rounded-xl,
+grid-cols-4, text-slate-400). The Django admin ships no Tailwind, so all of
+those did nothing and the tiles rendered as bare text. They are styled by
+admin.css now, which also has a dark-theme set.
+
+NB this must be a comment BLOCK, not a single-line {# ... #}: a Django {# #}
+comment is single-line only, so a multi-line one leaks its own text into the
+page. Comment blocks also do not nest, so this note deliberately avoids
+spelling the tag name literally.
 {% endcomment %}
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Total Users</h3>
-        <p class="text-3xl font-black text-slate-900">{{ platform_counts.users|default_if_none:"-" }}</p>
+
+{% block content %}
+
+<div class="eth-tiles">
+    <div class="eth-tile">
+        <h3>Total Users</h3>
+        <p>{{ platform_counts.users|default_if_none:"-" }}</p>
     </div>
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Job Posts</h3>
-        <p class="text-3xl font-black text-slate-900">{{ platform_counts.jobs|default_if_none:"-" }}</p>
+    <div class="eth-tile">
+        <h3>Job Posts</h3>
+        <p>{{ platform_counts.jobs|default_if_none:"-" }}</p>
     </div>
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Organizations</h3>
-        <p class="text-3xl font-black text-slate-900">{{ platform_counts.organizations|default_if_none:"-" }}</p>
+    <div class="eth-tile">
+        <h3>Organizations</h3>
+        <p>{{ platform_counts.organizations|default_if_none:"-" }}</p>
     </div>
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Active Tenants</h3>
-        <p class="text-3xl font-black text-brand-600">{{ platform_counts.tenants_active|default_if_none:"-" }}</p>
+    <div class="eth-tile eth-tile--accent">
+        <h3>Active Tenants</h3>
+        <p>{{ platform_counts.tenants_active|default_if_none:"-" }}</p>
     </div>
 </div>
 
 {% if platform.is_superuser %}
-<div class="module mb-8" style="padding: 0;">
+<div class="module eth-operator">
     <h2>Platform operator</h2>
-    <div style="padding: 10px 12px;">
-        <p style="margin: 0 0 10px 0;">
+    <div class="eth-operator-body">
+        <p>
             Operator tooling for tenants, plans and the ecosystem overview.
             These pages sit outside the model list below.
         </p>
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <div class="eth-operator-links">
             {% if platform.ecosystem %}
-            <a href="{{ platform.ecosystem }}" class="button" style="padding:8px 14px;">
+            <a href="{{ platform.ecosystem }}" class="button">
                 <i class="bi bi-grid-1x2"></i> Ecosystem overview</a>
             {% endif %}
             {% if platform.show_console %}
-            <a href="{{ platform.console }}" class="button" style="padding:8px 14px;">
+            <a href="{{ platform.console }}" class="button">
                 <i class="bi bi-speedometer2"></i> Operator console</a>
-            <a href="{{ platform.console_orgs }}" class="button" style="padding:8px 14px;">
+            <a href="{{ platform.console_orgs }}" class="button">
                 <i class="bi bi-buildings"></i> All organizations</a>
-            <a href="{{ platform.console_plans }}" class="button" style="padding:8px 14px;">
+            <a href="{{ platform.console_plans }}" class="button">
                 <i class="bi bi-layers"></i> Plans</a>
             {% endif %}
             {% if platform.workspaces %}
-            <a href="{{ platform.workspaces }}" class="button" style="padding:8px 14px;">
+            <a href="{{ platform.workspaces }}" class="button">
                 <i class="bi bi-briefcase"></i> Employer workspaces</a>
             {% endif %}
             {% if platform.admin_models %}
-            <a href="{{ platform.admin_models }}" class="button" style="padding:8px 14px;">
+            <a href="{{ platform.admin_models }}" class="button">
                 <i class="bi bi-table"></i> Tenants (raw models)</a>
             {% endif %}
         </div>
     </div>
 </div>
 {% endif %}
+
 {{ block.super }}
 {% endblock %}

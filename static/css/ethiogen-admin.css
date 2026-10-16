@@ -1,0 +1,359 @@
+/*
+ * Ethiogen admin skin.
+ *
+ * Two bugs this file exists to fix.
+ *
+ * 1. The Django admin ships no Tailwind, but three templates in this project
+ *    were written with Tailwind utility class names (bg-white, p-6,
+ *    rounded-xl, grid-cols-4, text-slate-400, ...). Every one silently did
+ *    nothing, which is why the admin index tiles rendered as bare text and
+ *    the login page had no card at all. Those are now semantic classes styled
+ *    from here.
+ *
+ * 2. The old skin was a large inline <style> using `!important` background
+ *    overrides. Django 5.2+ ships a light/dark toggle driven by data-theme on
+ *    <html>, and the !important rules beat it, so switching theme left the
+ *    header and buttons wrong. There is no !important in this file.
+ *
+ * How the brand colour is applied matters. base.css, dark_mode.css,
+ * nav_sidebar.css, dashboard.css and responsive.css load around this file --
+ * dashboard.css and responsive.css land AFTER it -- so styling .button
+ * directly loses on cascade order no matter how specific the selector is.
+ * Django's own custom properties are the supported extension point and they
+ * cascade regardless of which stylesheet consumes them, so the brand is
+ * applied by setting the variables below.
+ */
+
+/*
+ * Selector note: base.css declares its variables as
+ *     html[data-theme="light"], :root { ... }
+ * and the html[attr] part has specificity (0,1,1) against a bare :root's
+ * (0,1,0). A plain :root block here would lose even though this file loads
+ * later. So the brand block is written `:root, html[data-theme]` to tie the
+ * specificity and win on source order instead.
+ */
+:root,
+html[data-theme] {
+    --primary: #f97316;
+    --secondary: #0f172a;
+    --accent: #f97316;
+    --primary-fg: #ffffff;
+
+    --header-bg: #0f172a;
+    --header-color: #ffffff;
+    --header-branding-color: #ffffff;
+    --header-link-color: #cbd5e1;
+
+    --breadcrumbs-bg: #fff7ed;
+    --breadcrumbs-fg: #7c2d12;
+    --breadcrumbs-link-fg: #7c2d12;
+
+    --link-fg: #ea580c;
+    --link-hover-color: #7c2d12;
+    --link-selected-fg: #c2410c;
+
+    --button-bg: #f97316;
+    --button-hover-bg: #ea580c;
+    --button-fg: #ffffff;
+
+    --default-button-bg: #0f172a;
+    --default-button-hover-bg: #1e293b;
+
+    --close-button-bg: #64748b;
+    --close-button-hover-bg: #475569;
+
+    --selected-bg: #fff7ed;
+    --selected-row: #ffedd5;
+
+    /* --- local surfaces for the custom components --------------------- */
+    --eth-surface: #ffffff;
+    --eth-surface-alt: #f8fafc;
+    --eth-border: #e2e8f0;
+    --eth-fg: #0f172a;
+    --eth-fg-muted: #64748b;
+    --eth-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 1px 3px rgba(15, 23, 42, .1);
+    --eth-shadow-lg: 0 10px 30px -10px rgba(15, 23, 42, .25);
+}
+
+/* Django's dark theme sets data-theme="dark" on <html>. */
+html[data-theme="dark"] {
+    --breadcrumbs-bg: #1e293b;
+    --breadcrumbs-fg: #fbbf24;
+    --breadcrumbs-link-fg: #fbbf24;
+
+    --link-fg: #fb923c;
+    --link-hover-color: #fdba74;
+    --link-selected-fg: #fdba74;
+
+    --selected-bg: #1e293b;
+    --selected-row: #334155;
+
+    --eth-surface: #1e293b;
+    --eth-surface-alt: #172033;
+    --eth-border: #334155;
+    --eth-fg: #e2e8f0;
+    --eth-fg-muted: #94a3b8;
+    --eth-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    --eth-shadow-lg: 0 10px 30px -10px rgba(0, 0, 0, .6);
+}
+
+/* ---------------------------------------------------------------- header */
+
+#site-name a,
+#site-name a:link,
+#site-name a:visited {
+    color: #ffffff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -.01em;
+}
+
+#site-name a:hover {
+    opacity: .88;
+}
+
+.eth-brand-mark {
+    height: 30px;
+    width: auto;
+    display: block;
+}
+
+.eth-brand-text {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.eth-brand-text em {
+    color: var(--primary);
+    font-style: normal;
+}
+
+/* ------------------------------------------------------------ index tiles */
+
+.eth-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin: 0 0 1.5rem;
+}
+
+.eth-tile {
+    background: var(--eth-surface);
+    border: 1px solid var(--eth-border);
+    border-radius: 12px;
+    padding: 1.15rem 1.25rem;
+    box-shadow: var(--eth-shadow);
+}
+
+.eth-tile h3 {
+    margin: 0 0 .3rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--eth-fg-muted);
+}
+
+.eth-tile p {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--eth-fg);
+    font-variant-numeric: tabular-nums;
+}
+
+.eth-tile--accent p {
+    color: var(--primary);
+}
+
+/* ------------------------------------------------------- operator panel */
+
+.eth-operator {
+    padding: 0;
+    margin: 0 0 1.5rem;
+}
+
+.eth-operator h2 {
+    padding: .7rem 1rem;
+    background: var(--eth-surface-alt);
+    color: var(--eth-fg-muted);
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-size: .72rem;
+}
+
+.eth-operator-body {
+    padding: 1rem;
+}
+
+.eth-operator-body p {
+    margin: 0 0 .9rem;
+    color: var(--eth-fg-muted);
+    font-size: .88rem;
+    max-width: 62ch;
+}
+
+.eth-operator-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+/* ------------------------------------------------- platform nav sidebar */
+
+.eth-platform {
+    margin: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.eth-platform h2 {
+    background: var(--eth-surface-alt);
+    color: var(--eth-fg-muted);
+}
+
+.eth-platform ul {
+    margin: 0;
+    padding: 8px 6px;
+    list-style: none;
+}
+
+.eth-platform li {
+    margin: 0 0 2px;
+}
+
+.eth-platform a,
+.eth-platform a:link,
+.eth-platform a:visited {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .42rem .55rem;
+    border-radius: 7px;
+    color: var(--eth-fg);
+    font-size: .86rem;
+    text-decoration: none;
+}
+
+.eth-platform a:hover {
+    background: rgba(249, 115, 22, .14);
+    color: var(--eth-primary-hover, var(--primary));
+}
+
+.eth-platform i {
+    font-size: .95rem;
+    opacity: .75;
+    width: 1.1rem;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------- login */
+
+.eth-login-body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--eth-surface-alt);
+    padding: 1.5rem;
+}
+
+.eth-login-card {
+    background: var(--eth-surface);
+    border: 1px solid var(--eth-border);
+    border-radius: 18px;
+    box-shadow: var(--eth-shadow-lg);
+    padding: 2.25rem 2rem;
+    width: 100%;
+    max-width: 25rem;
+    text-align: center;
+}
+
+.eth-login-logo {
+    display: block;
+    height: 56px;
+    width: auto;
+    margin: 0 auto .9rem;
+}
+
+.eth-login-card h1 {
+    margin: 0 0 .25rem;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--eth-fg);
+}
+
+.eth-login-card .eth-login-sub {
+    margin: 0 0 1.6rem;
+    color: var(--eth-fg-muted);
+    font-size: .88rem;
+}
+
+.eth-login-error {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #9f1239;
+    border-radius: 9px;
+    padding: .65rem .85rem;
+    margin-bottom: 1.1rem;
+    font-size: .85rem;
+    text-align: left;
+}
+
+.eth-login-field {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.eth-login-field label {
+    display: block;
+    margin-bottom: .3rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--eth-fg);
+}
+
+.eth-login-field input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: .7rem .85rem;
+    font-size: .95rem;
+    color: var(--eth-fg);
+    background: var(--eth-surface);
+    border: 1px solid var(--eth-border);
+    border-radius: 9px;
+}
+
+.eth-login-field input:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+    border-color: var(--primary);
+}
+
+.eth-login-submit {
+    width: 100%;
+    padding: .8rem;
+    font-size: .95rem;
+    cursor: pointer;
+    border-radius: 9px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+}
+
+.eth-login-submit:hover {
+    background: var(--button-hover-bg);
+}
+
+.eth-login-foot {
+    margin: 1.4rem 0 0;
+    font-size: .76rem;
+    color: var(--eth-fg-muted);
+}
