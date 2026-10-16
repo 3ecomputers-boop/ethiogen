@@ -41,8 +41,13 @@ SRC_COLOURS = [(0x00, 0x50, 0xA0), (0xF0, 0x70, 0x00), (0x00, 0x90, 0x30)]
 
 VARIANTS = {
     # name                     figure      swoosh      star/lower
-    "ethiogen-logo.png": [(0xF9, 0x73, 0x16), (0xEA, 0x58, 0x0C), (0xFB, 0xBF, 0x24)],
+    # Full colour: the artwork exactly as drawn (blue / orange / green). Only
+    # the opaque white field is removed, so the mark sits on any theme surface
+    # without a white slab. This is the brand mark; the ramps below are
+    # single-hue treatments for surfaces where it would not read.
+    "ethiogen-logo.png": SRC_COLOURS,
     "ethiogen-logo-light.png": [(0xC2, 0x41, 0x0C), (0xEA, 0x58, 0x0C), (0xB4, 0x53, 0x09)],
+    "ethiogen-logo-mono.png": [(0xF9, 0x73, 0x16), (0xEA, 0x58, 0x0C), (0xFB, 0xBF, 0x24)],
     # Knockout white, for sitting on a brand-coloured surface (the mini app
     # header pill is an orange gradient). Alpha still comes from the source, so
     # the gaps between strokes stay transparent and the mark still reads.

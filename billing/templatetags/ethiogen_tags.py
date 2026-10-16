@@ -29,13 +29,22 @@ from billing import config
 register = template.Library()
 
 DEFAULT_FALLBACK = '/static/branding/ethiogen-logo.png'
+MONO_FALLBACK = '/static/branding/ethiogen-logo-mono.png'
 LIGHT_FALLBACK = '/static/branding/ethiogen-logo-light.png'
 ONBRAND_FALLBACK = '/static/branding/ethiogen-logo-onbrand.png'
 
+# The default (and any explicit "colour") is the brand artwork as drawn, with
+# only the opaque white field removed. "mono" is the single-hue orange ramp for
+# dark surfaces, where the artwork's blue leg drops to ~2.2:1 and goes muddy.
 _VARIANTS = {
+    'mono': MONO_FALLBACK,
+    'dark': MONO_FALLBACK,
     'light': LIGHT_FALLBACK,
     'onbrand': ONBRAND_FALLBACK,
     'on-brand': ONBRAND_FALLBACK,
+    'colour': DEFAULT_FALLBACK,
+    'color': DEFAULT_FALLBACK,
+    'full': DEFAULT_FALLBACK,
 }
 
 
@@ -46,19 +55,20 @@ def _fallback_for(variant):
 
 @register.simple_tag
 def brand_logo(height=None, show_caption=None, css_class='', link_url='', alt=None,
-               variant='dark'):
+               variant='colour'):
     """
     Render the site logo, with an optional wordmark underneath.
 
     Falls back to the bundled static logo until an admin uploads one.
 
-    `variant` picks the bundled artwork to use on a dark, light or
-    brand-coloured surface. The ramps are not interchangeable: amber-400
-    reaches 10.69:1 on the slate-900 headers but only 1.67:1 on a white one,
-    where it washes out to a pale smudge. The light variant steps down to
-    brand-700 / amber-700 so the mark keeps at least 3:1 on white, and
-    `onbrand` is a knockout white for brand-coloured surfaces. Ignored once an
-    admin has uploaded a logo, since that is one file for the whole site.
+    `variant` picks the bundled artwork for the surface it will sit on.
+    Omit it (or pass "colour") for the brand artwork as drawn. The ramps are
+    not interchangeable: amber-400 reaches 10.69:1 on a slate-900 header but
+    only 1.67:1 on white, where it washes out to a pale smudge, so "light"
+    steps down to brand-700 / amber-700; "mono" is the orange ramp for dark
+    surfaces where the artwork's blue leg drops to ~2.2:1; and "onbrand" is a
+    knockout white for brand-coloured surfaces. Ignored once an admin has
+    uploaded a logo, since that is one file for the whole site.
     """
     src = config.logo_url() or _fallback_for(variant)
     if src.startswith('/static/') and not src.startswith('/staticfiles/'):
