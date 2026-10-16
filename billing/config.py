@@ -260,6 +260,16 @@ def logo_fallback_url() -> str:
     return '/static/branding/ethiogen-logo.png'
 
 
+def favicon_fallback_url() -> str:
+    """Static favicon used until an admin uploads one.
+
+    Deliberately NOT logo_fallback_url(): the main logo is a wide figure+star
+    on a transparent field, which browsers crop to a square and it renders
+    tiny and off-centre at 16px. This is the same mark, square and padded.
+    """
+    return '/static/branding/favicon.png'
+
+
 def logo_wordmark() -> str:
     return str(_pick('logo_wordmark', 'BRAND_WORDMARK', 'Ethiogen') or 'Ethiogen')
 
@@ -285,7 +295,7 @@ def favicon_url() -> str:
             return row.favicon_image.url
         except Exception:
             pass
-    return logo_url() or logo_fallback_url()
+    return logo_url() or favicon_fallback_url()
 
 
 # ======================================================================
