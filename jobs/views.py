@@ -67,7 +67,7 @@ from .models import (
 )
 
 # Published construction rate card (single source of truth: jobs/rates.py)
-from .rates import MARKUP, rate_card
+from .models import current_week_rates
 
 # ============================================================================
 # CONFIGURATION
@@ -535,16 +535,20 @@ def home(request):
         for t in talents_qs
     ]
 
+    # Published weekly professional prices, editable in Django admin under
+    # Jobs -> Professional rates. The same rows price talent listings, so the
+    # advertised price and the hire price cannot drift apart.
+    week_rates = [r.to_dict() for r in current_week_rates()]
+
     context = {
         'talents_json': json.dumps(talents_list),
         'initial_cart': json.dumps(request.session.get('cart', [])),
         'initial_wishlist': json.dumps(request.session.get('wishlist', [])),
         'initial_compare': json.dumps(request.session.get('compare', [])),
         'initial_recent': json.dumps(request.session.get('recently_viewed', [])),
-        # Published construction rate card. Single source of truth in
-        # jobs.rates, so the card and the listing prices cannot drift apart.
-        'rate_card': rate_card(),
-        'markup_percent': round((MARKUP - 1) * 100),
+        'prices': week_rates,
+        'prices_json': json.dumps(week_rates),
+        'price_week': week_rates[0]['week_label'] if week_rates else '',
     }
 
     return render(request, 'home.html', context)

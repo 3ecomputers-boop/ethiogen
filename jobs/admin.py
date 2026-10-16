@@ -8,9 +8,9 @@ from django.contrib import messages
 from django.utils.html import format_html, mark_safe
 
 from .models import (
-    JobSeekerProfile, ClientProfile, Talent, HireRequest, 
-    PostNeedRequest, Job, Message, Review, Profession, 
-    Category, SubCategory, Booking, WorkerRating
+    JobSeekerProfile, ClientProfile, Talent, HireRequest,
+    PostNeedRequest, Job, Message, Review, Profession,
+    Category, SubCategory, Booking, WorkerRating, ProfessionalRate
 )
 
 User = get_user_model()
@@ -449,6 +449,76 @@ class BookingAdmin(admin.ModelAdmin):
     list_display = ('job', 'service_provider', 'status', 'start_date')
     list_filter = ('status', 'start_date')
     raw_id_fields = ('job', 'service_provider', 'client')
+
+
+# ============================================================================
+# PRICING
+# ============================================================================
+
+@admin.register(ProfessionalRate)
+class ProfessionalRateAdmin(admin.ModelAdmin):
+    """
+    Backs the public "Professional Prices" menu and prices talent listings.
+
+    Sorting by -effective_from first means the week currently advertised sits at
+    the top, since the public menu reads the newest effective_from.
+    """
+
+    list_display = (
+        'profession', 'week_badge', 'worker_wage_daily', 'client_rate_shown',
+        'weekly_client_rate', 'working_days_per_week', 'sort_order',
+        'is_active', 'updated_at',
+    )
+    # Only fields present in list_display can be list_editable. The client rate
+    # is edited on the change form instead, so the derived value stays visible.
+    list_editable = ('worker_wage_daily', 'sort_order', 'is_active')
+    list_filter = ('is_active', 'effective_from')
+    search_fields = ('profession', 'note')
+    ordering = ('-effective_from', 'sort_order', 'profession')
+    list_per_page = 50
+    date_hierarchy = 'effective_from'
+    readonly_fields = ('created_at', 'updated_at', 'derived_summary')
+    fieldsets = (
+        (None, {'fields': ('profession', 'note')}),
+        ('Price (ETB)', {
+            'fields': ('worker_wage_daily', 'client_rate_daily', 'derived_summary'),
+        }),
+        ('Week', {
+            'fields': ('effective_from', 'working_days_per_week', 'sort_order', 'is_active'),
+        }),
+        ('Audit', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
+    )
+
+    @admin.display(description="week")
+    def week_badge(self, obj):
+        return obj.effective_from.strftime('%d %b %Y')
+
+    @admin.display(description="client/day")
+    def client_rate_shown(self, obj):
+        """Show what is actually charged, derived value included."""
+        rate = obj.effective_client_rate_daily()
+        if not obj.client_rate_daily:
+            return format_html(
+                '<span title="Derived: {} x {}">{}</span> <small>(derived)</small>',
+                obj.worker_wage_daily, '1.25', format_html('<b>{}</b>', rate),
+            )
+        return rate
+
+    @admin.display(description="client/week")
+    def weekly_client_rate(self, obj):
+        return "{:,}".format(obj.weekly_client_rate())
+
+    @admin.display(description="Summary")
+    def derived_summary(self, obj):
+        if not obj.pk:
+            return 'Save to see the derived weekly price.'
+        margin = obj.platform_margin_pct
+        return format_html(
+            'Client pays <b>{:,}</b>/week ({:,}/day &times; {} days). '
+            'Worker takes <b>{:,}</b>/week. Platform margin <b>{}%</b>.',
+            obj.weekly_client_rate(), obj.effective_client_rate_daily(),
+            obj.working_days_per_week, obj.weekly_worker_wage(), margin,
+        )
 
 
 # ============================================================================

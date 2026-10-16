@@ -3,13 +3,16 @@
 
 import random
 import string
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import slugify
 from django_countries.fields import CountryField
+
+from .rates import PLATFORM_MARKUP
 
 
 # ============================================================================
@@ -67,6 +70,132 @@ class Profession(models.Model):
 
     def __str__(self):
         return self.name
+
+
+# ============================================================================
+# PRICING
+# ============================================================================
+
+class ProfessionalRate(models.Model):
+    """
+    Published weekly price for a professional trade.
+
+    The public "Professional Prices" menu reads from here, and the same rows
+    price talent listings, so the advertised price and the hire price cannot
+    drift apart. Editable in Django admin under Jobs -> Professional rates.
+
+    Rates are held per day and published per week: `effective_from` is the
+    Monday the week starts, so a new week's prices are added as new rows
+    rather than overwriting the week being advertised. Rows sharing an
+    effective_from form one published week; the menu shows the current one.
+    """
+
+    profession = models.CharField(max_length=120, db_index=True)
+
+    # What the worker takes home for one working day.
+    worker_wage_daily = models.PositiveIntegerField()
+
+    # What a client pays to hire for one working day. Left blank it is derived
+    # from worker_wage_daily x PLATFORM_MARKUP, which is the rule every
+    # published rate follows, so the margin stays consistent.
+    client_rate_daily = models.PositiveIntegerField(
+        blank=True, null=True,
+        help_text="Leave blank to derive from the worker wage x the platform margin.",
+    )
+
+    # Monday the published week begins.
+    effective_from = models.DateField(
+        default=date.today,
+        help_text="Monday this week's price takes effect. Rows sharing a date "
+                  "form one published week.",
+    )
+
+    working_days_per_week = models.PositiveSmallIntegerField(
+        default=6,
+        help_text="Used to turn the daily rate into the published weekly price.",
+    )
+
+    sort_order = models.PositiveIntegerField(default=100)
+
+    note = models.CharField(max_length=200, blank=True)
+
+    is_active = models.BooleanField(
+        default=True, db_index=True,
+        help_text="Uncheck to retire a profession without deleting its history.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'professional rate'
+        verbose_name_plural = 'professional rates'
+        ordering = ['sort_order', 'profession']
+        # One row per profession per published week. A bare unique() on
+        # profession would make it impossible to keep next week's rates
+        # alongside the week currently advertised.
+        constraints = [
+            models.UniqueConstraint(
+                fields=['profession', 'effective_from'],
+                name='unique_profession_per_week',
+            ),
+        ]
+
+    def __str__(self):
+        return '%s — %s/week' % (self.profession, self.weekly_client_rate())
+
+    # -- derived values -------------------------------------------------
+    @property
+    def platform_margin_pct(self):
+        """Markup over the worker wage, as a percentage."""
+        if not self.worker_wage_daily:
+            return 0
+        base = self.effective_client_rate_daily()
+        return round((base - self.worker_wage_daily) / self.worker_wage_daily * 100)
+
+    def effective_client_rate_daily(self):
+        """The client rate actually used, derived when blank."""
+        if self.client_rate_daily:
+            return self.client_rate_daily
+        if not self.worker_wage_daily:
+            return 0
+        return int(round(self.worker_wage_daily * PLATFORM_MARKUP))
+
+    def weekly_client_rate(self):
+        return self.effective_client_rate_daily() * (self.working_days_per_week or 0)
+
+    def weekly_worker_wage(self):
+        return (self.worker_wage_daily or 0) * (self.working_days_per_week or 0)
+
+    def to_dict(self):
+        """Flat payload for the public menu."""
+        return {
+            'id': self.pk,
+            'slug': slugify(self.profession),
+            'profession': self.profession,
+            'worker_wage_daily': self.worker_wage_daily,
+            'client_rate_daily': self.effective_client_rate_daily(),
+            'weekly_client_rate': self.weekly_client_rate(),
+            'weekly_worker_wage': self.weekly_worker_wage(),
+            'working_days': self.working_days_per_week,
+            'margin_pct': self.platform_margin_pct,
+            'week_label': self.effective_from.strftime('%d %B %Y'),
+            'note': self.note,
+        }
+
+
+def current_week_rates():
+    """
+    Rates for the week currently published, newest week first.
+
+    Falls back to the newest week on file when the current week has not been
+    published yet, so the menu is never empty mid-week.
+    """
+    live = ProfessionalRate.objects.filter(is_active=True)
+    if not live.exists():
+        return []
+    newest = live.order_by('-effective_from').values_list('effective_from', flat=True).first()
+    return list(live.filter(effective_from=newest))
 
 
 # ============================================================================

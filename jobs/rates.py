@@ -1,20 +1,21 @@
 """
-Published rate card for construction trades.
+Published price list for construction trades.
 
-Single source of truth for the daily rates shown on the public rate card and
-used to price talent listings. Rates are in ETB per working day.
+This module holds the arithmetic and the seed data. The live prices live in the
+database (jobs.ProfessionalRate) so they can be edited from Django admin
+without a deploy, and jobs/models.py imports PLATFORM_MARKUP from here.
 
-`client` is not hand-entered: every published client rate in the card is
-exactly 1.25x the worker's daily wage, so it is derived from MARKUP rather
-than stored. That keeps the margin consistent if a wage is ever revised -- the
-old table had 750 -> 938, which is 937.5 rounded, so hand-maintained values
-had already drifted from the rule.
+Rates are in ETB per working day. `client` is not hand-entered: every published
+client rate is exactly 1.25x the worker's daily wage, so it is derived from
+MARKUP rather than stored. That keeps the margin consistent if a wage is ever
+revised -- the hand-maintained table had 750 -> 938, which is 937.5 rounded, so
+stored values had already drifted from the rule.
 
 Adding a trade is one line in WORKER_WAGES; the client rate follows.
 """
 
 # Markup applied to the worker's daily wage to get the client rate.
-MARKUP = 1.25
+PLATFORM_MARKUP = MARKUP = 1.25
 
 # Trade -> worker wage in ETB/day.
 WORKER_WAGES = {
@@ -55,14 +56,20 @@ def client_rate(worker_wage):
 
 
 def rate_card():
-    """The public rate card, in display order."""
+    """
+    Seed rows for jobs.ProfessionalRate, in display order.
+
+    Used by the seed management command and as a fallback for the public menu
+    when the table is empty. Prices live in the database in normal operation.
+    """
     return [
         {
-            "category": name,
-            "worker_wage": WORKER_WAGES[name],
-            "client_rate": client_rate(WORKER_WAGES[name]),
+            "profession": name,
+            "worker_wage_daily": WORKER_WAGES[name],
+            "client_rate_daily": client_rate(WORKER_WAGES[name]),
+            "sort_order": index,
         }
-        for name in ORDER
+        for index, name in enumerate(ORDER)
     ]
 
 
@@ -82,10 +89,29 @@ def hire_rate_for(category):
     What a client pays per day to hire this trade, or None if unknown.
 
     This -- not the worker wage -- is what a public listing is priced at, since
-    a listing is quoted to the client.
+    a listing is quoted to the client. Prefers the live database row so an
+    admin edit is reflected immediately; falls back to the seed table.
     """
-    wage = worker_wage_for(category)
-    return None if wage is None else client_rate(wage)
+    if not category:
+        return None
+    try:
+        from .models import ProfessionalRate
+    except Exception:
+        return None
+
+    name = None
+    key = " ".join(str(category).split()).strip().lower()
+    for row in ProfessionalRate.objects.filter(is_active=True):
+        if row.profession.strip().lower() == key:
+            name = row.profession
+            break
+    if name is None:
+        wage = worker_wage_for(key)
+        return None if wage is None else client_rate(wage)
+
+    row = ProfessionalRate.objects.filter(
+        profession=name, is_active=True).order_by('-effective_from').first()
+    return row.effective_client_rate_daily() if row else None
 
 
 # ---------------------------------------------------------------------------

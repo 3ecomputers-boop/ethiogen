@@ -329,68 +329,78 @@
         </div>
     </section>
 
-    <!-- ===== Published Rate Card ===== -->
-    <!-- Rates come from jobs.rates (single source of truth) so this table and
-         the listing prices cannot drift apart. Worker wage is what the worker
-         takes; client rate is the published hire rate, worker wage x 1.25. -->
-    <section class="container mx-auto px-4 mb-12" id="rateCardSection">
+    <!-- ===== Professional Prices (weekly menu) ===== -->
+    <!-- Data comes from jobs.ProfessionalRate, editable in Django admin under
+         Jobs -> Professional rates. The same rows price talent listings, so the
+         advertised price and the hire price cannot drift apart. -->
+    <section class="container mx-auto px-4 mb-12" id="priceMenuSection"
+             data-prices='{{ prices_json }}'>
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-card border border-slate-100 dark:border-slate-700 overflow-hidden">
-            <div class="px-8 pt-8 pb-6 border-b border-slate-100 dark:border-slate-700">
-                <div class="flex flex-wrap items-end justify-between gap-4">
+
+            <div class="px-6 sm:px-8 pt-8 pb-5">
+                <div class="flex flex-wrap items-end justify-between gap-3">
                     <div>
                         <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                            <i class="bi bi-tags text-brand-500"></i> Published Rate Card
+                            <i class="bi bi-calendar-week text-brand-500"></i> Professional Prices
                         </h2>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            Standard construction trade rates, in ETB per working day.
+                            Weekly hire prices for construction trades, ETB.
                         </p>
                     </div>
-                    <div class="text-sm text-slate-500 dark:text-slate-400">
-                        <span class="font-semibold text-slate-700 dark:text-slate-200">{{ rate_card|length }}</span> trades listed
+                    {% if price_week %}
+                    <div class="text-xs font-semibold px-3 py-1.5 rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300">
+                        Week of {{ price_week }}
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 dark:bg-slate-900/40">
-                            <th class="text-left font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-8 py-4">
-                                Trade
-                            </th>
-                            <th class="text-right font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-6 py-4">
-                                Worker wage / day
-                            </th>
-                            <th class="text-right font-bold uppercase tracking-wider text-brand-600 px-8 py-4">
-                                Client rate / day
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in rate_card %}
-                        <tr class="border-t border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
-                            <td class="px-8 py-3.5 font-semibold text-slate-800 dark:text-slate-100">
-                                {{ row.category }}
-                            </td>
-                            <td class="px-6 py-3.5 text-right text-slate-600 dark:text-slate-300 tabular-nums">
-                                {{ row.worker_wage|floatformat:0 }}
-                            </td>
-                            <td class="px-8 py-3.5 text-right font-bold text-brand-600 tabular-nums">
-                                {{ row.client_rate|floatformat:0 }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            {% if prices %}
+            <!-- the menu: one chip per trade -->
+            <div class="px-6 sm:px-8">
+                <div class="flex flex-wrap gap-2 pb-6 border-b border-slate-100 dark:border-slate-700"
+                     id="priceMenu" role="tablist" aria-label="Choose a trade">
+                    {% for p in prices %}
+                    <button type="button" role="tab" data-price-tab="{{ p.slug }}"
+                            aria-controls="pricePanel"
+                            class="px-4 py-2 rounded-full text-sm font-semibold border transition-all
+                                   {% if forloop.first %}bg-brand-500 text-white border-brand-500 shadow-glow{% else %}bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-transparent hover:border-brand-300 hover:text-brand-600 dark:hover:text-brand-300{% endif %}">
+                        {{ p.profession }}
+                    </button>
+                    {% endfor %}
+                </div>
             </div>
 
-            <div class="px-8 py-5 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-100 dark:border-slate-700">
-                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Worker wage is the daily wage the worker takes home. Client rate is what a
-                    client pays to hire, and includes Ethiogen's {{ markup_percent }}% platform margin.
-                    Rates exclude transport, tools and materials unless agreed separately.
+            <!-- the detail panel for the selected trade -->
+            <div id="pricePanel" class="px-6 sm:px-8 py-8" role="tabpanel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Client pays / week</div>
+                        <div class="text-4xl font-extrabold text-brand-600 tabular-nums" id="pWeeklyClient">&mdash;</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="pWeeklyNote"></div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Worker takes / week</div>
+                        <div class="text-4xl font-extrabold text-slate-800 dark:text-slate-100 tabular-nums" id="pWeeklyWorker">&mdash;</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Before platform margin</div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Client rate / day</div>
+                        <div class="text-4xl font-extrabold text-slate-800 dark:text-slate-100 tabular-nums" id="pDailyClient">&mdash;</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="pMarginNote"></div>
+                    </div>
+                </div>
+                <p class="mt-6 text-xs text-slate-500 dark:text-slate-400 leading-relaxed" id="pTradeNote"></p>
+            </div>
+            {% else %}
+            <div class="px-8 py-10 text-center">
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    No professional prices published yet. Add them under
+                    <strong>Jobs &rarr; Professional rates</strong> in the admin.
                 </p>
             </div>
+            {% endif %}
+
         </div>
     </section>
 
@@ -1000,6 +1010,63 @@
                 qv_bio: "ታሪክ", qv_radius: "የአገል ርዝመት", qv_offer: "አሁን ያግኙ",
             }
         };
+
+        // ===== Professional Prices menu =====
+        // Chip-per-trade menu. Prices ship as JSON on the section element so
+        // this stays in sync with whatever is published in the admin.
+        (function professionalPriceMenu() {
+            const section = document.getElementById('priceMenuSection');
+            if (!section) return;
+
+            let prices = [];
+            try { prices = JSON.parse(section.dataset.prices || '[]'); }
+            catch (e) { console.error('price menu: bad JSON', e); return; }
+            if (!prices.length) return;
+
+            const byslug = {};
+            prices.forEach(p => { byslug[p.slug] = p; });
+
+            const tabs = [...section.querySelectorAll('[data-price-tab]')];
+            const weeklyClient = document.getElementById('pWeeklyClient');
+            const weeklyWorker = document.getElementById('pWeeklyWorker');
+            const dailyClient = document.getElementById('pDailyClient');
+            const weeklyNote = document.getElementById('pWeeklyNote');
+            const marginNote = document.getElementById('pMarginNote');
+            const tradeNote = document.getElementById('pTradeNote');
+
+            const etb = n => (n || 0).toLocaleString('en-ET') + ' ETB';
+
+            function show(slug) {
+                const p = byslug[slug];
+                if (!p) return;
+
+                weeklyClient.textContent = etb(p.weekly_client_rate);
+                weeklyWorker.textContent = etb(p.weekly_worker_wage);
+                dailyClient.textContent = etb(p.client_rate_daily);
+                weeklyNote.textContent = 'over ' + p.working_days + ' working days';
+                marginNote.textContent = 'includes ' + p.margin_pct + '% platform margin';
+                tradeNote.textContent = p.note || '';
+
+                tabs.forEach(t => {
+                    const on = t.dataset.priceTab === slug;
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                    t.className = 'px-4 py-2 rounded-full text-sm font-semibold border transition-all ' + (on
+                        ? 'bg-brand-500 text-white border-brand-500 shadow-glow'
+                        : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-transparent hover:border-brand-300 hover:text-brand-600 dark:hover:text-brand-300');
+                });
+                try { localStorage.setItem('ethiogen_price_tab', slug); } catch (e) {}
+            }
+
+            tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.priceTab)));
+
+            // open on the last trade the visitor looked at, else the first
+            let start = tabs.length ? tabs[0].dataset.priceTab : null;
+            try {
+                const saved = localStorage.getItem('ethiogen_price_tab');
+                if (saved && byslug[saved]) start = saved;
+            } catch (e) {}
+            if (start) show(start);
+        })();
 
         // --- Brand rename migration (moya_* -> ethiogen_*) ---
         // Copies any pre-rename key to its new name once, so carts, wishlists
