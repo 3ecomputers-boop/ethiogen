@@ -29,16 +29,38 @@ from billing import config
 register = template.Library()
 
 DEFAULT_FALLBACK = '/static/branding/ethiogen-logo.png'
+LIGHT_FALLBACK = '/static/branding/ethiogen-logo-light.png'
+ONBRAND_FALLBACK = '/static/branding/ethiogen-logo-onbrand.png'
+
+_VARIANTS = {
+    'light': LIGHT_FALLBACK,
+    'onbrand': ONBRAND_FALLBACK,
+    'on-brand': ONBRAND_FALLBACK,
+}
+
+
+def _fallback_for(variant):
+    """Bundled artwork matching the surface it will sit on."""
+    return _VARIANTS.get(str(variant).strip().lower(), DEFAULT_FALLBACK)
 
 
 @register.simple_tag
-def brand_logo(height=None, show_caption=None, css_class='', link_url='', alt=None):
+def brand_logo(height=None, show_caption=None, css_class='', link_url='', alt=None,
+               variant='dark'):
     """
     Render the site logo, with an optional wordmark underneath.
 
     Falls back to the bundled static logo until an admin uploads one.
+
+    `variant` picks the bundled artwork to use on a dark, light or
+    brand-coloured surface. The ramps are not interchangeable: amber-400
+    reaches 10.69:1 on the slate-900 headers but only 1.67:1 on a white one,
+    where it washes out to a pale smudge. The light variant steps down to
+    brand-700 / amber-700 so the mark keeps at least 3:1 on white, and
+    `onbrand` is a knockout white for brand-coloured surfaces. Ignored once an
+    admin has uploaded a logo, since that is one file for the whole site.
     """
-    src = config.logo_url() or DEFAULT_FALLBACK
+    src = config.logo_url() or _fallback_for(variant)
     if src.startswith('/static/') and not src.startswith('/staticfiles/'):
         # make the static URL version-proof across DEBUG/collectstatic setups
         try:

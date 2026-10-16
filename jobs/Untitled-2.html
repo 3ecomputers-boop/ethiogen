@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% load ethiogen_tags %}<!DOCTYPE html>
 {% load static %}
 <html lang="en">
 <head>
@@ -170,9 +170,7 @@
     <nav class="fixed top-0 w-full z-40 glass shadow-sm transition-all duration-300" id="navbar">
         <div class="container mx-auto px-4 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow">
-                    <i class="bi bi-stars text-xl"></i>
-                </div>
+                    {% brand_logo height=40 show_caption=False variant="light" %}
                 <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ethio<span class="text-brand-500">gen</span></span>
             </div>
 

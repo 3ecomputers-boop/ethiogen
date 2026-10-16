@@ -1,14 +1,14 @@
 {% extends "admin/base.html" %}
 {% load static %}
+{% load ethiogen_tags %}
 
 {% block title %}{{ title }} | Ethiogen Admin{% endblock %}
 
 {% block branding %}
 <div id="site-name">
     <a href="{% url 'admin:index' %}" class="flex items-center gap-2 text-xl font-bold tracking-tight">
-        <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-sm">
-            <i class="bi bi-stars text-sm"></i>
-        </span>
+        {% comment %}Header is #0f172a, so the bright (dark-background) variant.{% endcomment %}
+        {% brand_logo height=32 show_caption=False variant="dark" %}
         <span class="text-white">Ethio<span class="text-brand-300">gen</span> Admin</span>
     </a>
 </div>

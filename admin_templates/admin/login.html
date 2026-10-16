@@ -1,13 +1,12 @@
 {% extends "admin/login.html" %}
 {% load static %}
+{% load ethiogen_tags %}
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center bg-slate-50">
     <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md border border-slate-200">
         <div class="text-center mb-8">
-            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-md mx-auto">
-                <i class="bi bi-stars text-2xl"></i>
-            </div>
+            {% brand_logo height=56 show_caption=False variant="light" %}
             <h1 class="text-2xl font-bold text-slate-900 mt-4">Ethiogen Admin</h1>
             <p class="text-slate-500 text-sm">Sign in to manage the platform</p>
         </div>

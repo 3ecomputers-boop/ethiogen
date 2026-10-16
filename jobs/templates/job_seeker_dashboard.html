@@ -1,4 +1,4 @@
-{% load static %}
+{% load ethiogen_tags %}{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,9 +43,7 @@
     <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
         <div class="container mx-auto px-4 h-16 flex items-center justify-between">
             <a href="{% url 'jobs:home' %}" class="flex items-center gap-2 group">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-                    <i class="bi bi-stars text-sm"></i>
-                </div>
+                {% brand_logo height=32 show_caption=False variant="light" %}
                 <span class="text-lg font-bold text-slate-800 tracking-tight">Ethio<span class="text-brand-500">gen</span></span>
             </a>
             

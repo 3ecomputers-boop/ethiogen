@@ -99,7 +99,7 @@
         <div class="absolute inset-0 bg-gradient-to-r from-brand-500 to-amber-500 rounded-xl blur opacity-50"></div>
         <!-- Logo: drawn from Billing -> Integration settings -->
         <div class="relative bg-gradient-to-r from-brand-500 to-amber-500 px-4 py-2 rounded-xl flex items-center gap-2">
-          {% brand_logo height=26 show_caption=False css_class="rounded" %}
+{% brand_logo height=26 show_caption=False css_class="rounded" variant="onbrand" %}
           <span class="text-white font-extrabold text-lg tracking-tight">{% brand_wordmark %}</span>
         </div>
       </div>
@@ -555,7 +555,8 @@
     <!-- LOGIN PANEL -->
     <div id="authPanel-login" class="auth-panel">
       <div class="text-center mb-4">
-        <div class="auth-icon-wrap bg-gradient-to-br from-brand-500 to-amber-500 text-white shadow-glow mx-auto"><i class="bi bi-person"></i></div>
+        {% comment %}Login is a brand moment: show the real mark, not a person glyph.{% endcomment %}
+        <div class="mx-auto w-fit">{% brand_logo height=52 show_caption=False variant="light" %}</div>
         <p class="text-sm text-slate-500 dark:text-slate-400">Sign in to your Ethiogen account</p>
       </div>
       <div class="otp-method-toggle mb-4">

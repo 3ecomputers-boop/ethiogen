@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% load ethiogen_tags %}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -384,7 +384,11 @@
     <!-- ===== MOBILE NAV ===== -->
     <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
         <div class="flex items-center justify-between mb-8">
-            <span class="text-xl font-bold text-brand-500">Ethio<span class="text-slate-900 dark:text-white">gen</span></span>
+            <span class="flex items-center gap-2">
+                <span class="dark:hidden">{% brand_logo height=28 show_caption=False variant="light" %}</span>
+                <span class="hidden dark:inline-flex">{% brand_logo height=28 show_caption=False variant="dark" %}</span>
+                <span class="text-xl font-bold text-brand-500">Ethio<span class="text-slate-900 dark:text-white">gen</span></span>
+            </span>
             <button id="closeMobileNav" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-colors" aria-label="Close menu">
                 <i class="bi bi-x-lg text-xl"></i>
             </button>
@@ -410,9 +414,7 @@
     <nav class="fixed top-0 w-full z-40 glass shadow-sm transition-all duration-300" id="navbar" role="navigation" aria-label="Main navigation">
         <div class="container mx-auto px-4 h-20 flex items-center justify-between">
             <a href="#" onclick="navigateTo('marketplace'); return false;" class="flex items-center gap-3 no-underline" aria-label="Ethiogen home">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-glow">
-                    <i class="bi bi-stars text-xl"></i>
-                </div>
+                <span class="dark:hidden">{% brand_logo height=40 show_caption=False variant="light" %}</span><span class="hidden dark:inline-flex">{% brand_logo height=40 show_caption=False variant="dark" %}</span>
                 <span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ethio<span class="text-brand-500">gen</span></span>
             </a>
 
