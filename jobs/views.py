@@ -66,6 +66,9 @@ from .models import (
     TalentAccess,
 )
 
+# Published construction rate card (single source of truth: jobs/rates.py)
+from .rates import MARKUP, rate_card
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -538,6 +541,10 @@ def home(request):
         'initial_wishlist': json.dumps(request.session.get('wishlist', [])),
         'initial_compare': json.dumps(request.session.get('compare', [])),
         'initial_recent': json.dumps(request.session.get('recently_viewed', [])),
+        # Published construction rate card. Single source of truth in
+        # jobs.rates, so the card and the listing prices cannot drift apart.
+        'rate_card': rate_card(),
+        'markup_percent': round((MARKUP - 1) * 100),
     }
 
     return render(request, 'home.html', context)
