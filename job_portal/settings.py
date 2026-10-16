@@ -130,7 +130,13 @@ ROOT_URLCONF = 'job_portal.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # admin_templates/ must be in DIRS, not just an app's templates/ dir.
+        # 'django.contrib.admin' is first in INSTALLED_APPS, so the
+        # app_directories loader reaches django/contrib/admin/templates/admin/*
+        # before jobs/ or tenants/ ever get a look -- every admin override
+        # placed in an app's templates/ folder is silently ignored. The
+        # filesystem loader (DIRS) runs first and fixes that.
+        'DIRS': [BASE_DIR / 'admin_templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -138,7 +144,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-
+                'tenants.context_processors.platform_admin',
             ],
         },
     },

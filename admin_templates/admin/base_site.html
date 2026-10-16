@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
-{% block title %}{{ title }} | MoyaJobs Admin{% endblock %}
+{% block title %}{{ title }} | Ethiogen Admin{% endblock %}
 
 {% block branding %}
 <div id="site-name">
@@ -9,7 +9,7 @@
         <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-amber-500 flex items-center justify-center text-white shadow-sm">
             <i class="bi bi-stars text-sm"></i>
         </span>
-        <span class="text-white">Moya<span class="text-brand-300">Jobs</span> Admin</span>
+        <span class="text-white">Ethio<span class="text-brand-300">gen</span> Admin</span>
     </a>
 </div>
 {% endblock %}
@@ -67,3 +67,36 @@
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+
+{% comment %}
+The operator console and the ecosystem overview are plain views, not
+ModelAdmins, so Django's admin index builds no link to them. Without this
+sidebar there is no way to reach /admin/ecosystem/ by clicking.
+
+Django's own admin/index.html also defines a nav-sidebar block, so this one
+only shows on the changelist pages -- the index carries its own links in
+the content block instead.
+{% endcomment %}
+{% block nav-sidebar %}
+{% if platform.is_superuser %}
+<div class="module platform-nav" style="margin: 12px;">
+    <h2>Ethiogen Platform</h2>
+    <ul>
+        {% if platform.ecosystem %}
+        <li><a href="{{ platform.ecosystem }}"><i class="bi bi-grid-1x2"></i> Ecosystem overview</a></li>
+        {% endif %}
+        {% if platform.show_console %}
+        <li><a href="{{ platform.console }}"><i class="bi bi-speedometer2"></i> Operator console</a></li>
+        <li><a href="{{ platform.console_orgs }}"><i class="bi bi-buildings"></i> All organizations</a></li>
+        <li><a href="{{ platform.console_plans }}"><i class="bi bi-layers"></i> Plans</a></li>
+        {% endif %}
+        {% if platform.workspaces %}
+        <li><a href="{{ platform.workspaces }}"><i class="bi bi-briefcase"></i> Employer workspaces</a></li>
+        {% endif %}
+        {% if platform.admin_models %}
+        <li><a href="{{ platform.admin_models }}"><i class="bi bi-table"></i> Tenants (raw models)</a></li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
