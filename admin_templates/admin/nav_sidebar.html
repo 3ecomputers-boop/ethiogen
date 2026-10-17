@@ -73,9 +73,13 @@ entirely, which is how the model navigation went missing once already.
         {% endif %}
 
         <section class="eth-nav-section eth-nav-section--models">
-            <h3 class="eth-nav-heading">
-                <i class="bi bi-collection"></i> Models
-            </h3>
+            <div class="eth-nav-section-head">
+                <h3 class="eth-nav-heading">
+                    <i class="bi bi-collection"></i> Models
+                </h3>
+                <button type="button" id="eth-nav-expand-all" class="eth-nav-expand-all"
+                        data-action="collapse">Collapse all</button>
+            </div>
             {% include "admin/app_list.html" with app_list=available_apps show_changelinks=False %}
         </section>
 

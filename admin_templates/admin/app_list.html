@@ -3,16 +3,20 @@ Custom admin app list.
 
 Django's default renders each app as a <table> with a caption and one row per
 model, which reads as visually heavy across nine apps. This keeps that
-structure but restyles it: a compact icon header per app, and one tight row per
-model with a dot instead of a table grid.
+structure but restyles it: a compact icon header per app, one tight row per
+model with a dot instead of a table grid, and the group collapsible.
 
-The <th scope="row"> wrapper is load-bearing and must stay. nav_sidebar.js
-drives the "Start typing to filter..." box with
-document.querySelectorAll('th[scope=row] a') and hides the ones that do not
-match. Dropping the table in favour of nested <ul><li> made every app group
-unfilterable -- the box still worked, it just matched nothing. Same reason the
-app header link sits outside it: it is a caption in Django's markup, and the
-filter is not expected to match it either.
+Two parts of the structure are load-bearing and must stay:
+
+  * <th scope="row"> -- nav_sidebar.js filters the nav with
+    querySelectorAll('th[scope=row] a') and hides a.parentNode.parentNode,
+    i.e. the <tr>. Rewriting the list as nested <ul><li> made every app group
+    unfilterable: the box accepted input and matched nothing.
+  * the app header is an <a> to app_url (the app index) in Django's markup,
+    and the filter is not expected to match it either.
+
+Collapsing is wired up by static/js/ethiogen-admin-nav.js: the header is a
+button carrying data-nav-toggle, and the body is marked with data-nav-body.
 
 available_apps is what Django passes here (not app_list); each entry carries
 app_label, name, app_url and a models list of name / admin_url / object_name.
@@ -23,14 +27,23 @@ app_label, name, app_url and a models list of name / admin_url / object_name.
     {% for app in app_list %}
         {% with app_label=app.app_label %}
         {% if app.models %}
-        <div class="eth-nav-group{% if app.app_url == platform.current_url or platform.current_app == app_label %} eth-nav-group--active{% endif %}">
-            <a href="{{ app.app_url }}" class="eth-nav-app"
-               title="Models in the {{ app.name|default:app_label }} application">
-                <i class="bi {{ app_label|app_icon }}"></i>
-                <span class="eth-nav-app-name">{{ app|app_name_of }}</span>
-                <i class="bi bi-chevron-right eth-nav-chevron"></i>
-            </a>
-            <table class="eth-nav-models">
+        <div class="eth-nav-group{% if app.app_url == platform.current_url or platform.current_app == app_label %} eth-nav-group--active{% endif %}"
+             data-nav-group="{{ app_label }}">
+            <div class="eth-nav-app-row">
+                <button type="button" class="eth-nav-app-toggle" data-nav-toggle
+                        aria-expanded="true"
+                        aria-controls="eth-nav-models-{{ forloop.counter }}-{{ app_label }}">
+                    <i class="bi {{ app_label|app_icon }} eth-nav-app-icon"></i>
+                    <span class="eth-nav-app-name">{{ app|app_name_of }}</span>
+                    <i class="bi bi-chevron-down eth-nav-chevron"></i>
+                </button>
+                <a href="{{ app.app_url }}" class="eth-nav-app-link"
+                   title="Open the {{ app.name|default:app_label }} app index">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </div>
+            <table class="eth-nav-models" id="eth-nav-models-{{ forloop.counter }}-{{ app_label }}"
+                   data-nav-body>
                 <tbody>
                     {% for model in app.models %}
                     <tr>

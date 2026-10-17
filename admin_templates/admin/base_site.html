@@ -30,6 +30,11 @@ own dark_mode.css still wins where it should.
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 {% endblock %}
 
+{% block extrahead %}
+{{ block.super }}
+<script src="{% static 'js/ethiogen-admin-nav.js' %}" defer></script>
+{% endblock %}
+
 {% block nav-global %}{% endblock %}
 
 {% comment %}
