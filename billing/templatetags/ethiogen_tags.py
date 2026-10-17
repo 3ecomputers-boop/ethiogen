@@ -113,6 +113,84 @@ def brand_wordmark():
     return config.logo_wordmark()
 
 
+# ============================================================================
+# ADMIN NAVIGATION
+# ============================================================================
+
+# app_label -> bootstrap-icons glyph, for the admin sidebar.
+APP_ICONS = {
+    'accounts': 'bi-people',
+    'auth': 'bi-shield-lock',
+    'borker_network': 'bi-diagram-3',
+    'employers': 'bi-buildings',
+    'freelancer': 'bi-laptop',
+    'jobs': 'bi-briefcase',
+    'recruitment': 'bi-person-badge',
+    'billing': 'bi-credit-card',
+    'tenants': 'bi-diagram-2',
+    'talent': 'bi-person-badge',
+    'django_celery_beat': 'bi-clock-history',
+}
+
+# Human labels for app_labels whose auto-generated name is ugly.
+APP_LABELS = {
+    'borker_network': 'Borker Network',
+    'auth': 'Auth & Permissions',
+}
+
+
+def _field(entry, key, default=''):
+    """
+    Read `key` from an admin app_list entry.
+
+    available_apps holds plain dicts, not model instances. Django's template
+    engine falls back to dict lookup for {{ app.app_label }}, so the template
+    works either way -- but a Python filter using getattr() silently returns
+    the default for a dict, which is how the app names came out blank.
+    """
+    if isinstance(entry, dict):
+        value = entry.get(key, default)
+    else:
+        value = getattr(entry, key, default)
+    return default if value is None else value
+
+
+@register.filter
+def app_icon(app_label):
+    """Bootstrap Icons glyph for an admin app_label, with a sane fallback."""
+    return APP_ICONS.get(str(app_label).lower(), 'bi-folder')
+
+
+@register.filter
+def app_label_of(app):
+    """The app_label for an entry from the admin's app_list context."""
+    return _field(app, 'app_label')
+
+
+@register.filter
+def app_name_of(app):
+    """
+    Display name for an app, replacing Django's auto-derived ones.
+
+    Django derives "Borker_Network" from the module name, and "Authentication
+    and Authorization" from django.contrib.auth -- neither reads well in a nav.
+    """
+    label = _field(app, 'app_label')
+    return APP_LABELS.get(label) or _field(app, 'name') or label
+
+
+@register.simple_tag(takes_context=True)
+def admin_is_active(context, url):
+    """True when the current request path starts with this admin url."""
+    request = context.get('request')
+    if not request or not url:
+        return False
+    path = request.path
+    if url.endswith('/'):
+        return path == url or path.startswith(url)
+    return path.startswith(url + '/')
+
+
 @register.simple_tag
 def brand_logo_url():
     """The logo URL only (uploaded image, or the static fallback)."""

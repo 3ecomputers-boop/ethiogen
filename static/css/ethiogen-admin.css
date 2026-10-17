@@ -357,3 +357,285 @@ html[data-theme="dark"] {
     font-size: .76rem;
     color: var(--eth-fg-muted);
 }
+
+/* =========================================================================
+   SIDEBAR NAVIGATION
+   ========================================================================= */
+
+.eth-nav-filter {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 10px;
+    padding: .5rem .7rem;
+    font-size: .84rem;
+    color: var(--eth-fg);
+    background: var(--eth-surface);
+    border: 1px solid var(--eth-border);
+    border-radius: 8px;
+}
+
+.eth-nav-filter:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+    border-color: var(--primary);
+}
+
+.eth-nav-empty {
+    margin: .5rem;
+    padding: .7rem;
+    font-size: .82rem;
+    text-align: center;
+    color: var(--eth-fg-muted);
+}
+
+.eth-nav {
+    padding: 4px 8px 28px;
+}
+
+.eth-nav-section + .eth-nav-section {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--eth-border);
+}
+
+.eth-nav-heading {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin: 0 0 .5rem;
+    padding: 0 .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--eth-fg-muted);
+}
+
+.eth-nav-heading i {
+    color: var(--primary);
+    font-size: .85rem;
+}
+
+/* ---- operator quick links ---- */
+
+.eth-nav-quick {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 2px;
+}
+
+.eth-nav-quick-link {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem .6rem;
+    border-radius: 8px;
+    font-size: .86rem;
+    font-weight: 500;
+    color: var(--eth-fg);
+    text-decoration: none;
+    transition: background .14s ease, color .14s ease;
+}
+
+.eth-nav-quick-link i:first-child {
+    width: 1.15rem;
+    text-align: center;
+    font-size: .98rem;
+    color: var(--primary);
+    flex: none;
+}
+
+.eth-nav-quick-link span {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eth-nav-quick-arrow {
+    flex: none;
+    font-size: .95rem;
+    opacity: 0;
+    transform: translateX(-3px);
+    transition: opacity .14s ease, transform .14s ease;
+}
+
+.eth-nav-quick-link:hover {
+    background: rgba(249, 115, 22, .12);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.eth-nav-quick-link:hover .eth-nav-quick-arrow {
+    opacity: .7;
+    transform: none;
+}
+
+.eth-nav-quick-link--active,
+.eth-nav-quick-link--active:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.eth-nav-quick-link--active i:first-child,
+.eth-nav-quick-link--active:hover i:first-child {
+    color: #fff;
+}
+
+/* current-page marker on the model row */
+.eth-nav-model-current {
+    flex: none;
+    font-size: .7rem;
+    color: var(--primary);
+}
+
+/* ---- app groups ---- */
+
+.eth-nav-group {
+    border-radius: 9px;
+    margin-bottom: 2px;
+    overflow: hidden;
+}
+
+.eth-nav-app {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .45rem .55rem;
+    border-radius: 8px;
+    font-size: .87rem;
+    font-weight: 600;
+    color: var(--eth-fg);
+    text-decoration: none;
+    transition: background .14s ease;
+}
+
+.eth-nav-app > i:first-child {
+    width: 1.15rem;
+    text-align: center;
+    font-size: .95rem;
+    color: var(--eth-fg-muted);
+    flex: none;
+    transition: color .14s ease;
+}
+
+.eth-nav-app-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eth-nav-chevron {
+    flex: none;
+    font-size: .7rem;
+    color: var(--eth-fg-muted);
+    opacity: .55;
+    transition: transform .16s ease;
+}
+
+.eth-nav-app:hover {
+    background: rgba(148, 163, 184, .14);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.eth-nav-app:hover > i:first-child {
+    color: var(--primary);
+}
+
+/* the open app keeps its models visible by tint, not by JS */
+.eth-nav-group--active > .eth-nav-app {
+    background: rgba(249, 115, 22, .1);
+    color: var(--primary);
+}
+
+.eth-nav-group--active > .eth-nav-app > i:first-child {
+    color: var(--primary);
+}
+
+/* ---- model list ---- */
+
+/*
+ * A <table> rather than nested <ul><li>, because nav_sidebar.js filters the
+ * nav with querySelectorAll('th[scope=row] a'). Keeping the table keeps that
+ * working. Django's own grid/border styling is reset here.
+ */
+.eth-nav-models {
+    width: 100%;
+    margin: 0 0 .35rem;
+    border-collapse: collapse;
+    border-left: 2px solid var(--eth-border);
+    margin-left: 1.05rem;
+    width: calc(100% - 1.05rem);
+}
+
+.eth-nav-models th {
+    padding: 0;
+    font-weight: normal;
+    text-align: left;
+}
+
+.eth-nav-model {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .32rem .5rem;
+    border-radius: 7px;
+    font-size: .83rem;
+    color: var(--eth-fg-muted);
+    text-decoration: none;
+    transition: background .14s ease, color .14s ease;
+}
+
+.eth-nav-model-dot {
+    flex: none;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .45;
+}
+
+.eth-nav-model-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eth-nav-model-count {
+    flex: none;
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+    opacity: .6;
+}
+
+.eth-nav-model:hover {
+    background: rgba(148, 163, 184, .16);
+    color: var(--eth-fg);
+    text-decoration: none;
+}
+
+.eth-nav-model--active,
+.eth-nav-model--active:hover {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.eth-nav-model--active .eth-nav-model-dot,
+.eth-nav-model--active:hover .eth-nav-model-dot {
+    background: #fff;
+    opacity: .9;
+}
+
+.eth-nav-model--active .eth-nav-model-count,
+.eth-nav-model--active:hover .eth-nav-model-count {
+    opacity: .85;
+}

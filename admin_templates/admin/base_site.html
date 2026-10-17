@@ -41,26 +41,11 @@ Django's own admin/index.html also defines a nav-sidebar block, so this one
 only shows on the changelist pages -- the index carries its own links in the
 content block instead.
 {% endcomment %}
-{% block nav-sidebar %}
-{% if platform.is_superuser %}
-<div class="module eth-platform">
-    <h2>Ethiogen Platform</h2>
-    <ul>
-        {% if platform.ecosystem %}
-        <li><a href="{{ platform.ecosystem }}"><i class="bi bi-grid-1x2"></i> Ecosystem overview</a></li>
-        {% endif %}
-        {% if platform.show_console %}
-        <li><a href="{{ platform.console }}"><i class="bi bi-speedometer2"></i> Operator console</a></li>
-        <li><a href="{{ platform.console_orgs }}"><i class="bi bi-buildings"></i> All organizations</a></li>
-        <li><a href="{{ platform.console_plans }}"><i class="bi bi-layers"></i> Plans</a></li>
-        {% endif %}
-        {% if platform.workspaces %}
-        <li><a href="{{ platform.workspaces }}"><i class="bi bi-briefcase"></i> Employer workspaces</a></li>
-        {% endif %}
-        {% if platform.admin_models %}
-        <li><a href="{{ platform.admin_models }}"><i class="bi bi-table"></i> Tenants (raw models)</a></li>
-        {% endif %}
-    </ul>
-</div>
-{% endif %}
-{% endblock %}
+{% comment %}
+Deliberately NOT overridden. Django's nav-sidebar block includes
+admin/nav_sidebar.html, and overriding the block replaces that include --
+which is how the model navigation, the mobile toggle and the filter box all
+disappeared once already. The sidebar is restyled by overriding
+admin/nav_sidebar.html and admin/app_list.html instead, so Django's own
+structure and its nav_sidebar.js keep working.
+{% endcomment %}

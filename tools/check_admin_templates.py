@@ -48,11 +48,26 @@ for path in sorted(ADMIN.glob("*.html")):
                             % (rel, line_no))
 
     # 3. unbalanced block tags
-    opens = len(re.findall(r"\{%\s*(?:block|if|for|with|comment|spaceless)\b", src))
-    closes = len(re.findall(r"\{%\s*end(?:block|if|for|with|comment|spaceless)\b", src))
+    #
+    # Comment bodies are stripped first. Django never parses what is inside a
+    # comment block, and prose that mentions a tag by name -- "overriding
+    # {% block nav-sidebar %} replaces this include" -- is exactly the sort of
+    # sentence that appears in a note explaining one of these bugs. Counting it
+    # reported a perfectly valid template as unbalanced.
+    stripped = re.sub(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", "", src, flags=re.S)
+    # a {# ... #} comment may span lines in someone's source even though
+    # Django treats it as single-line, so drop whole-line ones too
+    opens = len(re.findall(r"\{%\s*(?:block|if|for|with|spaceless)\b", stripped))
+    closes = len(re.findall(r"\{%\s*end(?:block|if|for|with|spaceless)\b", stripped))
     if opens != closes:
         problems.append("%s     unbalanced block tags: %d open / %d close"
                         % (rel, opens, closes))
+
+    # 3b. a comment block that never closes leaks its whole body as page text
+    if len(re.findall(r"\{%\s*comment\s*%\}", src)) != len(
+            re.findall(r"\{%\s*endcomment\s*%\}", src)):
+        problems.append("%s     unclosed comment block (body renders as text)"
+                        % rel)
 
     # 4. Tailwind utility classes -- the admin ships no Tailwind
     tw = re.compile(

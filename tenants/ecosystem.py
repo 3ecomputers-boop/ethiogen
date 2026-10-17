@@ -178,6 +178,19 @@ def ecosystem(request):
             'plans': reverse('tenants:console_plans'),
         },
     }
+
+    # This renders through admin/base_site.html, but it is a plain view rather
+    # than an AdminSite one, so none of the admin chrome context is present and
+    # the sidebar rendered empty. each_context supplies available_apps (what
+    # the nav sidebar needs) plus the breadcrumbs and user-tools it expects.
+    if request.user.is_active and request.user.is_staff:
+        try:
+            from django.contrib import admin as django_admin
+
+            context.update(django_admin.site.each_context(request))
+        except Exception:
+            pass
+
     return render(request, 'admin/ecosystem.html', context)
 
 

@@ -62,5 +62,18 @@ def platform_admin(request):
             "admin_models": _safe("admin:tenants_organization_changelist"),
             "is_superuser": is_super,
             "show_console": is_super,
+            # Current page, so the admin sidebar can mark the active app and
+            # model rather than highlighting nothing.
+            "current_url": request.path,
+            "current_app": _current_app_label(request.path),
         },
     }
+
+
+def _current_app_label(path):
+    """app_label owning an admin path, or '' when not under /admin/."""
+    parts = [p for p in path.split("/") if p]
+    # /admin/<app_label>/...
+    if len(parts) >= 2 and parts[0] == "admin":
+        return parts[1]
+    return ""

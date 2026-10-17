@@ -1,0 +1,83 @@
+{% comment %}
+Custom admin sidebar.
+
+Reproduces Django's own admin/nav_sidebar.html structure and then adds the
+Ethiogen operator section. The structure is kept deliberately identical --
+nav_sidebar.js drives the mobile toggle and the "Start typing to filter..."
+box by id (toggle-nav-sidebar, nav-sidebar, nav-filter) and hides empty
+results by adding .no-results, so replacing this block with something that
+omits them silently breaks filtering on every page.
+
+Overriding {% block nav-sidebar %} in base_site.html REPLACES this include
+entirely, which is how the model navigation went missing once already.
+{% endcomment %}
+{% load ethiogen_tags %}
+
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
+<nav class="sticky" id="nav-sidebar" aria-label="Sidebar">
+
+    <input type="search" id="nav-filter" class="eth-nav-filter"
+           placeholder="Start typing to filter..."
+           aria-label="Filter navigation items">
+
+    <div class="eth-nav">
+
+        {% if platform.is_superuser %}
+        {% comment %}
+        Operator tooling lives above the models: these pages are plain views,
+        not ModelAdmins, so nothing in the model list links to them.
+        {% endcomment %}
+        <section class="eth-nav-section">
+            <h3 class="eth-nav-heading">
+                <i class="bi bi-stars"></i> Ethiogen Platform
+            </h3>
+            <ul class="eth-nav-quick">
+                {% if platform.ecosystem %}
+                <li>
+                    <a href="{{ platform.ecosystem }}" class="eth-nav-quick-link">
+                        <i class="bi bi-grid-1x2"></i>
+                        <span>Ecosystem</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if platform.show_console %}
+                <li>
+                    <a href="{{ platform.console }}" class="eth-nav-quick-link">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Operator console</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ platform.console_orgs }}" class="eth-nav-quick-link">
+                        <i class="bi bi-buildings"></i>
+                        <span>Organizations</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ platform.console_plans }}" class="eth-nav-quick-link">
+                        <i class="bi bi-layers"></i>
+                        <span>Plans</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if platform.workspaces %}
+                <li>
+                    <a href="{{ platform.workspaces }}" class="eth-nav-quick-link">
+                        <i class="bi bi-briefcase"></i>
+                        <span>Workspaces</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <section class="eth-nav-section eth-nav-section--models">
+            <h3 class="eth-nav-heading">
+                <i class="bi bi-collection"></i> Models
+            </h3>
+            {% include "admin/app_list.html" with app_list=available_apps show_changelinks=False %}
+        </section>
+
+    </div>
+</nav>
