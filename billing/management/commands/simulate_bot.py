@@ -118,6 +118,12 @@ class Command(BaseCommand):
     help = 'Exercise the inline-button handlers locally without Telegram.'
 
     def handle(self, *args, **options):
+        import sys
+        try:
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+            sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+        except Exception:
+            pass
         from bot import telegram_bridge as tb
 
         user = User.objects.filter(username='sim_bot_user').first()
