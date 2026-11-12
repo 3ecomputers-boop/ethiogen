@@ -31,7 +31,7 @@
       <td>{{ p.published_at|date:"d M Y H:i" }}</td>
       <td>
         {% if p.status != 'published' %}
-        <form method="post" action="{% url 'dashboard:post_publish' p.id %}" class="inline">{% csrf_token %}<button class="text-emerald-600 text-xs font-semibold">Publish</button></form>
+        <form method="post" action="{% url 'dashboard:post_publish' p.id %}" style="display:inline;">{% csrf_token %}<button class="text-emerald-600 text-xs font-semibold">Publish</button></form>
         {% endif %}
       </td>
     </tr>

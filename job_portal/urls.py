@@ -51,6 +51,13 @@ urlpatterns = [
     path('api/job-seekers/<int:seeker_id>/toggle-verify/', api_toggle_verify, name='api_toggle_verify'),
     path('api/admin/verify-job-seeker/', verify_job_seeker, name='verify_job_seeker'),
 ]
+# Serve static files even when DEBUG is False (local / single-server deploys).
+from django.views.static import serve as _serve_static
+
+urlpatterns += [
+    path('static/<path:path>', _serve_static,
+         {'document_root': settings.BASE_DIR / 'static'}),
+]
 if settings.DEBUG:
     urlpatterns += static(
         settings.MEDIA_URL,

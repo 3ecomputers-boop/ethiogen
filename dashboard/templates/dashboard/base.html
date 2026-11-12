@@ -10,6 +10,17 @@
   <style>
     body { font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; }
     .dash-sidebar { width: 260px; }
+    .hover-nav:hover { background: #1e293b; }
+    .dash-main { margin-left: 260px; min-height: 100vh; }
+    .min-h-screen { min-height: 100vh; }
+    .bg-blue-50 { background: #eff6ff; }
+    .border-blue-200 { border-color: #bfdbfe; }
+    .text-blue-800 { color: #1e40af; }
+    .text-red-600 { color: #dc2626; }
+    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .pb-1 { padding-bottom: 0.25rem; }
+    .pt-3 { padding-top: 0.75rem; }
+    .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
     .dash-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
     .dark .dash-card { background: #1e293b; border-color: #334155; }
     .dash-kpi { padding: 16px; }
@@ -29,30 +40,30 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen">
   <div class="flex min-h-screen">
     <!-- Sidebar -->
-    <aside class="dash-sidebar bg-slate-900 text-slate-200 flex flex-col fixed inset-y-0 left-0 z-30">
+    <aside class="dash-sidebar bg-slate-900 text-slate-200 flex flex-col fixed top-0 bottom-0 left-0 z-30">
       <div class="px-5 py-4 border-b border-slate-700">
         <a href="{% url 'dashboard:home' %}" class="flex items-center gap-2">
-          <span class="text-xl font-bold text-white">Ethio<span class="text-amber-400">gen</span></span>
+          <span class="text-xl font-bold text-white">Ethio<span style="color:#fbbf24">gen</span></span>
           <span class="text-xs text-slate-400">Admin</span>
         </a>
       </div>
       <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        <a href="{% url 'dashboard:home' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'home' %}bg-slate-800 text-white{% endif %}">
+        <a href="{% url 'dashboard:home' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav {% if request.resolver_match.url_name == 'home' %}bg-slate-800 text-white{% endif %}">
           <i class="bi bi-speedometer2"></i> Dashboard
         </a>
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">People</div>
-        <a href="{% url 'dashboard:users' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-people"></i> Users</a>
-        <a href="{% url 'dashboard:job_seekers' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-person-badge"></i> Job Seekers</a>
-        <a href="{% url 'dashboard:organizations' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-buildings"></i> Organizations</a>
+        <a href="{% url 'dashboard:users' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-people"></i> Users</a>
+        <a href="{% url 'dashboard:job_seekers' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-person-badge"></i> Job Seekers</a>
+        <a href="{% url 'dashboard:organizations' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-buildings"></i> Organizations</a>
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">Content</div>
-        <a href="{% url 'dashboard:posts' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-megaphone"></i> Channel Posts</a>
-        <a href="{% url 'dashboard:applications' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-inbox"></i> Applications</a>
+        <a href="{% url 'dashboard:posts' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-megaphone"></i> Channel Posts</a>
+        <a href="{% url 'dashboard:applications' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-inbox"></i> Applications</a>
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">Billing</div>
-        <a href="{% url 'dashboard:subscriptions' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-credit-card"></i> Subscriptions</a>
-        <a href="/billing/analytics/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-graph-up"></i> Analytics</a>
+        <a href="{% url 'dashboard:subscriptions' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-credit-card"></i> Subscriptions</a>
+        <a href="/billing/analytics/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-graph-up"></i> Analytics</a>
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">System</div>
-        <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-gear"></i> Django Admin (raw)</a>
-        <a href="/admin/dashboard/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800"><i class="bi bi-grid"></i> Operator Console</a>
+        <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-gear"></i> Django Admin (raw)</a>
+        <a href="/admin/dashboard/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-grid"></i> Operator Console</a>
       </nav>
       <div class="px-4 py-3 border-t border-slate-700 text-xs text-slate-400">
         Signed in as <strong class="text-slate-200">{{ user.username }}</strong>
@@ -63,7 +74,7 @@
       </div>
     </aside>
     <!-- Main -->
-    <div class="flex-1 ml-[260px]">
+    <div class="dash-main">
       <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
         <div>
           <h1 class="text-lg font-semibold text-slate-800">{% block page_title %}Dashboard{% endblock %}</h1>

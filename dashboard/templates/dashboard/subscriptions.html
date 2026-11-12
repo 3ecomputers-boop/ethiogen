@@ -27,12 +27,12 @@
       <td>{{ s.get_payment_method_display }}</td>
       <td>{{ s.created_at|date:"d M Y" }}</td>
       <td>{{ s.expires_at|date:"d M Y" }}</td>
-      <td class="space-x-1">
+      <td style="white-space:nowrap;">
         {% if s.status != 'active' %}
-        <form method="post" action="{% url 'dashboard:subscription_action' s.id 'approve' %}" class="inline">{% csrf_token %}<button class="text-emerald-600 text-xs font-semibold">Approve</button></form>
+        <form method="post" action="{% url 'dashboard:subscription_action' s.id 'approve' %}" style="display:inline;">{% csrf_token %}<button class="text-emerald-600 text-xs font-semibold">Approve</button></form>
         {% endif %}
         {% if s.status != 'rejected' %}
-        <form method="post" action="{% url 'dashboard:subscription_action' s.id 'reject' %}" class="inline">{% csrf_token %}<button class="text-red-600 text-xs font-semibold">Reject</button></form>
+        <form method="post" action="{% url 'dashboard:subscription_action' s.id 'reject' %}" style="display:inline;">{% csrf_token %}<button class="text-red-600 text-xs font-semibold">Reject</button></form>
         {% endif %}
       </td>
     </tr>
