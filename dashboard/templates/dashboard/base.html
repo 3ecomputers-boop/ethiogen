@@ -11,11 +11,12 @@
     body { font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; }
     .dash-sidebar { width: 220px; }
     .hover-nav:hover { background: #1e293b; }
-    .dash-main { margin-left: 220px; min-height: 100vh; transition: margin-left .2s; max-width: none; width: auto; }
+    html, body { margin: 0; padding: 0; width: 100%; max-width: none; }
+    .dash-main { margin-left: 220px; min-height: 100vh; transition: margin-left .2s; max-width: none; width: calc(100% - 220px); box-sizing: border-box; }
     @media (max-width: 768px) {
       .dash-sidebar { transform: translateX(-100%); transition: transform .2s; z-index: 40; }
       .dash-sidebar.open { transform: translateX(0); }
-      .dash-main { margin-left: 0; }
+      .dash-main { margin-left: 0; width: 100%; }
       .dash-overlay { display: none; }
       .dash-overlay.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 35; }
       .dash-toggle { display: inline-flex !important; }
