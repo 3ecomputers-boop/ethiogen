@@ -180,3 +180,96 @@ def applications(request: HttpRequest) -> HttpResponse:
         page=page, status=status,
         status_choices=PostApplication.STATUS_CHOICES,
     ))
+
+
+def _settings_row():
+    from billing.models import IntegrationSettings
+
+    row = IntegrationSettings.load()
+    if row is None:
+        row = IntegrationSettings()
+        row.save()
+    return row
+
+
+SECTION_FIELDS = {
+    'telegram': [
+        'telegram_bot_token', 'telegram_bot_username', 'telegram_channel_id',
+        'telegram_channel_username', 'telegram_group_id', 'telegram_admin_ids',
+        'telegram_website_url',
+    ],
+    'chapa': [
+        'chapa_enabled', 'chapa_public_key', 'chapa_secret_key', 'chapa_api_base',
+        'chapa_auto_approve', 'chapa_webhook_url',
+    ],
+    'telebirr': [
+        'telebirr_enabled', 'telebirr_name', 'telebirr_phone', 'telebirr_api_base',
+        'telebirr_api_key', 'telebirr_merchant_id', 'telebirr_return_url',
+    ],
+    'bank': [
+        'bank_enabled', 'bank_name', 'bank_account_name', 'bank_account_number',
+    ],
+    'subscription': [
+        'currency', 'subscription_price', 'subscription_days', 'payment_instructions',
+    ],
+    'branding': [
+        'logo_wordmark', 'logo_show_caption', 'logo_height_px',
+    ],
+    'facebook': [
+        'facebook_enabled', 'facebook_page_id', 'facebook_page_name',
+        'facebook_page_access_token', 'facebook_api_version', 'facebook_default_link',
+    ],
+    'site': ['site_url', 'notes'],
+}
+
+
+@_wrap
+def settings_view(request: HttpRequest) -> HttpResponse:
+    from billing import config
+
+    row = _settings_row()
+    return render(request, 'dashboard/settings.html', _ctx(request, row=row, report=config.configuration_report()))
+
+
+@_wrap
+@require_POST
+def settings_save(request: HttpRequest) -> HttpResponse:
+    from billing import config
+
+    row = _settings_row()
+    section = request.POST.get('section', '').strip()
+    fields = SECTION_FIELDS.get(section, [])
+    for f in fields:
+        if f in ('chapa_enabled', 'chapa_auto_approve', 'telebirr_enabled',
+                 'bank_enabled', 'facebook_enabled', 'logo_show_caption'):
+            setattr(row, f, request.POST.get(f) in ('on', '1', 'true', 'True'))
+        else:
+            val = request.POST.get(f, '')
+            # numeric handling
+            if f == 'logo_height_px':
+                try:
+                    val = int(val or 0)
+                except ValueError:
+                    val = row.logo_height_px
+            if f == 'subscription_price':
+                from decimal import Decimal
+
+                try:
+                    val = Decimal(val)
+                except Exception:
+                    val = row.subscription_price
+            if f == 'subscription_days':
+                try:
+                    val = int(val or 0)
+                except ValueError:
+                    val = row.subscription_days
+            setattr(row, f, val)
+    row.save()
+    try:
+        config.invalidate_cache()
+    except Exception:
+        pass
+    from django.contrib import messages
+
+    messages.success(request, f'{section.title()} settings saved.')
+    return redirect('dashboard:settings')

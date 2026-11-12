@@ -73,6 +73,8 @@
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">Billing</div>
         <a href="{% url 'dashboard:subscriptions' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-credit-card"></i> Subscriptions</a>
         <a href="/billing/analytics/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-graph-up"></i> Analytics</a>
+        <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">Settings</div>
+        <a href="{% url 'dashboard:settings' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav {% if request.resolver_match.url_name == 'settings' %}bg-slate-800 text-white{% endif %}"><i class="bi bi-gear"></i> Configuration</a>
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">System</div>
         <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-gear"></i> Django Admin (raw)</a>
         <a href="/admin/dashboard/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-grid"></i> Operator Console</a>

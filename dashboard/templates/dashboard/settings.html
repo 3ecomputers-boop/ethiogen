@@ -1,0 +1,156 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Settings | Admin{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Configure Telegram, payments, subscriptions, branding and more{% endblock %}
+{% block content %}
+{% with r=row %}
+<style>
+  .settings-section { margin-bottom: 1.5rem; }
+  .settings-section h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .75rem; }
+  .field { margin-bottom: .75rem; }
+  .field label { display: block; font-size: .8rem; font-weight: 600; color: #475569; margin-bottom: .25rem; }
+  .field input, .field textarea, .field select { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; font-size: .9rem; box-sizing: border-box; }
+  .field textarea { min-height: 80px; }
+  .field .hint { font-size: .7rem; color: #94a3b8; margin-top: .25rem; }
+  .checkbox-field { display: flex; align-items: center; gap: .5rem; }
+  .checkbox-field input { width: auto; }
+  .save-btn { background: #0f172a; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+</style>
+
+<!-- Telegram -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-telegram"></i> Telegram Bot & Connection</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="telegram">
+    <div class="field"><label>Bot Token</label><input name="telegram_bot_token" value="{{ r.telegram_bot_token }}" type="password"><div class="hint">From @BotFather</div></div>
+    <div class="field"><label>Bot Username (without @)</label><input name="telegram_bot_username" value="{{ r.telegram_bot_username }}"></div>
+    <div class="field"><label>Channel ID</label><input name="telegram_channel_id" value="{{ r.telegram_channel_id }}" placeholder="-100..."></div>
+    <div class="field"><label>Channel Username (without @)</label><input name="telegram_channel_username" value="{{ r.telegram_channel_username }}"></div>
+    <div class="field"><label>Group ID (optional)</label><input name="telegram_group_id" value="{{ r.telegram_group_id }}"></div>
+    <div class="field"><label>Admin Telegram IDs (comma separated)</label><textarea name="telegram_admin_ids">{{ r.telegram_admin_ids }}</textarea></div>
+    <div class="field"><label>Website URL</label><input name="telegram_website_url" value="{{ r.telegram_website_url }}"></div>
+    <button class="save-btn" type="submit">Save Telegram</button>
+  </form>
+</div>
+
+<!-- Miniapp / Site -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-phone"></i> Miniapp & Site</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="site">
+    <div class="field"><label>Site URL</label><input name="site_url" value="{{ r.site_url }}"></div>
+    <div class="field"><label>Notes</label><textarea name="notes">{{ r.notes }}</textarea></div>
+    <button class="save-btn" type="submit">Save Site</button>
+  </form>
+</div>
+
+<!-- Chapa -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-credit-card"></i> Chapa (Card / Telebirr gateway)</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="chapa">
+    <div class="field checkbox-field"><input type="checkbox" name="chapa_enabled" {% if r.chapa_enabled %}checked{% endif %}><label>Enabled</label></div>
+    <div class="field"><label>Public Key</label><input name="chapa_public_key" value="{{ r.chapa_public_key }}"></div>
+    <div class="field"><label>Secret Key</label><input name="chapa_secret_key" value="{{ r.chapa_secret_key }}" type="password"></div>
+    <div class="field"><label>API Base</label><input name="chapa_api_base" value="{{ r.chapa_api_base }}"></div>
+    <div class="field checkbox-field"><input type="checkbox" name="chapa_auto_approve" {% if r.chapa_auto_approve %}checked{% endif %}><label>Auto-approve on success</label></div>
+    <div class="field"><label>Webhook URL</label><input name="chapa_webhook_url" value="{{ r.chapa_webhook_url }}"></div>
+    <button class="save-btn" type="submit">Save Chapa</button>
+  </form>
+</div>
+
+<!-- Telebirr -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-phone"></i> Telebirr (manual transfer)</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="telebirr">
+    <div class="field checkbox-field"><input type="checkbox" name="telebirr_enabled" {% if r.telebirr_enabled %}checked{% endif %}><label>Enabled</label></div>
+    <div class="field"><label>Account Name</label><input name="telebirr_name" value="{{ r.telebirr_name }}"></div>
+    <div class="field"><label>Phone</label><input name="telebirr_phone" value="{{ r.telebirr_phone }}"></div>
+    <div class="field"><label>Gateway URL (optional)</label><input name="telebirr_api_base" value="{{ r.telebirr_api_base }}"></div>
+    <div class="field"><label>Gateway API Key</label><input name="telebirr_api_key" value="{{ r.telebirr_api_key }}" type="password"></div>
+    <div class="field"><label>Merchant ID</label><input name="telebirr_merchant_id" value="{{ r.telebirr_merchant_id }}"></div>
+    <div class="field"><label>Return URL</label><input name="telebirr_return_url" value="{{ r.telebirr_return_url }}"></div>
+    <button class="save-btn" type="submit">Save Telebirr</button>
+  </form>
+</div>
+
+<!-- Bank -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-bank"></i> Bank Transfer</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="bank">
+    <div class="field checkbox-field"><input type="checkbox" name="bank_enabled" {% if r.bank_enabled %}checked{% endif %}><label>Enabled</label></div>
+    <div class="field"><label>Bank Name</label><input name="bank_name" value="{{ r.bank_name }}"></div>
+    <div class="field"><label>Account Name</label><input name="bank_account_name" value="{{ r.bank_account_name }}"></div>
+    <div class="field"><label>Account Number</label><input name="bank_account_number" value="{{ r.bank_account_number }}"></div>
+    <button class="save-btn" type="submit">Save Bank</button>
+  </form>
+</div>
+
+<!-- Subscriptions -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-credit-card-2-front"></i> Subscription Process</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="subscription">
+    <div class="field"><label>Currency</label><input name="currency" value="{{ r.currency }}"></div>
+    <div class="field"><label>Price</label><input name="subscription_price" value="{{ r.subscription_price }}" type="number" step="0.01"></div>
+    <div class="field"><label>Duration (days)</label><input name="subscription_days" value="{{ r.subscription_days }}" type="number"></div>
+    <div class="field"><label>Payment Instructions (extra text)</label><textarea name="payment_instructions">{{ r.payment_instructions }}</textarea></div>
+    <button class="save-btn" type="submit">Save Subscription</button>
+  </form>
+</div>
+
+<!-- Branding -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-palette"></i> Branding</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="branding">
+    <div class="field"><label>Wordmark</label><input name="logo_wordmark" value="{{ r.logo_wordmark }}"></div>
+    <div class="field checkbox-field"><input type="checkbox" name="logo_show_caption" {% if r.logo_show_caption %}checked{% endif %}><label>Show caption</label></div>
+    <div class="field"><label>Logo height (px)</label><input name="logo_height_px" value="{{ r.logo_height_px }}" type="number"></div>
+    <button class="save-btn" type="submit">Save Branding</button>
+  </form>
+</div>
+
+<!-- Facebook -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-facebook"></i> Facebook Page</h2>
+  <form method="post" action="{% url 'dashboard:settings_save' %}">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="facebook">
+    <div class="field checkbox-field"><input type="checkbox" name="facebook_enabled" {% if r.facebook_enabled %}checked{% endif %}><label>Enabled</label></div>
+    <div class="field"><label>Page ID</label><input name="facebook_page_id" value="{{ r.facebook_page_id }}"></div>
+    <div class="field"><label>Page Name</label><input name="facebook_page_name" value="{{ r.facebook_page_name }}"></div>
+    <div class="field"><label>Page Access Token</label><input name="facebook_page_access_token" value="{{ r.facebook_page_access_token }}" type="password"></div>
+    <div class="field"><label>API Version</label><input name="facebook_api_version" value="{{ r.facebook_api_version }}"></div>
+    <div class="field"><label>Default Link</label><input name="facebook_default_link" value="{{ r.facebook_default_link }}"></div>
+    <button class="save-btn" type="submit">Save Facebook</button>
+  </form>
+</div>
+
+<!-- Diagnostics -->
+<div class="dash-card settings-section" style="padding:1.25rem;">
+  <h2><i class="bi bi-clipboard-check"></i> Configuration Diagnostics</h2>
+  <table class="w-full text-sm dash-table">
+    <thead><tr class="text-left text-slate-500 border-b"><th>Item</th><th>Status</th><th>Detail</th></tr></thead>
+    <tbody>
+    {% for label, ok, detail in report %}
+    <tr class="border-b border-slate-100">
+      <td>{{ label }}</td>
+      <td>{% if ok %}<span class="badge badge-green">OK</span>{% else %}<span class="badge badge-red">MISSING</span>{% endif %}</td>
+      <td class="text-slate-500">{{ detail }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endwith %}
+{% endblock %}

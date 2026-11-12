@@ -14,4 +14,6 @@ urlpatterns = [
     path('organizations/', views.organizations, name='organizations'),
     path('job-seekers/', views.job_seekers, name='job_seekers'),
     path('applications/', views.applications, name='applications'),
+    path('settings/', views.settings_view, name='settings'),
+    path('settings/save/', views.settings_save, name='settings_save'),
 ]
