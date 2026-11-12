@@ -34,20 +34,42 @@ def platform_admin(request):
 
     # Counts are shown on the admin index tiles. A failure here must not take
     # the whole admin down, so each count is guarded independently.
-    counts = {"users": None, "jobs": None, "organizations": None, "tenants_active": None}
+    counts = {
+        "users": None, "jobs": None, "organizations": None, "tenants_active": None,
+        "job_seekers": None, "clients": None, "channel_posts": None,
+        "published_posts": None, "subscriptions": None, "active_subscriptions": None,
+        "pending_subscriptions": None, "applications": None, "revenue_active": None,
+    }
     try:
         counts["users"] = get_user_model().objects.count()
     except Exception:
         pass
     try:
-        from jobs.models import JobPost
+        from jobs.models import JobPost, JobSeekerProfile, ClientProfile
 
         counts["jobs"] = JobPost.objects.count()
+        counts["job_seekers"] = JobSeekerProfile.objects.count()
+        counts["clients"] = ClientProfile.objects.count()
     except Exception:
         pass
     try:
         counts["organizations"] = Organization.objects.count()
         counts["tenants_active"] = Organization.objects.filter(status="active").count()
+    except Exception:
+        pass
+    try:
+        from billing.models import ChannelPost, Subscription, PostApplication
+        from django.db.models import Sum
+        from decimal import Decimal
+
+        counts["channel_posts"] = ChannelPost.objects.count()
+        counts["published_posts"] = ChannelPost.objects.filter(status=ChannelPost.STATUS_PUBLISHED).count()
+        counts["subscriptions"] = Subscription.objects.count()
+        counts["active_subscriptions"] = Subscription.objects.filter(status=Subscription.STATUS_ACTIVE).count()
+        counts["pending_subscriptions"] = Subscription.objects.filter(status=Subscription.STATUS_PENDING_REVIEW).count()
+        counts["applications"] = PostApplication.objects.count()
+        agg = Subscription.objects.filter(status=Subscription.STATUS_ACTIVE).aggregate(s=Sum('amount'))
+        counts["revenue_active"] = agg.get('s') or Decimal('0')
     except Exception:
         pass
 
@@ -60,6 +82,7 @@ def platform_admin(request):
             "console_plans": _safe("tenants:console_plans"),
             "workspaces": _safe("tenants:workspace_list"),
             "admin_models": _safe("admin:tenants_organization_changelist"),
+            "analytics": _safe("billing:analytics_dashboard"),
             "is_superuser": is_super,
             "show_console": is_super,
             # Current page, so the admin sidebar can mark the active app and

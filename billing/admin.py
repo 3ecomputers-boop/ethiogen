@@ -276,6 +276,8 @@ class ChannelPostAdmin(admin.ModelAdmin):
     list_filter = ('kind', 'status', 'show_apply', 'show_subscribe', 'facebook_posted')
     search_fields = ('title', 'body', 'company', 'location')
     list_editable = ()
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
     readonly_fields = (
         'telegram_message_id', 'telegram_chat_id', 'status',
         'published_at', 'publish_error', 'preview', 'created_at',
@@ -453,6 +455,8 @@ class SubscriptionAdmin(admin.ModelAdmin):
         'user__username', 'user__email', 'transaction_reference',
         'chapa_reference', 'payer_note',
     )
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
     readonly_fields = (
         'user', 'telegram_chat_id', 'amount', 'duration_days',
         'chapa_reference', 'chapa_checkout_url', 'chapa_payload',
