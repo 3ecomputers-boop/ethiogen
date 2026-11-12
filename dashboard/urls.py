@@ -16,4 +16,5 @@ urlpatterns = [
     path('applications/', views.applications, name='applications'),
     path('settings/', views.settings_view, name='settings'),
     path('settings/save/', views.settings_save, name='settings_save'),
+    path('admin-models/', views.admin_models, name='admin_models'),
 ]

@@ -224,6 +224,32 @@ SECTION_FIELDS = {
 
 
 @_wrap
+def admin_models(request: HttpRequest) -> HttpResponse:
+    from django.contrib import admin
+
+    groups = {}
+    for model, model_admin in admin.site._registry.items():
+        app_label = model._meta.app_label
+        groups.setdefault(app_label, []).append({
+            'name': model._meta.verbose_name_plural.title(),
+            'model_name': model._meta.model_name,
+            'app_label': app_label,
+            'count': model.objects.count() if hasattr(model, 'objects') else 0,
+        })
+    # app verbose names
+    from django.apps import apps
+
+    app_names = {}
+    for app in apps.get_app_configs():
+        app_names[app.label] = app.verbose_name
+    grouped = [
+        {'app': app_names.get(label, label), 'label': label, 'models': models}
+        for label, models in sorted(groups.items())
+    ]
+    return render(request, 'dashboard/admin_models.html', _ctx(request, grouped=grouped))
+
+
+@_wrap
 def settings_view(request: HttpRequest) -> HttpResponse:
     from billing import config
 

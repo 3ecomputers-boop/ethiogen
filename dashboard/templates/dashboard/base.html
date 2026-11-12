@@ -76,6 +76,7 @@
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">Settings</div>
         <a href="{% url 'dashboard:settings' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav {% if request.resolver_match.url_name == 'settings' %}bg-slate-800 text-white{% endif %}"><i class="bi bi-gear"></i> Configuration</a>
         <div class="pt-3 pb-1 px-3 text-xs uppercase tracking-wider text-slate-500">System</div>
+        <a href="{% url 'dashboard:admin_models' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-list-ul"></i> All Models</a>
         <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-gear"></i> Django Admin (raw)</a>
         <a href="/admin/dashboard/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover-nav"><i class="bi bi-grid"></i> Operator Console</a>
       </nav>

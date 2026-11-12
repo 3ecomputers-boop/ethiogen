@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}All Models | Admin{% endblock %}
+{% block page_title %}All Django Admin Models{% endblock %}
+{% block page_subtitle %}Quick links to every registered model in the raw Django admin{% endblock %}
+{% block content %}
+<p class="text-sm text-slate-500 mb-4">Click a model to open its change list in the Django admin (raw view).</p>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  {% for g in grouped %}
+  <div class="dash-card" style="padding:1rem;">
+    <h3 class="font-semibold mb-2 text-slate-700">{{ g.app }}</h3>
+    <ul class="space-y-1 text-sm">
+      {% for m in g.models %}
+      <li class="flex items-center justify-between">
+        <a href="/django-admin/{{ m.app_label }}/{{ m.model_name }}/" class="text-blue-600 hover:underline">{{ m.name }}</a>
+        <span class="badge badge-gray">{{ m.count }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
