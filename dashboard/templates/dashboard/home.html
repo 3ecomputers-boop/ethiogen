@@ -5,18 +5,18 @@
 {% block content %}
 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
   {% with c=counts %}
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Users</div><div class="value">{{ c.users }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Job Seekers</div><div class="value">{{ c.job_seekers }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Clients</div><div class="value">{{ c.clients }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Job Posts</div><div class="value">{{ c.jobs }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Organizations</div><div class="value">{{ c.organizations }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Active Tenants</div><div class="value">{{ c.active_tenants }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Channel Posts</div><div class="value">{{ c.channel_posts }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Published</div><div class="value">{{ c.published_posts }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Subscriptions</div><div class="value">{{ c.subscriptions }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Active Subs</div><div class="value text-emerald-600">{{ c.active_subs }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Pending Review</div><div class="value text-amber-600">{{ c.pending_subs }}</div></div>
-  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Applications</div><div class="value">{{ c.applications }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Users</div><div class="value">{{ c.users }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Job Seekers</div><div class="value">{{ c.job_seekers }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Clients</div><div class="value">{{ c.clients }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Job Posts</div><div class="value">{{ c.jobs }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Organizations</div><div class="value">{{ c.organizations }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Active Tenants</div><div class="value">{{ c.active_tenants }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Channel Posts</div><div class="value">{{ c.channel_posts }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Published</div><div class="value">{{ c.published_posts }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Subscriptions</div><div class="value">{{ c.subscriptions }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Active Subs</div><div class="value text-emerald-600">{{ c.active_subs }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Pending Review</div><div class="value text-amber-600">{{ c.pending_subs }}</div></div>
+  <div class="dash-card dash-kpi"><div class="label">Applications</div><div class="value">{{ c.applications }}</div></div>
   {% endwith %}
 </div>
 <div class="dash-card p-4 mb-6">
