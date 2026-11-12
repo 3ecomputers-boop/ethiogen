@@ -1,0 +1,26 @@
+{% extends "social/base.html" %}
+{% block title %}Network | Ethiogen{% endblock %}
+{% block content %}
+<h2 style="font-size:1.2rem;font-weight:700;margin-bottom:12px;">Pending requests to you</h2>
+{% for c in pending_in %}
+<div class="card" style="padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+  <span><strong>{{ c.from_user.username }}</strong> wants to connect</span>
+  <div style="display:flex;gap:8px;">
+    <form method="post" action="{% url 'social:connection_action' c.id 'accept' %}">{% csrf_token %}<button class="btn btn-primary" type="submit">Accept</button></form>
+    <form method="post" action="{% url 'social:connection_action' c.id 'reject' %}">{% csrf_token %}<button class="btn btn-ghost" type="submit">Ignore</button></form>
+  </div>
+</div>
+{% empty %}<p style="color:#64748b;">No pending requests.</p>{% endfor %}
+
+<h2 style="font-size:1.2rem;font-weight:700;margin:20px 0 12px;">Your connections</h2>
+{% for c in accepted %}
+<div class="card" style="padding:12px;margin-bottom:8px;">
+  {% if c.from_user == request.user %}{{ c.to_user.username }}{% else %}{{ c.from_user.username }}{% endif %}
+</div>
+{% empty %}<p style="color:#64748b;">No connections yet.</p>{% endfor %}
+
+<h2 style="font-size:1.2rem;font-weight:700;margin:20px 0 12px;">Sent requests</h2>
+{% for c in pending_out %}
+<div class="card" style="padding:12px;margin-bottom:8px;color:#64748b;">{{ c.to_user.username }} — pending</div>
+{% empty %}<p style="color:#64748b;">No sent requests.</p>{% endfor %}
+{% endblock %}

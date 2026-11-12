@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Ethiogen Social{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body { font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; background: #f1f5f9; margin: 0; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+    .btn { display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: .85rem; font-weight: 600; cursor: pointer; border: none; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-ghost { background: #f1f5f9; color: #475569; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header style="background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+    <a href="{% url 'social:feed' %}" style="font-weight:800;font-size:1.2rem;color:#0f172a;text-decoration:none;">Ethio<span style="color:#f59e0b">gen</span> <span style="color:#64748b;font-size:.8rem;">Network</span></a>
+    <nav style="display:flex;gap:1.2rem;font-size:.9rem;">
+      <a href="{% url 'social:feed' %}" style="color:#475569;text-decoration:none;">Feed</a>
+      <a href="{% url 'social:connections' %}" style="color:#475569;text-decoration:none;">Network</a>
+      <a href="{% url 'social:inbox' %}" style="color:#475569;text-decoration:none;">Messages</a>
+      <a href="{% url 'social:saved_jobs' %}" style="color:#475569;text-decoration:none;">Saved Jobs</a>
+      <a href="{% url 'social:notifications' %}" style="color:#475569;text-decoration:none;">Notifications</a>
+      <a href="/accounts/logout/" style="color:#475569;text-decoration:none;">Sign out</a>
+    </nav>
+  </header>
+  <main style="max-width:720px;margin:24px auto;padding:0 16px;">
+    {% if messages %}{% for m in messages %}<div class="card" style="padding:10px 14px;margin-bottom:12px;color:#1e40af;">{{ m }}</div>{% endfor %}{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

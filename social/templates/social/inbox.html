@@ -1,0 +1,19 @@
+{% extends "social/base.html" %}
+{% block title %}Messages | Ethiogen{% endblock %}
+{% block content %}
+<h2 style="font-size:1.2rem;font-weight:700;margin-bottom:12px;">Messages</h2>
+<div class="card" style="padding:16px;margin-bottom:16px;">
+  <form method="post" style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% csrf_token %}
+    <input name="recipient" placeholder="Recipient user ID" style="border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:.85rem;flex:1;min-width:120px;">
+    <input name="message" placeholder="Type a message..." style="border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:.85rem;flex:2;min-width:200px;">
+    <button class="btn btn-primary" type="submit">Send</button>
+  </form>
+</div>
+{% for m in messages %}
+<div class="card" style="padding:12px;margin-bottom:8px;">
+  <div style="font-size:.8rem;color:#64748b;">{{ m.sender.username }} → {{ m.recipient.username }} · {{ m.timestamp|date:"d M H:i" }}</div>
+  <div style="margin-top:4px;">{{ m.message }}</div>
+</div>
+{% empty %}<p style="color:#64748b;">No messages.</p>{% endfor %}
+{% endblock %}

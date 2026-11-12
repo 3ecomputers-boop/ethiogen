@@ -1,0 +1,12 @@
+{% extends "social/base.html" %}
+{% block title %}Notifications | Ethiogen{% endblock %}
+{% block content %}
+<h2 style="font-size:1.2rem;font-weight:700;margin-bottom:12px;">Notifications</h2>
+{% for n in notifications %}
+<div class="card" style="padding:12px;margin-bottom:8px;{% if not n.is_read %}border-left:3px solid #4f46e5;{% endif %}">
+  <div style="font-weight:600;">{{ n.title }}</div>
+  {% if n.body %}<div style="font-size:.85rem;color:#475569;margin-top:4px;">{{ n.body }}</div>{% endif %}
+  <div style="font-size:.75rem;color:#94a3b8;margin-top:4px;">{{ n.created_at|date:"d M Y H:i" }}</div>
+</div>
+{% empty %}<p style="color:#64748b;">No notifications.</p>{% endfor %}
+{% endblock %}

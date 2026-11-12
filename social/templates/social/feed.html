@@ -1,0 +1,41 @@
+{% extends "social/base.html" %}
+{% block title %}Feed | Ethiogen{% endblock %}
+{% block content %}
+<div class="card" style="padding:16px;margin-bottom:16px;">
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="content" placeholder="Share an update, insight, or opportunity..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:.95rem;min-height:80px;box-sizing:border-box;"></textarea>
+    <div style="text-align:right;margin-top:8px;"><button class="btn btn-primary" type="submit">Post</button></div>
+  </form>
+</div>
+{% for post in posts %}
+<div class="card" style="padding:16px;margin-bottom:16px;" id="post-{{ post.id }}">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <div class="avatar">{{ post.author.username|slice:":1"|upper }}</div>
+    <div>
+      <div style="font-weight:600;">{{ post.author.username }}</div>
+      <div style="font-size:.75rem;color:#64748b;">{{ post.created_at|date:"d M Y H:i" }}</div>
+    </div>
+  </div>
+  <p style="white-space:pre-wrap;margin:0 0 12px;">{{ post.content }}</p>
+  <div style="display:flex;gap:16px;font-size:.85rem;color:#64748b;border-top:1px solid #f1f5f9;padding-top:10px;">
+    <a href="{% url 'social:like_post' post.id %}" style="color:#4f46e5;text-decoration:none;"><i class="bi bi-hand-thumbs-up"></i> Like ({{ post.like_count }})</a>
+    <span><i class="bi bi-chat"></i> {{ post.comment_count }} comments</span>
+  </div>
+  {% if post.comments.all %}
+  <div style="margin-top:10px;padding-left:12px;border-left:2px solid #e0e7ff;">
+    {% for c in post.comments.all %}
+    <div style="margin-bottom:6px;"><strong style="font-size:.85rem;">{{ c.author.username }}</strong> <span style="font-size:.85rem;">{{ c.content }}</span> <span style="font-size:.7rem;color:#94a3b8;">{{ c.created_at|date:"d M" }}</span></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <form method="post" action="{% url 'social:comment_post' post.id %}" style="margin-top:10px;display:flex;gap:8px;">
+    {% csrf_token %}
+    <input name="content" placeholder="Write a comment..." style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:.85rem;">
+    <button class="btn btn-ghost" type="submit">Comment</button>
+  </form>
+</div>
+{% empty %}
+<div class="card" style="padding:24px;text-align:center;color:#64748b;">No posts yet. Be the first to share!</div>
+{% endfor %}
+{% endblock %}

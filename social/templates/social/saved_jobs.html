@@ -1,0 +1,11 @@
+{% extends "social/base.html" %}
+{% block title %}Saved Jobs | Ethiogen{% endblock %}
+{% block content %}
+<h2 style="font-size:1.2rem;font-weight:700;margin-bottom:12px;">Saved Jobs</h2>
+{% for s in saved %}
+<div class="card" style="padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+  <div><strong>{{ s.job.title }}</strong><br><span style="font-size:.8rem;color:#64748b;">{{ s.job.location }} · {{ s.job.budget }}</span></div>
+  <form method="post" action="{% url 'social:unsave_job' s.job.id %}">{% csrf_token %}<button class="btn btn-ghost" type="submit">Remove</button></form>
+</div>
+{% empty %}<p style="color:#64748b;">No saved jobs.</p>{% endfor %}
+{% endblock %}
