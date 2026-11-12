@@ -1,0 +1,47 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Channel Posts | Admin{% endblock %}
+{% block page_title %}Channel Posts{% endblock %}
+{% block page_subtitle %}Publish and manage Telegram channel posts{% endblock %}
+{% block content %}
+<form method="get" class="mb-4 flex gap-2">
+  <input name="q" value="{{ q }}" placeholder="Search title..." class="border rounded-lg px-3 py-2 text-sm flex-1 max-w-xs">
+  <select name="status" class="border rounded-lg px-3 py-2 text-sm">
+    <option value="">All statuses</option>
+    {% for v,l in status_choices %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <select name="kind" class="border rounded-lg px-3 py-2 text-sm">
+    <option value="">All kinds</option>
+    {% for v,l in kind_choices %}<option value="{{ v }}" {% if kind == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <button class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm">Filter</button>
+</form>
+<div class="dash-card overflow-hidden">
+  <table class="w-full text-sm dash-table">
+    <thead class="bg-slate-50"><tr class="text-left text-slate-500">
+      <th>Title</th><th>Kind</th><th>Status</th><th>Apply</th><th>Subscribe</th><th>Published</th><th>Actions</th>
+    </tr></thead>
+    <tbody>
+    {% for p in page %}
+    <tr class="border-b border-slate-100">
+      <td class="font-medium">{{ p.title }}</td>
+      <td>{{ p.get_kind_display }}</td>
+      <td><span class="badge badge-{% if p.status == 'published' %}green{% elif p.status == 'failed' %}red{% else %}gray{% endif %}">{{ p.get_status_display }}</span></td>
+      <td>{% if p.show_apply %}✓{% else %}—{% endif %}</td>
+      <td>{% if p.show_subscribe %}✓{% else %}—{% endif %}</td>
+      <td>{{ p.published_at|date:"d M Y H:i" }}</td>
+      <td>
+        {% if p.status != 'published' %}
+        <form method="post" action="{% url 'dashboard:post_publish' p.id %}" class="inline">{% csrf_token %}<button class="text-emerald-600 text-xs font-semibold">Publish</button></form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="7" class="text-center py-6 text-slate-400">No posts</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="mt-4 flex justify-center gap-2 text-sm">
+  {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&q={{ q }}&status={{ status }}&kind={{ kind }}" class="px-3 py-1 border rounded">Prev</a>{% endif %}
+  <span class="px-3 py-1">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a href="?page={{ page.next_page_number }}&q={{ q }}&status={{ status }}&kind={{ kind }}" class="px-3 py-1 border rounded">Next</a>{% endif %}
+</div>
+{% endblock %}

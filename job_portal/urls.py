@@ -23,7 +23,8 @@ from jobs import urls as jobs_urls
 
 urlpatterns = [
     path('admin/dashboard/', staff_dashboard, name='staff_dashboard'),
-    path('admin/', admin.site.urls),
+    path('django-admin/', admin.site.urls),
+    path('admin/', include('dashboard.urls')),
 
     # Include jobs.urls WITHOUT a namespace here, so templates can use the
     # short form {% url 'home' %} as well as {% url 'jobs:home' %}.

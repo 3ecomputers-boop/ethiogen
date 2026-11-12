@@ -1,0 +1,93 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Dashboard | Ethiogen Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Platform overview and recent activity{% endblock %}
+{% block content %}
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+  {% with c=counts %}
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Users</div><div class="value">{{ c.users }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Job Seekers</div><div class="value">{{ c.job_seekers }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Clients</div><div class="value">{{ c.clients }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Job Posts</div><div class="value">{{ c.jobs }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Organizations</div><div class="value">{{ c.organizations }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Active Tenants</div><div class="value">{{ c.active_tenants }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Channel Posts</div><div class="value">{{ c.channel_posts }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Published</div><div class="value">{{ c.published_posts }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Subscriptions</div><div class="value">{{ c.subscriptions }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Active Subs</div><div class="value text-emerald-600">{{ c.active_subs }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Pending Review</div><div class="value text-amber-600">{{ c.pending_subs }}</div></div>
+  <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Applications</div><div class="value">{{ c.applications }}</div></div>
+  {% endwith %}
+</div>
+<div class="dash-card p-4 mb-6">
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="font-semibold">Active Subscription Revenue</h2>
+    <span class="text-2xl font-bold text-emerald-600">{{ counts.revenue }} ETB</span>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="dash-card p-4">
+    <h2 class="font-semibold mb-3">Recent Subscriptions</h2>
+    <table class="w-full text-sm dash-table">
+      <thead><tr class="text-left text-slate-500 border-b"><th>User</th><th>Status</th><th>Amount</th><th>Created</th></tr></thead>
+      <tbody>
+      {% for s in recent_subs %}
+      <tr class="border-b border-slate-100">
+        <td>{{ s.user.username }}</td>
+        <td><span class="badge badge-{% if s.status == 'active' %}green{% elif s.status == 'pending_review' %}amber{% else %}gray{% endif %}">{{ s.get_status_display }}</span></td>
+        <td>{{ s.amount }}</td>
+        <td class="text-slate-500">{{ s.created_at|date:"d M" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="4" class="text-slate-400 py-4 text-center">No subscriptions yet</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="dash-card p-4">
+    <h2 class="font-semibold mb-3">Recent Channel Posts</h2>
+    <table class="w-full text-sm dash-table">
+      <thead><tr class="text-left text-slate-500 border-b"><th>Title</th><th>Kind</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>
+      {% for p in recent_posts %}
+      <tr class="border-b border-slate-100">
+        <td class="truncate max-w-[200px]">{{ p.title }}</td>
+        <td>{{ p.get_kind_display }}</td>
+        <td><span class="badge badge-{% if p.status == 'published' %}green{% elif p.status == 'failed' %}red{% else %}gray{% endif %}">{{ p.get_status_display }}</span></td>
+        <td class="text-slate-500">{{ p.created_at|date:"d M" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="4" class="text-slate-400 py-4 text-center">No posts yet</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="dash-card p-4">
+    <h2 class="font-semibold mb-3">Recent Applications</h2>
+    <table class="w-full text-sm dash-table">
+      <thead><tr class="text-left text-slate-500 border-b"><th>Applicant</th><th>Post</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for a in recent_apps %}
+      <tr class="border-b border-slate-100">
+        <td>{{ a.applicant.username }}</td>
+        <td class="truncate max-w-[200px]">{{ a.post.title }}</td>
+        <td><span class="badge badge-blue">{{ a.get_status_display }}</span></td>
+      </tr>
+      {% empty %}<tr><td colspan="3" class="text-slate-400 py-4 text-center">No applications yet</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="dash-card p-4">
+    <h2 class="font-semibold mb-3">Recent Organizations</h2>
+    <table class="w-full text-sm dash-table">
+      <thead><tr class="text-left text-slate-500 border-b"><th>Name</th><th>Type</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for o in recent_orgs %}
+      <tr class="border-b border-slate-100">
+        <td>{{ o.name }}</td>
+        <td>{{ o.get_organization_type_display }}</td>
+        <td><span class="badge badge-{% if o.status == 'active' %}green{% else %}gray{% endif %}">{{ o.get_status_display }}</span></td>
+      </tr>
+      {% empty %}<tr><td colspan="3" class="text-slate-400 py-4 text-center">No organizations yet</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

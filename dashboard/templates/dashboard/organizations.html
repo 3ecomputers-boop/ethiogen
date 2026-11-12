@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Organizations | Admin{% endblock %}
+{% block page_title %}Organizations{% endblock %}
+{% block page_subtitle %}Tenant organizations{% endblock %}
+{% block content %}
+<form method="get" class="mb-4 flex gap-2">
+  <input name="q" value="{{ q }}" placeholder="Search name/slug..." class="border rounded-lg px-3 py-2 text-sm flex-1 max-w-xs">
+  <button class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm">Search</button>
+</form>
+<div class="dash-card overflow-hidden">
+  <table class="w-full text-sm dash-table">
+    <thead class="bg-slate-50"><tr class="text-left text-slate-500">
+      <th>Name</th><th>Slug</th><th>Type</th><th>Status</th><th>Verified</th><th>Created</th>
+    </tr></thead>
+    <tbody>
+    {% for o in page %}
+    <tr class="border-b border-slate-100">
+      <td class="font-medium">{{ o.name }}</td>
+      <td class="text-slate-500">{{ o.slug }}</td>
+      <td>{{ o.get_organization_type_display }}</td>
+      <td><span class="badge badge-{% if o.status == 'active' %}green{% else %}gray{% endif %}">{{ o.get_status_display }}</span></td>
+      <td>{% if o.is_verified %}✓{% else %}—{% endif %}</td>
+      <td>{{ o.created_at|date:"d M Y" }}</td>
+    </tr>
+    {% empty %}<tr><td colspan="6" class="text-center py-6 text-slate-400">No organizations</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="mt-4 flex justify-center gap-2 text-sm">
+  {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&q={{ q }}" class="px-3 py-1 border rounded">Prev</a>{% endif %}
+  <span class="px-3 py-1">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a href="?page={{ page.next_page_number }}&q={{ q }}" class="px-3 py-1 border rounded">Next</a>{% endif %}
+</div>
+{% endblock %}

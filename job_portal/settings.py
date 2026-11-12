@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'borker_network',
     'billing',
     'tenants',
+    'dashboard',
     'django_countries',
     'rest_framework',
     'corsheaders',
@@ -126,6 +127,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'job_portal.urls'
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/admin/'
 
 TEMPLATES = [
     {

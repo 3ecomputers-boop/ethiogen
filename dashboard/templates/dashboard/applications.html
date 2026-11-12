@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Applications | Admin{% endblock %}
+{% block page_title %}Applications{% endblock %}
+{% block page_subtitle %}Channel post applications{% endblock %}
+{% block content %}
+<form method="get" class="mb-4 flex gap-2">
+  <select name="status" class="border rounded-lg px-3 py-2 text-sm">
+    <option value="">All statuses</option>
+    {% for v,l in status_choices %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <button class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm">Filter</button>
+</form>
+<div class="dash-card overflow-hidden">
+  <table class="w-full text-sm dash-table">
+    <thead class="bg-slate-50"><tr class="text-left text-slate-500">
+      <th>Applicant</th><th>Post</th><th>Status</th><th>Created</th>
+    </tr></thead>
+    <tbody>
+    {% for a in page %}
+    <tr class="border-b border-slate-100">
+      <td class="font-medium">{{ a.applicant.username }}</td>
+      <td>{{ a.post.title }}</td>
+      <td><span class="badge badge-blue">{{ a.get_status_display }}</span></td>
+      <td>{{ a.created_at|date:"d M Y" }}</td>
+    </tr>
+    {% empty %}<tr><td colspan="4" class="text-center py-6 text-slate-400">No applications</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="mt-4 flex justify-center gap-2 text-sm">
+  {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&status={{ status }}" class="px-3 py-1 border rounded">Prev</a>{% endif %}
+  <span class="px-3 py-1">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a href="?page={{ page.next_page_number }}&status={{ status }}" class="px-3 py-1 border rounded">Next</a>{% endif %}
+</div>
+{% endblock %}
