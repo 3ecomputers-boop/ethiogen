@@ -440,3 +440,40 @@ def record_application(post: ChannelPost, user) -> PostApplication:
     except Exception as exc:
         logger.error('Applicant email failed: %s', exc)
     return application
+
+
+def notify_application_status(application: PostApplication, note: str = '') -> bool:
+    """
+    Tell the applicant (and, where relevant, the employer) that an
+    application's status changed. Never raises.
+    """
+    try:
+        post = application.post
+        applicant = application.applicant
+        status = application.get_status_display()
+        chat_id = resolve_chat_id(applicant)
+        if chat_id:
+            from bot.telegram_bridge import build_subscribe_keyboard
+
+            message = (
+                f"\U0001F4CB *Application update*\n\n"
+                f"Post: *{post.title}*\n"
+                f"Status: *{status}*\n"
+            )
+            if note:
+                message += f"Note: {note}\n"
+            send_to_user(chat_id, message, parse_mode='Markdown')
+        if applicant.email:
+            from . import emails
+
+            emails.send(
+                applicant.email,
+                f'Application update: {post.title}',
+                f'Your application to "{post.title}" is now: {status}.\n'
+                + (f'Note: {note}\n' if note else '')
+                + f'\nView details: {post.source_url or ""}\n',
+            )
+        return True
+    except Exception as exc:
+        logger.error('Application status notify failed for %s: %s', application.pk, exc)
+        return False

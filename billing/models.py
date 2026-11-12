@@ -358,12 +358,14 @@ class Subscription(models.Model):
     STATUS_ACTIVE = 'active'
     STATUS_REJECTED = 'rejected'
     STATUS_CANCELLED = 'cancelled'
+    STATUS_EXPIRED = 'expired'
     STATUS_CHOICES = [
         (STATUS_AWAITING_PAYMENT, 'Awaiting payment'),
         (STATUS_PENDING_REVIEW, 'Pending review'),
         (STATUS_ACTIVE, 'Active'),
         (STATUS_REJECTED, 'Rejected'),
         (STATUS_CANCELLED, 'Cancelled'),
+        (STATUS_EXPIRED, 'Expired'),
     ]
 
     PAYMENT_CHAPA = 'chapa'

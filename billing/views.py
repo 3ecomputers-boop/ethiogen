@@ -3,6 +3,7 @@ import json
 import logging
 
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -97,3 +98,42 @@ def chapa_webhook(request: HttpRequest) -> JsonResponse:
         'subscription_id': subscription.pk if subscription else None,
         'status': subscription.status if subscription else None,
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def analytics_dashboard(request: HttpRequest) -> JsonResponse:
+    """Lightweight analytics for staff: counts, revenue, conversion."""
+    from .models import Subscription, ChannelPost, PostApplication, AlertDelivery
+
+    subs = Subscription.objects.all()
+    revenue = sum(
+        (s.amount for s in subs.filter(status=Subscription.STATUS_ACTIVE)),
+        __import__('decimal').Decimal('0'),
+    )
+    data = {
+        'subscriptions': {
+            'total': subs.count(),
+            'active': subs.filter(status=Subscription.STATUS_ACTIVE).count(),
+            'pending_review': subs.filter(status=Subscription.STATUS_PENDING_REVIEW).count(),
+            'expired': subs.filter(status=Subscription.STATUS_EXPIRED).count(),
+            'rejected': subs.filter(status=Subscription.STATUS_REJECTED).count(),
+        },
+        'revenue_active_etb': str(revenue),
+        'posts': {
+            'total': ChannelPost.objects.count(),
+            'published': ChannelPost.objects.filter(status=ChannelPost.STATUS_PUBLISHED).count(),
+            'failed': ChannelPost.objects.filter(status=ChannelPost.STATUS_FAILED).count(),
+        },
+        'applications': {
+            'total': PostApplication.objects.count(),
+            'submitted': PostApplication.objects.filter(status=PostApplication.STATUS_SUBMITTED).count(),
+            'shortlisted': PostApplication.objects.filter(status=PostApplication.STATUS_SHORTLISTED).count(),
+            'rejected': PostApplication.objects.filter(status=PostApplication.STATUS_REJECTED).count(),
+        },
+        'alerts': {
+            'deliveries': AlertDelivery.objects.count(),
+            'successful': AlertDelivery.objects.filter(ok=True).count(),
+        },
+    }
+    return JsonResponse(data)

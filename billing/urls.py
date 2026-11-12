@@ -8,6 +8,8 @@ app_name = 'billing'
 urlpatterns = [
     # Payments
     path('chapa/webhook/', views.chapa_webhook, name='chapa_webhook'),
+    # Analytics
+    path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
 
     # Telegram Web App one-tap sign-in
     path('auth/telegram/', telegram_login, name='telegram_login'),

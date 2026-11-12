@@ -538,6 +538,32 @@ class PostApplicationAdmin(admin.ModelAdmin):
     search_fields = ('applicant__username', 'applicant__email', 'post__title')
     readonly_fields = ('post', 'applicant', 'created_at', 'updated_at')
     autocomplete_fields = ('applicant',)
+    actions = ('mark_reviewing', 'mark_shortlisted', 'mark_rejected')
+
+    @admin.action(description='Mark selected as reviewing')
+    def mark_reviewing(self, request, queryset):
+        self._set_status(request, queryset, PostApplication.STATUS_REVIEWING)
+
+    @admin.action(description='Mark selected as shortlisted')
+    def mark_shortlisted(self, request, queryset):
+        self._set_status(request, queryset, PostApplication.STATUS_SHORTLISTED)
+
+    @admin.action(description='Mark selected as rejected')
+    def mark_rejected(self, request, queryset):
+        self._set_status(request, queryset, PostApplication.STATUS_REJECTED)
+
+    def _set_status(self, request, queryset, new_status):
+        from . import services
+
+        count = 0
+        for application in queryset.select_related('post', 'applicant'):
+            if application.status == new_status:
+                continue
+            application.status = new_status
+            application.save(update_fields=['status', 'updated_at'])
+            services.notify_application_status(application)
+            count += 1
+        self.message_user(request, f'Updated {count} application(s); applicants notified.')
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('post', 'applicant')

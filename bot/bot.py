@@ -2243,6 +2243,9 @@ def build_application() -> Application:
     application.add_handler(CommandHandler("test", test_command))
     application.add_handler(CommandHandler("scrape", scrape_command))
     application.add_handler(CommandHandler("tenders", tenders_command))
+    application.add_handler(CommandHandler("approve", admin_approve_command))
+    application.add_handler(CommandHandler("reject", admin_reject_command))
+    application.add_handler(CommandHandler("stats", admin_stats_command))
 
     # Subscription check callback (must be BEFORE the catch-all menu_handler)
     application.add_handler(CallbackQueryHandler(check_subscription_callback, pattern=r"^check_sub$"))
@@ -2270,6 +2273,113 @@ def build_application() -> Application:
 
     application.add_error_handler(error_handler)
     return application
+
+
+# ---------------------------------------------------------------------
+# Admin commands (Telegram)
+# ---------------------------------------------------------------------
+async def admin_approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    message = update.effective_message
+    if user is None or message is None:
+        return
+    if user.id not in ADMIN_IDS:
+        await message.reply_text("⛔ Admin only.")
+        return
+    if not context.args:
+        await message.reply_text("Usage: /approve <subscription_id>")
+        return
+    try:
+        sub_id = int(context.args[0])
+    except ValueError:
+        await message.reply_text("Invalid subscription id.")
+        return
+
+    @sync_to_async
+    def _approve():
+        from billing.models import Subscription
+        from billing.services import activate_subscription
+
+        sub = Subscription.objects.filter(pk=sub_id).first()
+        if sub is None:
+            return None
+        activate_subscription(sub, reviewed_by=None, note='Approved via Telegram.')
+        return sub
+
+    sub = await _approve()
+    if sub is None:
+        await message.reply_text(f"Subscription #{sub_id} not found.")
+        return
+    await message.reply_text(f"✅ Subscription #{sub_id} approved and activated.")
+
+
+async def admin_reject_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    message = update.effective_message
+    if user is None or message is None:
+        return
+    if user.id not in ADMIN_IDS:
+        await message.reply_text("⛔ Admin only.")
+        return
+    if not context.args:
+        await message.reply_text("Usage: /reject <subscription_id> [note]")
+        return
+    try:
+        sub_id = int(context.args[0])
+    except ValueError:
+        await message.reply_text("Invalid subscription id.")
+        return
+    note = " ".join(context.args[1:]) or "Rejected via Telegram."
+
+    @sync_to_async
+    def _reject():
+        from billing.models import Subscription
+        from billing.services import reject_subscription
+
+        sub = Subscription.objects.filter(pk=sub_id).first()
+        if sub is None:
+            return None
+        reject_subscription(sub, reviewed_by=None, note=note)
+        return sub
+
+    sub = await _reject()
+    if sub is None:
+        await message.reply_text(f"Subscription #{sub_id} not found.")
+        return
+    await message.reply_text(f"❌ Subscription #{sub_id} rejected.")
+
+
+async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    message = update.effective_message
+    if user is None or message is None:
+        return
+    if user.id not in ADMIN_IDS:
+        await message.reply_text("⛔ Admin only.")
+        return
+
+    @sync_to_async
+    def _stats():
+        from billing.models import Subscription, ChannelPost, PostApplication
+        from django.utils import timezone
+
+        return {
+            "subs_total": Subscription.objects.count(),
+            "subs_active": Subscription.objects.filter(status=Subscription.STATUS_ACTIVE).count(),
+            "subs_pending": Subscription.objects.filter(status=Subscription.STATUS_PENDING_REVIEW).count(),
+            "posts": ChannelPost.objects.count(),
+            "posts_published": ChannelPost.objects.filter(status=ChannelPost.STATUS_PUBLISHED).count(),
+            "applications": PostApplication.objects.count(),
+        }
+
+    s = await _stats()
+    await message.reply_text(
+        "📊 *Ethiogen stats*\n"
+        f"Subscriptions: {s['subs_total']} (active {s['subs_active']}, pending {s['subs_pending']})\n"
+        f"Posts: {s['posts']} (published {s['posts_published']})\n"
+        f"Applications: {s['applications']}",
+        parse_mode="Markdown",
+    )
 
 
 def main():
