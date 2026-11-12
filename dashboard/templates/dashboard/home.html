@@ -3,7 +3,7 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block page_subtitle %}Platform overview and recent activity{% endblock %}
 {% block content %}
-<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
   {% with c=counts %}
   <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Users</div><div class="value">{{ c.users }}</div></div>
   <div class="dash-card dash-kpi"><div class="text-xs text-slate-500">Job Seekers</div><div class="value">{{ c.job_seekers }}</div></div>
