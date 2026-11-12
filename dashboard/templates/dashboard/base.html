@@ -11,7 +11,16 @@
     body { font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; }
     .dash-sidebar { width: 260px; }
     .hover-nav:hover { background: #1e293b; }
-    .dash-main { margin-left: 260px; min-height: 100vh; }
+    .dash-main { margin-left: 260px; min-height: 100vh; transition: margin-left .2s; }
+    @media (max-width: 768px) {
+      .dash-sidebar { transform: translateX(-100%); transition: transform .2s; z-index: 40; }
+      .dash-sidebar.open { transform: translateX(0); }
+      .dash-main { margin-left: 0; }
+      .dash-overlay { display: none; }
+      .dash-overlay.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 35; }
+      .dash-toggle { display: inline-flex !important; }
+    }
+    .dash-toggle { display: none; }
     .min-h-screen { min-height: 100vh; }
     .bg-blue-50 { background: #eff6ff; }
     .border-blue-200 { border-color: #bfdbfe; }
@@ -22,6 +31,7 @@
     .pt-3 { padding-top: 0.75rem; }
     .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
     .dash-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+    .dash-card table { display: block; overflow-x: auto; white-space: nowrap; }
     .dark .dash-card { background: #1e293b; border-color: #334155; }
     .dash-kpi { padding: 16px; }
     .dash-kpi .value { font-size: 1.5rem; font-weight: 700; }
@@ -38,9 +48,10 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen">
+  <div class="dash-overlay" id="dash-overlay" onclick="toggleSidebar()"></div>
   <div class="flex min-h-screen">
     <!-- Sidebar -->
-    <aside class="dash-sidebar bg-slate-900 text-slate-200 flex flex-col fixed top-0 bottom-0 left-0 z-30">
+    <aside id="dash-sidebar" class="dash-sidebar bg-slate-900 text-slate-200 flex flex-col fixed top-0 bottom-0 left-0 z-40">
       <div class="px-5 py-4 border-b border-slate-700">
         <a href="{% url 'dashboard:home' %}" class="flex items-center gap-2">
           <span class="text-xl font-bold text-white">Ethio<span style="color:#fbbf24">gen</span></span>
@@ -76,6 +87,7 @@
     <!-- Main -->
     <div class="dash-main">
       <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+        <button class="dash-toggle items-center justify-center w-9 h-9 rounded-lg border border-slate-200 mr-3" onclick="toggleSidebar()" aria-label="Menu"><i class="bi bi-list text-lg"></i></button>
         <div>
           <h1 class="text-lg font-semibold text-slate-800">{% block page_title %}Dashboard{% endblock %}</h1>
           <p class="text-xs text-slate-500">{% block page_subtitle %}Ethiogen platform overview{% endblock %}</p>
@@ -96,5 +108,13 @@
       </main>
     </div>
   </div>
+<script>
+function toggleSidebar() {
+  var sb = document.getElementById('dash-sidebar');
+  var ov = document.getElementById('dash-overlay');
+  if (sb) sb.classList.toggle('open');
+  if (ov) ov.classList.toggle('open');
+}
+</script>
 </body>
 </html>
