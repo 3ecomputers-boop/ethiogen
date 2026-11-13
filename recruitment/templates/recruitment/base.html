@@ -1,0 +1,279 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Recruitment | Ethiogen{% endblock %}</title>
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --brand: #ea580c;
+            --brand-soft: #fff7ed;
+            --good: #047857;
+            --good-soft: #ecfdf5;
+            --warn: #b45309;
+            --warn-soft: #fffbeb;
+            --bad: #be123c;
+            --bad-soft: #fff1f2;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f6f7fb;
+            color: var(--ink);
+            font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+            line-height: 1.55;
+        }
+        a { color: inherit; }
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .9rem clamp(1rem, 4vw, 2.5rem);
+            background: rgba(255, 255, 255, .94);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(10px);
+        }
+        .brand {
+            display: flex;
+            align-items: baseline;
+            gap: .45rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            text-decoration: none;
+        }
+        .brand span {
+            color: var(--brand);
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .site-nav { display: flex; gap: .35rem; flex-wrap: wrap; }
+        .site-nav a {
+            padding: .45rem .7rem;
+            border-radius: .55rem;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .site-nav a:hover { background: var(--brand-soft); color: var(--brand); }
+        main {
+            width: min(1240px, calc(100% - 2rem));
+            margin: 0 auto;
+            padding: 2rem 0 4rem;
+        }
+        .hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: .45rem;
+            color: var(--brand);
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0 0 .4rem;
+            font-size: clamp(1.7rem, 3vw, 2.35rem);
+            line-height: 1.15;
+            letter-spacing: -.035em;
+        }
+        h2 { margin: 0 0 .35rem; font-size: 1.1rem; line-height: 1.3; }
+        h3 {
+            margin: 0 0 .45rem;
+            color: var(--muted);
+            font-size: .72rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .lede { margin: 0; max-width: 65ch; color: var(--muted); }
+        .muted { color: var(--muted); }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            padding: .6rem .85rem;
+            border: 1px solid var(--brand);
+            border-radius: .6rem;
+            background: var(--brand);
+            color: #fff;
+            font: inherit;
+            font-size: .88rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .btn:hover { filter: brightness(.95); }
+        .btn.ghost { background: #fff; color: var(--brand); }
+        .btn.small { padding: .35rem .6rem; font-size: .78rem; }
+        .btn.danger { border-color: var(--bad); background: var(--bad); }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 1rem;
+            background: #fff;
+            padding: 1.1rem;
+            box-shadow: 0 8px 30px -24px rgba(15, 23, 42, .45);
+        }
+        .grid { display: grid; gap: 1rem; }
+        .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .meta { margin: .2rem 0; color: var(--muted); font-size: .86rem; }
+        .actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+        .badge {
+            display: inline-block;
+            padding: .18rem .55rem;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+        .badge.hired, .badge.verified { background: var(--good-soft); color: var(--good); }
+        .badge.shortlisted, .badge.offer { background: var(--brand-soft); color: var(--brand); }
+        .badge.rejected, .badge.withdrawn { background: var(--bad-soft); color: var(--bad); }
+        .badge.interview, .badge.screening { background: var(--warn-soft); color: var(--warn); }
+        .empty {
+            padding: 2rem;
+            border: 1px dashed #cbd5e1;
+            border-radius: 1rem;
+            background: #fff;
+            text-align: center;
+            color: var(--muted);
+        }
+        .messages { display: grid; gap: .5rem; margin-bottom: 1rem; }
+        .message {
+            padding: .7rem .9rem;
+            border: 1px solid var(--line);
+            border-radius: .65rem;
+            background: #fff;
+            font-size: .88rem;
+        }
+        .message.success { border-color: #a7f3d0; background: var(--good-soft); color: #065f46; }
+        .message.error { border-color: #fecdd3; background: var(--bad-soft); color: #9f1239; }
+        .message.info { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
+        .form-row { margin-bottom: .9rem; }
+        .form-row label { display: block; margin-bottom: .25rem; font-size: .82rem; font-weight: 700; }
+        input, select, textarea {
+            width: 100%;
+            padding: .55rem .65rem;
+            border: 1px solid #cbd5e1;
+            border-radius: .5rem;
+            background: #fff;
+            color: var(--ink);
+            font: inherit;
+            font-size: .9rem;
+        }
+        textarea { resize: vertical; }
+        .errorlist { margin: .25rem 0 0; padding-left: 1.1rem; color: var(--bad); font-size: .8rem; }
+        .timeline { margin: 0; padding: 0; list-style: none; }
+        .timeline li {
+            position: relative;
+            margin-left: .75rem;
+            padding: 0 0 1rem 1rem;
+            border-left: 2px solid var(--line);
+        }
+        .timeline li:last-child { padding-bottom: 0; border-left-color: transparent; }
+        .timeline li::before {
+            position: absolute;
+            top: .25rem;
+            left: -.4rem;
+            width: .7rem;
+            height: .7rem;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            background: var(--brand);
+            content: "";
+        }
+        .timeline strong { display: block; font-size: .9rem; }
+        .timeline span { color: var(--muted); font-size: .78rem; }
+        .timeline p { margin: .35rem 0 0; font-size: .88rem; }
+        .pipeline {
+            display: flex;
+            gap: .8rem;
+            overflow-x: auto;
+            padding-bottom: .7rem;
+            align-items: flex-start;
+        }
+        .stage {
+            flex: 0 0 17rem;
+            border: 1px solid var(--line);
+            border-radius: .9rem;
+            background: #fff;
+            padding: .7rem;
+        }
+        .stage-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            margin-bottom: .6rem;
+        }
+        .stage-head h2 { margin: 0; font-size: .91rem; }
+        .stage-list { display: grid; gap: .5rem; }
+        .mini-card {
+            display: block;
+            padding: .6rem;
+            border: 1px solid var(--line);
+            border-radius: .65rem;
+            background: #fbfcfe;
+            text-decoration: none;
+        }
+        .mini-card:hover { border-color: var(--brand); background: var(--brand-soft); }
+        .mini-card strong { display: block; font-size: .87rem; }
+        .mini-card span { color: var(--muted); font-size: .75rem; }
+        .detail-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(18rem, .9fr); gap: 1rem; }
+        .note { margin-top: 1.2rem; color: var(--muted); font-size: .78rem; }
+        @media (max-width: 860px) {
+            .hero { flex-direction: column; align-items: stretch; }
+            .job-grid, .detail-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="{% url 'recruitment:job_postings' %}">Ethiogen <span>Recruitment</span></a>
+        <nav class="site-nav" aria-label="Primary">
+            <a href="{% url 'recruitment:job_postings' %}">Open jobs</a>
+            <a href="{% url 'recruitment:my_applications' %}">My applications</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'recruitment:ats_dashboard' %}">Employer ATS</a>
+                <a href="{% url 'jobs:job_seeker_dashboard' %}">Dashboard</a>
+            {% else %}
+                <a href="{% url 'jobs:home' %}">Sign in</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

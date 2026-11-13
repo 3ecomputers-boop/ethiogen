@@ -1,0 +1,53 @@
+{% extends 'recruitment/base.html' %}
+{% block title %}Employer ATS | Ethiogen{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Employer workspace</span>
+        <h1>Applicant tracking</h1>
+        <p class="lede">Review every application in one pipeline. Move candidates through screening, shortlisting, interviews, offers, and hiring.</p>
+    </div>
+    <a class="btn ghost" href="{% url 'recruitment:create_job_posting' %}">Post a job</a>
+</section>
+
+{% if jobs %}
+    <div class="grid">
+        {% for job in jobs %}
+            <article class="card">
+                <div class="card-head">
+                    <div>
+                        <h2>{{ job.title }}</h2>
+                        <p class="meta">{{ job.company_name }} · {{ job.location }} · {{ job.employment_type }}</p>
+                        <p class="meta">
+                            {% if job.is_approved %}
+                                <span class="badge hired">Approved</span>
+                            {% else %}
+                                <span class="badge screening">Pending approval</span>
+                            {% endif %}
+                            {% if job.is_completed %}<span class="badge rejected">Completed</span>{% endif %}
+                        </p>
+                    </div>
+                    <a class="btn" href="{% url 'recruitment:ats_job_pipeline' job.pk %}">Open pipeline</a>
+                </div>
+
+                <div class="actions" style="margin-top: .9rem;">
+                    <span class="badge">All {{ job.application_count }}</span>
+                    <span class="badge">Submitted {{ job.submitted_count }}</span>
+                    <span class="badge shortlisted">Shortlisted {{ job.shortlisted_count }}</span>
+                    <span class="badge hired">Hired {{ job.hired_count }}</span>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">
+        <h2>No jobs yet</h2>
+        <p>Post a vacancy to start collecting and tracking applications.</p>
+        <a class="btn" href="{% url 'recruitment:create_job_posting' %}">Post a job</a>
+    </div>
+{% endif %}
+
+<p class="note">
+    Only the job owner and Ethiogen staff can access this pipeline. Stage changes and notes are recorded in the application timeline.
+</p>
+{% endblock %}

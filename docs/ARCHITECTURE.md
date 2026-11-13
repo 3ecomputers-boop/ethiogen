@@ -51,7 +51,7 @@ dashboard/             # custom staff admin console
 social/                # LinkedIn-style social graph and feed
 ai_engine/             # explainable job matching, rules-based
 tenants/               # multi-tenant organizations and workspaces
-recruitment/           # simple recruitment job board
+recruitment/           # recruitment board and applicant tracking (ATS)
 freelancer/            # freelance jobs and bids
 employers/             # employer profile module
 borker_network/        # broker/deal/payout/task module
@@ -265,7 +265,7 @@ Organization ──< Membership >── User
 
 ### Other modules
 
-- **Recruitment** — `Application` links a user to a `jobs.Job`.
+- **Recruitment** - `Application` links a user to a `jobs.Job`; `ApplicationEvent` records stage changes and internal notes for the ATS.
 - **Freelancer** — `Skill`, `FreelancerProfile`, `JobPosting`, `Bid`.
 - **Employers** — `Employer` profile (one-to-one with user).
 - **Broker network** — `Broker`, `Deal`, `Payout`, `Task`.

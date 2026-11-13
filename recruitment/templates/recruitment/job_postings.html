@@ -1,0 +1,47 @@
+{% extends 'recruitment/base.html' %}
+{% block title %}Open jobs | Ethiogen Recruitment{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Recruitment</span>
+        <h1>Open jobs</h1>
+        <p class="lede">Apply with your Ethiogen profile and track every stage from submitted to hired.</p>
+    </div>
+    <a class="btn ghost" href="{% url 'recruitment:create_job_posting' %}">Post a job</a>
+</section>
+
+{% if job_postings %}
+    <div class="grid job-grid">
+        {% for job in job_postings %}
+            <article class="card">
+                <div class="card-head">
+                    <div>
+                        <h2>{{ job.title }}</h2>
+                        <p class="meta">{{ job.company_name }} · {{ job.location }} · {{ job.employment_type }}</p>
+                        <p class="meta">
+                            {% if job.salary %}{{ job.salary }} ETB{% endif %}
+                            {% if job.experience_required %} · {{ job.experience_required }}+ years{% endif %}
+                        </p>
+                    </div>
+                    {% if job.pk in applied_job_ids %}
+                        <span class="badge hired">Applied</span>
+                    {% endif %}
+                </div>
+                <p class="meta">{{ job.description|truncatechars:220 }}</p>
+                <div class="actions">
+                    {% if job.pk in applied_job_ids %}
+                        <a class="btn ghost" href="{% url 'recruitment:my_applications' %}">Track application</a>
+                    {% else %}
+                        <a class="btn" href="{% url 'recruitment:apply_for_job' job.pk %}">Apply now</a>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">
+        <h2>No open jobs</h2>
+        <p>Approved vacancies will appear here.</p>
+    </div>
+{% endif %}
+{% endblock %}

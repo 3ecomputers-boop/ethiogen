@@ -1,0 +1,46 @@
+{% extends 'recruitment/base.html' %}
+{% block title %}Apply for {{ job_posting.title }} | Ethiogen{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Application</span>
+        <h1>{{ job_posting.title }}</h1>
+        <p class="lede">
+            {{ job_posting.company_name }} · {{ job_posting.location }} · {{ job_posting.employment_type }}
+            {% if job_posting.salary %} · {{ job_posting.salary }} ETB{% endif %}
+        </p>
+    </div>
+    <a class="btn ghost" href="{% url 'recruitment:job_postings' %}">Back to jobs</a>
+</section>
+
+<div class="detail-grid">
+    <div class="card">
+        <h2>Job description</h2>
+        <p>{{ job_posting.description|linebreaksbr }}</p>
+        {% if job_posting.responsibilities %}
+            <h3>Responsibilities</h3>
+            <p>{{ job_posting.responsibilities|linebreaksbr }}</p>
+        {% endif %}
+        {% if job_posting.required_skills.all %}
+            <h3>Required skills</h3>
+            <p>
+                {% for skill in job_posting.required_skills.all %}
+                    <span class="badge">{{ skill.name }}</span>
+                {% endfor %}
+            </p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Your application</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions">
+                <button class="btn" type="submit">Submit application</button>
+                <a class="btn ghost" href="{% url 'recruitment:job_postings' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

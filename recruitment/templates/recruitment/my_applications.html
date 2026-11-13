@@ -1,0 +1,68 @@
+{% extends 'recruitment/base.html' %}
+{% block title %}My applications | Ethiogen{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Candidate tracker</span>
+        <h1>My applications</h1>
+        <p class="lede">Follow each application through screening, shortlisting, interviews, and offers.</p>
+    </div>
+    <a class="btn ghost" href="{% url 'recruitment:job_postings' %}">Find more jobs</a>
+</section>
+
+{% if applications %}
+    <div class="grid">
+        {% for application in applications %}
+            <article class="card">
+                <div class="card-head">
+                    <div>
+                        <h2>{{ application.job.title }}</h2>
+                        <p class="meta">
+                            {{ application.job.company_name }} · {{ application.job.location }}
+                            · Applied {{ application.applied_at|date:"M j, Y" }}
+                        </p>
+                    </div>
+                    <span class="badge {{ application.status }}">{{ application.get_status_display }}</span>
+                </div>
+
+                {% if application.cover_letter %}
+                    <h3>Your cover letter</h3>
+                    <p>{{ application.cover_letter|truncatechars:400|linebreaksbr }}</p>
+                {% endif %}
+
+                <details>
+                    <summary class="muted">Application timeline</summary>
+                    <ul class="timeline" style="margin-top: .8rem;">
+                        {% for event in application.events.all %}
+                            <li>
+                                <strong>{{ event.get_event_type_display }}</strong>
+                                <span>{{ event.created_at|date:"M j, Y H:i" }}{% if event.actor %} · {{ event.actor.get_full_name|default:event.actor.username }}{% endif %}</span>
+                                {% if event.from_status or event.to_status %}
+                                    <p>
+                                        {% if event.from_status %}{{ event.get_from_status_display }}{% endif %}
+                                        {% if event.from_status and event.to_status %} → {% endif %}
+                                        {% if event.to_status %}{{ event.get_to_status_display }}{% endif %}
+                                    </p>
+                                {% endif %}
+                                {% if event.note %}<p>{{ event.note|linebreaksbr }}</p>{% endif %}
+                            </li>
+                        {% empty %}
+                            <li><strong>Application submitted</strong><span>No timeline entries yet.</span></li>
+                        {% endfor %}
+                    </ul>
+                </details>
+
+                <div class="actions">
+                    <a class="btn ghost" href="{% url 'jobs:job_details' application.job.pk %}">View job</a>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">
+        <h2>No applications yet</h2>
+        <p>Apply to an open job to start tracking your progress.</p>
+        <a class="btn" href="{% url 'recruitment:job_postings' %}">Browse jobs</a>
+    </div>
+{% endif %}
+{% endblock %}

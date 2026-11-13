@@ -1,0 +1,50 @@
+{% extends 'recruitment/base.html' %}
+{% block title %}Pipeline: {{ job.title }} | Ethiogen{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Candidate pipeline</span>
+        <h1>{{ job.title }}</h1>
+        <p class="lede">
+            {{ job.company_name }} · {{ job.location }} · {{ job.employment_type }}
+            · {{ applications|length }} application{{ applications|length|pluralize }}
+        </p>
+    </div>
+    <div class="actions">
+        <a class="btn ghost" href="{% url 'recruitment:ats_dashboard' %}">All jobs</a>
+        <a class="btn ghost" href="{% url 'jobs:job_details' job.pk %}">View job</a>
+    </div>
+</section>
+
+<div class="pipeline">
+    {% for stage in stage_groups %}
+        <section class="stage">
+            <div class="stage-head">
+                <h2>{{ stage.label }}</h2>
+                <span class="badge">{{ stage.items|length }}</span>
+            </div>
+            <div class="stage-list">
+                {% for application in stage.items %}
+                    <a class="mini-card" href="{% url 'recruitment:ats_application_detail' application.pk %}">
+                        <strong>{{ application.applicant.get_full_name|default:application.applicant.username }}</strong>
+                        <span>
+                            {% if application.seeker_profile and application.seeker_profile.title %}
+                                {{ application.seeker_profile.title }}
+                            {% else %}
+                                Job seeker
+                            {% endif %}
+                        </span>
+                        <span> · {{ application.applied_at|date:"M j, Y" }}</span>
+                    </a>
+                {% empty %}
+                    <p class="meta">No candidates.</p>
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
+</div>
+
+<p class="note">
+    Click a candidate to review their cover letter and CV, change their stage, or add an internal note.
+</p>
+{% endblock %}

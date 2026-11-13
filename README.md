@@ -45,6 +45,7 @@ On Linux/macOS use `source venv/bin/activate` and `cp .env.example .env`.
 - **Employer workspaces** — multi-tenant organizations, memberships, invitations, plans, quotas, audit log, and an operator console.
 - **Recruitment and freelancing** — job postings/applications and a separate freelancer bidding module.
 - **Explainable job matching** — rules-based, transparent seeker/job and employer/candidate scores with reasons, gaps, and JSON endpoints; no external AI provider required.
+- **Applicant tracking (ATS)** — employer pipeline from submitted to hired, internal notes, audit timeline, and a candidate status tracker.
 - **Broker network** — brokers, deals, payouts, and tasks (scaffolding/legacy module).
 - **Management commands** — seeding, verification resets, scraping, Telegram verification, bot simulation, digests, reminders, and PostgreSQL migration tooling.
 
@@ -64,6 +65,7 @@ Full documentation lives in [`docs/`](docs/README.md).
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Every configuration section and environment variable |
 | [docs/SOCIAL_FEATURES.md](docs/SOCIAL_FEATURES.md) | Feed, connections, saved jobs, notifications, messaging |
 | [docs/AI_MATCHING.md](docs/AI_MATCHING.md) | Explainable matching, weights, permissions, JSON endpoints |
+| [docs/ATS.md](docs/ATS.md) | Applicant pipeline, statuses, timeline, tests |
 | [docs/BILLING_AND_TELEGRAM.md](docs/BILLING_AND_TELEGRAM.md) | Subscription flow, Chapa, manual payments, bot commands, alerts |
 | [docs/API_REFERENCE.md](docs/API_REFERENCE.md) | JSON endpoints, Telegram auth, employer API, analytics |
 | [docs/MANAGEMENT_COMMANDS.md](docs/MANAGEMENT_COMMANDS.md) | All custom `manage.py` commands with usage |
@@ -102,6 +104,10 @@ Full documentation lives in [`docs/`](docs/README.md).
 | `/tenants/workspaces/` | Employer workspaces | Authenticated |
 | `/tenants/console/` | Operator console | Superuser |
 | `/recruitment/` | Recruitment job board | Authenticated |
+| `/recruitment/my-applications/` | Candidate application tracker | Authenticated |
+| `/recruitment/employer/` | Employer ATS dashboard | Job owner or staff |
+| `/recruitment/employer/jobs/<id>/` | Candidate pipeline for one job | Job owner or staff |
+| `/recruitment/employer/applications/<id>/` | Candidate detail and timeline | Job owner or staff |
 | `/freelancingjobs/` | Freelance job board | Public |
 
 ---
@@ -118,7 +124,7 @@ dashboard/                 Custom staff admin console
 social/                    LinkedIn-style feed, connections, messages
 ai_engine/                 Explainable job matching (rules-based, no models)
 tenants/                   Multi-tenant employer workspaces
-recruitment/               Simple recruitment postings/applications
+recruitment/               Recruitment board, applications, and ATS pipeline
 freelancer/                Freelance job posting and bidding
 employers/                 Employer profile module
 borker_network/            Broker/deal/payout/task module

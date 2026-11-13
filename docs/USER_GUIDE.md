@@ -75,7 +75,15 @@ Verification (`is_verified`) is granted by staff and improves trust.
 3. Use the message form on the job page to contact the poster.
 4. Save a channel job for later from the social layer (`/social/save-job/<job_id>/`).
 
-Formal application forms live in the recruitment module (`/recruitment/<id>/apply/`) and in the Telegram channel (**Apply Now** on a published post, which requires an active subscription). The job seeker dashboard currently shows profile completion and navigation; it does not yet provide a full application tracker.
+Formal application forms live in the recruitment module (`/recruitment/<id>/apply/`) and in the Telegram channel (**Apply Now** on a published post, which requires an active subscription). The job seeker dashboard links to your application tracker.
+
+### My applications
+
+Open `/recruitment/my-applications/` or use **My Applications** on the dashboard. Each card shows the job, current stage, and a timeline of updates. Stages are:
+
+`Submitted → Screening → Shortlisted → Interview → Offer → Hired`
+
+Rejected and withdrawn applications remain visible with their final status. See [ATS.md](ATS.md).
 
 ### Recommended jobs
 
@@ -117,8 +125,11 @@ Employer job posting requires:
 ### Review applicants
 
 - `/admin/applications/` (staff dashboard) shows `PostApplication` rows.
+- Employer ATS: `/recruitment/employer/` for portal applications.
 - Employer API: `/billing/api/employer/applications/`.
 - Update status to `reviewing`, `shortlisted`, or `rejected`; the applicant is notified by Telegram/email when possible.
+
+Open a recruitment job in the ATS to move candidates through `Submitted → Screening → Shortlisted → Interview → Offer → Hired`. The candidate detail page records stage changes and internal notes in a timeline. Only the job owner and staff can access it. See [ATS.md](ATS.md).
 
 ### Rank candidates
 

@@ -1,0 +1,23 @@
+{% extends 'recruitment/base.html' %}
+{% block title %}Post a job | Ethiogen Recruitment{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Employer</span>
+        <h1>Post a job</h1>
+        <p class="lede">New vacancies are reviewed by staff before they appear publicly. You can manage applicants in the ATS as soon as applications arrive.</p>
+    </div>
+    <a class="btn ghost" href="{% url 'recruitment:ats_dashboard' %}">Open ATS</a>
+</section>
+
+<div class="card" style="max-width: 52rem;">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="actions">
+            <button class="btn" type="submit">Submit for approval</button>
+            <a class="btn ghost" href="{% url 'recruitment:job_postings' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

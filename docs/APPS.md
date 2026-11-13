@@ -13,7 +13,7 @@ The project is split into focused Django apps. This document lists each app, its
 | `social` | Feed, connections, saved jobs, notifications, messages | Yes | Yes |
 | `ai_engine` | Explainable job/candidate matching | No | No |
 | `tenants` | Multi-tenant organizations and workspaces | Yes | Yes |
-| `recruitment` | Simple recruitment postings/applications | Yes | Yes |
+| `recruitment` | Recruitment board, applications, and ATS pipeline | Yes | Yes |
 | `freelancer` | Freelance jobs and bids | Yes | Yes |
 | `employers` | Employer profile | Yes | Yes |
 | `borker_network` | Broker/deal/payout/task module | Yes | Yes |
@@ -333,9 +333,16 @@ See [SOCIAL_FEATURES.md](SOCIAL_FEATURES.md).
 
 ## `recruitment`
 
-**Purpose:** a simple recruitment board separate from the main job portal.
+**Purpose:** a recruitment board and applicant tracking system (ATS) for portal jobs.
 
-**Model:** `Application` — applicant user, `jobs.Job`, cover letter, resume, applied timestamp.
+**Models**
+
+| Model | Purpose |
+|---|---|
+| `Application` | Applicant user, `jobs.Job`, cover letter, resume, pipeline status, timestamps |
+| `ApplicationEvent` | Audit trail: created, status change, or internal note |
+
+**Statuses:** `submitted`, `screening`, `shortlisted`, `interview`, `offer`, `hired`, `rejected`, `withdrawn`.
 
 **Routes**
 
@@ -344,6 +351,19 @@ See [SOCIAL_FEATURES.md](SOCIAL_FEATURES.md).
 | `/recruitment/` | `job_postings` |
 | `/recruitment/create/` | `create_job_posting` |
 | `/recruitment/<id>/apply/` | `apply_for_job` |
+| `/recruitment/my-applications/` | `my_applications` |
+| `/recruitment/employer/` | `ats_dashboard` |
+| `/recruitment/employer/jobs/<job_id>/` | `ats_job_pipeline` |
+| `/recruitment/employer/applications/<id>/` | `ats_application_detail` |
+| `/recruitment/employer/applications/<id>/status/` | `update_application_status` (POST) |
+| `/recruitment/employer/applications/<id>/notes/` | `add_application_note` (POST) |
+
+**Notes**
+
+- ATS access is limited to the job owner and staff.
+- Signals in `recruitment/signals.py` create timeline events automatically.
+- Covers `recruitment.Application` only; Telegram `PostApplication` and bot `JobApplication` remain separate for now.
+- See [ATS.md](ATS.md).
 
 ---
 

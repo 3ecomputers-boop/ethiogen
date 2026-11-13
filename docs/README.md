@@ -13,11 +13,12 @@ This directory is the reference manual for the Ethiogen Job Seeker Hub. Each doc
 7. [Social Features](SOCIAL_FEATURES.md) — the LinkedIn-style layer.
 8. [Billing and Telegram](BILLING_AND_TELEGRAM.md) — subscriptions, payments, bot.
 9. [AI Matching](AI_MATCHING.md) — explainable seeker/job and employer/candidate scoring.
-10. [API Reference](API_REFERENCE.md) — JSON endpoints.
-11. [Management Commands](MANAGEMENT_COMMANDS.md) — operational scripts.
-12. [Deployment](DEPLOYMENT.md) — production checklist.
-13. [Troubleshooting](TROUBLESHOOTING.md) — known errors and fixes.
-14. [PostgreSQL Migration](POSTGRES.md) — existing guide for moving off SQLite.
+10. [ATS](ATS.md) — applicant pipeline, stages, timeline, permissions.
+11. [API Reference](API_REFERENCE.md) — JSON endpoints.
+12. [Management Commands](MANAGEMENT_COMMANDS.md) — operational scripts.
+13. [Deployment](DEPLOYMENT.md) — production checklist.
+14. [Troubleshooting](TROUBLESHOOTING.md) — known errors and fixes.
+15. [PostgreSQL Migration](POSTGRES.md) — existing guide for moving off SQLite.
 
 ## Conventions used in this manual
 
@@ -38,6 +39,7 @@ This directory is the reference manual for the Ethiogen Job Seeker Hub. Each doc
 | Integration settings | Yes | Includes fallback/resolution order |
 | Social layer | Yes | Models, routes, flows, limitations |
 | AI matching | Yes | Scoring weights, routes, permissions, JSON examples |
+| Applicant tracking | Yes | Statuses, timeline, employer permissions, tests |
 | Billing / Telegram | Yes | Manual and Chapa flows, bot commands |
 | JSON APIs | Yes | Endpoint tables and auth rules |
 | Management commands | Yes | All custom commands |
