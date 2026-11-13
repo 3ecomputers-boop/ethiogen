@@ -49,6 +49,7 @@ urlpatterns = [
     path('billing/', include('billing.urls')),
     path('tenants/', include('tenants.urls')),
     path('social/', include('social.urls')),
+    path('matches/', include('ai_engine.urls')),
     path('api/job-seekers/<int:seeker_id>/toggle-verify/', api_toggle_verify, name='api_toggle_verify'),
     path('api/admin/verify-job-seeker/', verify_job_seeker, name='verify_job_seeker'),
 ]

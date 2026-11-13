@@ -1,0 +1,144 @@
+{% extends 'ai_engine/base.html' %}
+{% block title %}Candidates for {{ job.title }} | Ethiogen{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Candidate ranking</span>
+        <h1>{{ job.title }}</h1>
+        <p class="lede">
+            {{ job.company_name }} · {{ job.location }} · {{ job.employment_type }}
+            {% if job.experience_required %} · {{ job.experience_required }}+ years required{% endif %}
+        </p>
+    </div>
+    <a class="btn ghost" href="{% url 'ai_engine:employer_candidates' %}">Choose another job</a>
+</section>
+
+<div class="card" style="margin-bottom: 1rem;">
+    <div class="job-row">
+        <div>
+            <h3>Required skills</h3>
+            {% for skill in job.required_skills.all %}
+                <span class="pill">{{ skill.name }}</span>
+            {% empty %}
+                <span class="meta">No explicit skills listed; ranking uses role keywords.</span>
+            {% endfor %}
+        </div>
+        <a class="btn ghost" href="{% url 'jobs:job_details' job.pk %}">View job post</a>
+    </div>
+</div>
+
+{% if matches %}
+    <div class="grid job-grid">
+        {% for match in matches %}
+            <article class="card">
+                <div class="card-head">
+                    <div>
+                        <h2>
+                            <a href="{% url 'jobs:view_job_seeker_profile' match.profile.pk %}">
+                                {{ match.profile.user.get_full_name|default:match.profile.user.username }}
+                            </a>
+                        </h2>
+                        <p class="meta">
+                            {{ match.profile.title|default:"Job seeker" }}
+                            {% if match.profile.city %} · {{ match.profile.city }}{% endif %}
+                            {% if match.profile.years_of_experience %} · {{ match.profile.years_of_experience }} years{% endif %}
+                        </p>
+                    </div>
+                    <div class="score{% if match.score >= 75 %} high{% elif match.score >= 50 %} mid{% endif %}"
+                         aria-label="Match score {{ match.score }} percent">
+                        <strong>{{ match.score }}</strong>
+                        <small>match</small>
+                    </div>
+                </div>
+
+                <div class="meter" aria-hidden="true">
+                    <span class="{% if match.score >= 75 %}high{% elif match.score >= 50 %}mid{% endif %}"
+                          style="width: {{ match.score }}%"></span>
+                </div>
+
+                <p class="meta">
+                    {% if match.profile.is_verified %}
+                        <span class="pill verified">Verified</span>
+                    {% else %}
+                        <span class="pill">Not verified</span>
+                    {% endif %}
+                    {% if match.profile.hourly_rate %}
+                        <span class="pill">{{ match.profile.hourly_rate }} ETB/hour</span>
+                    {% endif %}
+                    {% if match.profile.average_rating %}
+                        <span class="pill">Rating {{ match.profile.average_rating }}</span>
+                    {% endif %}
+                </p>
+
+                {% if match.profile.skills %}
+                    <p>
+                        {% for skill in match.profile.skills|slice:":8" %}
+                            <span class="pill">{{ skill }}</span>
+                        {% endfor %}
+                    </p>
+                {% endif %}
+
+                <div class="two-col">
+                    <div>
+                        <h3>Why this candidate</h3>
+                        <ul class="clean">
+                            {% for reason in match.reasons %}
+                                <li>{{ reason }}</li>
+                            {% empty %}
+                                <li>No positive signals yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Gaps</h3>
+                        <ul class="clean gaps">
+                            {% for gap in match.gaps %}
+                                <li>{{ gap }}</li>
+                            {% empty %}
+                                <li>No major gaps detected.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <details>
+                    <summary>Score breakdown</summary>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Signal</th>
+                                <th>Detail</th>
+                                <th class="num">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for component in match.components %}
+                                <tr>
+                                    <td>{{ component.label }}</td>
+                                    <td>{{ component.detail }}</td>
+                                    <td class="num">{{ component.points|floatformat:1 }} / {{ component.weight }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+
+                <div class="card-actions">
+                    <a class="btn" href="{% url 'jobs:view_job_seeker_profile' match.profile.pk %}">View profile</a>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">
+        <h2>No active candidates yet</h2>
+        <p>Candidates will appear here once job seekers create active profiles.</p>
+    </div>
+{% endif %}
+
+<p class="note">
+    Only the job owner and Ethiogen staff can view this ranking. Scores are
+    generated from profile data and should be reviewed alongside applications,
+    interviews, and references.
+</p>
+{% endblock %}

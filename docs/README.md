@@ -12,11 +12,12 @@ This directory is the reference manual for the Ethiogen Job Seeker Hub. Each doc
 6. [Configuration](CONFIGURATION.md) — every setting and environment variable.
 7. [Social Features](SOCIAL_FEATURES.md) — the LinkedIn-style layer.
 8. [Billing and Telegram](BILLING_AND_TELEGRAM.md) — subscriptions, payments, bot.
-9. [API Reference](API_REFERENCE.md) — JSON endpoints.
-10. [Management Commands](MANAGEMENT_COMMANDS.md) — operational scripts.
-11. [Deployment](DEPLOYMENT.md) — production checklist.
-12. [Troubleshooting](TROUBLESHOOTING.md) — known errors and fixes.
-13. [PostgreSQL Migration](POSTGRES.md) — existing guide for moving off SQLite.
+9. [AI Matching](AI_MATCHING.md) — explainable seeker/job and employer/candidate scoring.
+10. [API Reference](API_REFERENCE.md) — JSON endpoints.
+11. [Management Commands](MANAGEMENT_COMMANDS.md) — operational scripts.
+12. [Deployment](DEPLOYMENT.md) — production checklist.
+13. [Troubleshooting](TROUBLESHOOTING.md) — known errors and fixes.
+14. [PostgreSQL Migration](POSTGRES.md) — existing guide for moving off SQLite.
 
 ## Conventions used in this manual
 
@@ -36,8 +37,9 @@ This directory is the reference manual for the Ethiogen Job Seeker Hub. Each doc
 | Custom admin console | Yes | Includes every page and action |
 | Integration settings | Yes | Includes fallback/resolution order |
 | Social layer | Yes | Models, routes, flows, limitations |
+| AI matching | Yes | Scoring weights, routes, permissions, JSON examples |
 | Billing / Telegram | Yes | Manual and Chapa flows, bot commands |
 | JSON APIs | Yes | Endpoint tables and auth rules |
 | Management commands | Yes | All custom commands |
 | Deployment | Yes | cPanel/WSGI, static/media, PostgreSQL |
-| Automated tests | Partial | Test coverage is still being expanded |
+| Automated tests | Partial | `ai_engine` is covered; broader coverage is still being expanded |

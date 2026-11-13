@@ -44,6 +44,7 @@ On Linux/macOS use `source venv/bin/activate` and `cp .env.example .env`.
 - **LinkedIn-style social layer** (`/social/`) — professional feed with likes and comments, connections, saved jobs, notifications, and direct messages.
 - **Employer workspaces** — multi-tenant organizations, memberships, invitations, plans, quotas, audit log, and an operator console.
 - **Recruitment and freelancing** — job postings/applications and a separate freelancer bidding module.
+- **Explainable job matching** — rules-based, transparent seeker/job and employer/candidate scores with reasons, gaps, and JSON endpoints; no external AI provider required.
 - **Broker network** — brokers, deals, payouts, and tasks (scaffolding/legacy module).
 - **Management commands** — seeding, verification resets, scraping, Telegram verification, bot simulation, digests, reminders, and PostgreSQL migration tooling.
 
@@ -62,6 +63,7 @@ Full documentation lives in [`docs/`](docs/README.md).
 | [docs/ADMIN_DASHBOARD.md](docs/ADMIN_DASHBOARD.md) | Custom admin console, pages, actions, theme, raw Django admin |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Every configuration section and environment variable |
 | [docs/SOCIAL_FEATURES.md](docs/SOCIAL_FEATURES.md) | Feed, connections, saved jobs, notifications, messaging |
+| [docs/AI_MATCHING.md](docs/AI_MATCHING.md) | Explainable matching, weights, permissions, JSON endpoints |
 | [docs/BILLING_AND_TELEGRAM.md](docs/BILLING_AND_TELEGRAM.md) | Subscription flow, Chapa, manual payments, bot commands, alerts |
 | [docs/API_REFERENCE.md](docs/API_REFERENCE.md) | JSON endpoints, Telegram auth, employer API, analytics |
 | [docs/MANAGEMENT_COMMANDS.md](docs/MANAGEMENT_COMMANDS.md) | All custom `manage.py` commands with usage |
@@ -88,6 +90,11 @@ Full documentation lives in [`docs/`](docs/README.md).
 | `/social/saved-jobs/` | Saved jobs | Authenticated |
 | `/social/notifications/` | Notifications | Authenticated |
 | `/social/inbox/` | Direct messages | Authenticated |
+| `/matches/` | Recommended jobs | Signed-in seeker with profile |
+| `/matches/candidates/` | Employer candidate matching | Job owner or staff |
+| `/matches/jobs/<id>/candidates/` | Candidate ranking for one job | Job owner or staff |
+| `/matches/api/jobs/` | Matching JSON API | Signed-in seeker with profile |
+| `/matches/api/jobs/<id>/candidates/` | Candidate JSON API | Job owner or staff |
 | `/billing/analytics/` | Staff analytics JSON | `is_staff` |
 | `/billing/chapa/webhook/` | Chapa webhook (POST) | Public, CSRF-exempt |
 | `/telegram-webhook/` | Telegram webhook (POST) | Public |
@@ -109,6 +116,7 @@ jobs/                      Core job portal, profiles, talents, API, bot models
 billing/                   Subscriptions, channel posts, integrations, payments
 dashboard/                 Custom staff admin console
 social/                    LinkedIn-style feed, connections, messages
+ai_engine/                 Explainable job matching (rules-based, no models)
 tenants/                   Multi-tenant employer workspaces
 recruitment/               Simple recruitment postings/applications
 freelancer/                Freelance job posting and bidding

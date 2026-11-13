@@ -1,0 +1,130 @@
+{% extends 'ai_engine/base.html' %}
+{% block title %}Recommended jobs | Ethiogen{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Explainable matching</span>
+        <h1>Jobs matched to your profile</h1>
+        <p class="lede">
+            Each score is built from your skills, role, location, experience,
+            verification, and profile completeness. Open a breakdown to see why
+            a job was recommended.
+        </p>
+    </div>
+    <a class="btn ghost" href="{% url 'jobs:create_job_seeker_profile' %}">Update profile</a>
+</section>
+
+<div class="card" style="margin-bottom: 1rem;">
+    <div class="job-row">
+        <div>
+            <h2 style="margin-bottom: .2rem;">{{ profile.title|default:"Your professional profile" }}</h2>
+            <p class="meta">
+                {{ profile.city|default:"Add your city" }}
+                {% if profile.profession %} · {{ profile.profession.name }}{% endif %}
+                {% if profile.years_of_experience %} · {{ profile.years_of_experience }} years experience{% endif %}
+            </p>
+        </div>
+        <div>
+            {% if profile.is_verified %}
+                <span class="pill verified">Verified profile</span>
+            {% else %}
+                <span class="pill">Verification pending</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if matches %}
+    <div class="grid job-grid">
+        {% for match in matches %}
+            <article class="card">
+                <div class="card-head">
+                    <div>
+                        <h2>
+                            <a href="{% url 'jobs:job_details' match.job.pk %}">{{ match.job.title }}</a>
+                        </h2>
+                        <p class="meta">
+                            {{ match.job.company_name }} · {{ match.job.location }}
+                            · {{ match.job.employment_type }}
+                            {% if match.job.salary %} · {{ match.job.salary }} ETB{% endif %}
+                        </p>
+                    </div>
+                    <div class="score{% if match.score >= 75 %} high{% elif match.score >= 50 %} mid{% endif %}"
+                         aria-label="Match score {{ match.score }} percent">
+                        <strong>{{ match.score }}</strong>
+                        <small>match</small>
+                    </div>
+                </div>
+
+                <div class="meter" aria-hidden="true">
+                    <span class="{% if match.score >= 75 %}high{% elif match.score >= 50 %}mid{% endif %}"
+                          style="width: {{ match.score }}%"></span>
+                </div>
+
+                <div class="two-col">
+                    <div>
+                        <h3>Why this matches</h3>
+                        <ul class="clean">
+                            {% for reason in match.reasons %}
+                                <li>{{ reason }}</li>
+                            {% empty %}
+                                <li>Add more profile details to improve this match.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Gaps to close</h3>
+                        <ul class="clean gaps">
+                            {% for gap in match.gaps %}
+                                <li>{{ gap }}</li>
+                            {% empty %}
+                                <li>No major gaps detected.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <details>
+                    <summary>Score breakdown</summary>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Signal</th>
+                                <th>Detail</th>
+                                <th class="num">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for component in match.components %}
+                                <tr>
+                                    <td>{{ component.label }}</td>
+                                    <td>{{ component.detail }}</td>
+                                    <td class="num">{{ component.points|floatformat:1 }} / {{ component.weight }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+
+                <div class="card-actions">
+                    <a class="btn" href="{% url 'jobs:job_details' match.job.pk %}">View job</a>
+                    <a class="btn ghost" href="{% url 'jobs:create_job_seeker_profile' %}">Improve profile</a>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">
+        <h2>No approved jobs to match yet</h2>
+        <p>New vacancies will appear here as soon as they are approved. You can also browse all jobs.</p>
+        <a class="btn" href="{% url 'jobs:list_jobs' %}">Browse jobs</a>
+    </div>
+{% endif %}
+
+<p class="note">
+    Scores are generated from the information in your Ethiogen profile. They are
+    a matching aid, not a guarantee of shortlisting or employment. The current
+    engine is rules-based and explainable; an optional AI provider can be added
+    later without changing this page.
+</p>
+{% endblock %}

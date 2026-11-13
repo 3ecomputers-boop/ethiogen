@@ -11,6 +11,7 @@ The project is split into focused Django apps. This document lists each app, its
 | `billing` | Subscriptions, channel posts, payments, integrations | Yes | Yes |
 | `dashboard` | Custom staff admin console | No | No |
 | `social` | Feed, connections, saved jobs, notifications, messages | Yes | Yes |
+| `ai_engine` | Explainable job/candidate matching | No | No |
 | `tenants` | Multi-tenant organizations and workspaces | Yes | Yes |
 | `recruitment` | Simple recruitment postings/applications | Yes | Yes |
 | `freelancer` | Freelance jobs and bids | Yes | Yes |
@@ -251,6 +252,41 @@ All views require `is_staff`. See [ADMIN_DASHBOARD.md](ADMIN_DASHBOARD.md).
 | `/social/inbox/` | `inbox` (list + send) |
 
 See [SOCIAL_FEATURES.md](SOCIAL_FEATURES.md).
+
+---
+
+## `ai_engine`
+
+**Purpose:** explainable, rules-based matching between `jobs.JobSeekerProfile` and `jobs.Job`. No external AI provider is required, and no database models are added yet.
+
+**Models:** none. Scores are computed on demand from existing `jobs` data.
+
+**Services** (`ai_engine/services.py`)
+
+| Function | Purpose |
+|---|---|
+| `calculate_match(profile, job)` | Return a 0–100 score, six component scores, reasons, and gaps |
+| `rank_jobs_for_profile(profile, limit=20)` | Approved/open jobs ordered by score |
+| `rank_candidates_for_job(job, limit=20)` | Active job seekers ordered by score |
+| `serialize_job_match(result)` | JSON-safe job recommendation payload |
+| `serialize_candidate(result)` | JSON-safe candidate payload (no contact details) |
+
+**Routes**
+
+| Route | Access | Purpose |
+|---|---|---|
+| `/matches/` | Signed-in seeker with profile | Recommended jobs page |
+| `/matches/candidates/` | Employer or staff | Choose a job to rank candidates |
+| `/matches/jobs/<job_id>/candidates/` | Job owner or staff | Candidate ranking page |
+| `/matches/api/jobs/` | Signed-in seeker with profile | Job recommendations JSON |
+| `/matches/api/jobs/<job_id>/candidates/` | Job owner or staff | Candidate ranking JSON |
+
+**Notes**
+
+- Weights live in `WEIGHTS` in `ai_engine/services.py` and must total 100.
+- Candidate pages/APIs are permission-checked; non-owners receive `403`.
+- Scores are computed live, so there is no migration and no stale cache.
+- See [AI_MATCHING.md](AI_MATCHING.md) for the scoring model and API examples.
 
 ---
 

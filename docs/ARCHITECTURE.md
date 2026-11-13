@@ -49,6 +49,7 @@ jobs/                  # public portal, profiles, talents, APIs, signals
 billing/               # subscriptions, channel posts, integrations, payments
 dashboard/             # custom staff admin console
 social/                # LinkedIn-style social graph and feed
+ai_engine/             # explainable job matching, rules-based
 tenants/               # multi-tenant organizations and workspaces
 recruitment/           # simple recruitment job board
 freelancer/            # freelance jobs and bids
@@ -123,7 +124,8 @@ users                       employers
 borker_network              billing
 tenants                     dashboard
 social                      django_countries
-rest_framework             corsheaders
+ai_engine                   rest_framework
+corsheaders
 ```
 
 ## 4. URL routing (`job_portal/urls.py`)
@@ -143,6 +145,7 @@ The root configuration is intentionally explicit:
 | `/billing/` | `billing.urls` | Chapa webhook, analytics, employer API |
 | `/tenants/` | `tenants.urls` | Workspaces, console, tenant API |
 | `/social/` | `social.urls` | LinkedIn-style features |
+| `/matches/` | `ai_engine.urls` | Explainable job/candidate matching |
 | `/telegram-webhook/`, `/tg/wh/` | `jobs.views.telegram_webhook` | Bot webhook aliases |
 | `/miniapp/` | `jobs.views.mini_app` | Telegram mini app shell |
 | `/api/...` | `jobs.views.*` | Registration, login, jobs, talents, etc. |

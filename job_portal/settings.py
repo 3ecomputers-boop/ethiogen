@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     'tenants',
     'dashboard',
     'social',
+    'ai_engine',
     'django_countries',
     'rest_framework',
     'corsheaders',

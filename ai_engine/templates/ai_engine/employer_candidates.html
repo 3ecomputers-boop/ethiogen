@@ -1,0 +1,57 @@
+{% extends 'ai_engine/base.html' %}
+{% block title %}Candidate matching | Ethiogen{% endblock %}
+{% block content %}
+<section class="hero">
+    <div>
+        <span class="eyebrow">Recruiter workspace</span>
+        <h1>Rank candidates for a job</h1>
+        <p class="lede">
+            Choose one of your vacancies to see active job seekers ordered by
+            explainable match score. Candidate details are visible only to the
+            job owner and Ethiogen staff.
+        </p>
+    </div>
+    <a class="btn ghost" href="{% url 'jobs:employer_dashboard' %}">Employer dashboard</a>
+</section>
+
+{% if jobs %}
+    <div class="grid">
+        {% for job in jobs %}
+            <article class="card">
+                <div class="job-row">
+                    <div>
+                        <h2>{{ job.title }}</h2>
+                        <p class="meta">
+                            {{ job.company_name }} · {{ job.location }} · {{ job.employment_type }}
+                            {% if job.salary %} · {{ job.salary }} ETB{% endif %}
+                        </p>
+                        <p class="meta" style="margin-top: .35rem;">
+                            {% if job.is_approved %}
+                                <span class="status approved">Approved</span>
+                            {% else %}
+                                <span class="status">Pending approval</span>
+                            {% endif %}
+                            {% if job.is_completed %}<span class="status">Completed</span>{% endif %}
+                        </p>
+                    </div>
+                    <div class="card-actions" style="margin-top: 0;">
+                        <a class="btn" href="{% url 'ai_engine:job_candidates' job.pk %}">Rank candidates</a>
+                        <a class="btn ghost" href="{% url 'jobs:job_details' job.pk %}">View job</a>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">
+        <h2>No jobs to rank yet</h2>
+        <p>Create a vacancy first, then return here to see candidate matches.</p>
+        <a class="btn" href="{% url 'jobs:add_job' %}">Post a job</a>
+    </div>
+{% endif %}
+
+<p class="note">
+    Rankings use the same transparent scoring model as job-seeker recommendations.
+    They are decision support, not an automated hiring decision.
+</p>
+{% endblock %}

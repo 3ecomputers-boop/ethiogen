@@ -1,0 +1,247 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Matches | Ethiogen{% endblock %}</title>
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --brand: #ea580c;
+            --brand-soft: #fff7ed;
+            --good: #047857;
+            --good-soft: #ecfdf5;
+            --warn: #b45309;
+            --warn-soft: #fffbeb;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f6f7fb;
+            color: var(--ink);
+            font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+            line-height: 1.55;
+        }
+        a { color: inherit; }
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .9rem clamp(1rem, 4vw, 2.5rem);
+            background: rgba(255, 255, 255, .94);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(10px);
+        }
+        .brand {
+            display: flex;
+            align-items: baseline;
+            gap: .45rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            text-decoration: none;
+        }
+        .brand span {
+            color: var(--brand);
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .site-nav { display: flex; gap: .35rem; flex-wrap: wrap; }
+        .site-nav a {
+            padding: .45rem .7rem;
+            border-radius: .55rem;
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .site-nav a:hover { background: var(--brand-soft); color: var(--brand); }
+        main {
+            width: min(1120px, calc(100% - 2rem));
+            margin: 0 auto;
+            padding: 2rem 0 4rem;
+        }
+        .hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: .45rem;
+            color: var(--brand);
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0 0 .4rem;
+            font-size: clamp(1.7rem, 3vw, 2.35rem);
+            line-height: 1.15;
+            letter-spacing: -.035em;
+        }
+        .lede { margin: 0; max-width: 62ch; color: var(--muted); }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            padding: .65rem .9rem;
+            border: 1px solid var(--brand);
+            border-radius: .65rem;
+            background: var(--brand);
+            color: #fff;
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn:hover { filter: brightness(.95); }
+        .btn.ghost { background: #fff; color: var(--brand); }
+        .grid { display: grid; gap: 1rem; }
+        .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 1rem;
+            background: #fff;
+            padding: 1.15rem;
+            box-shadow: 0 8px 30px -24px rgba(15, 23, 42, .45);
+        }
+        .card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .card h2 { margin: 0 0 .2rem; font-size: 1.1rem; line-height: 1.3; }
+        .card h2 a { text-decoration: none; }
+        .card h2 a:hover { color: var(--brand); }
+        .meta { margin: 0; color: var(--muted); font-size: .86rem; }
+        .score {
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+            width: 4.4rem;
+            height: 4.4rem;
+            border-radius: 50%;
+            background: var(--brand-soft);
+            color: var(--brand);
+            line-height: 1;
+        }
+        .score strong { font-size: 1.35rem; }
+        .score small { margin-top: .15rem; font-size: .62rem; font-weight: 700; text-transform: uppercase; }
+        .score.high { background: var(--good-soft); color: var(--good); }
+        .score.mid { background: var(--warn-soft); color: var(--warn); }
+        .meter {
+            height: .4rem;
+            margin: .9rem 0 1rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #f1f5f9;
+        }
+        .meter span { display: block; height: 100%; border-radius: inherit; background: var(--brand); }
+        .meter span.high { background: var(--good); }
+        .meter span.mid { background: #f59e0b; }
+        .two-col {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .two-col h3, .card h3 {
+            margin: 0 0 .35rem;
+            color: var(--muted);
+            font-size: .72rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        ul.clean { margin: 0; padding-left: 1.1rem; font-size: .88rem; }
+        ul.clean li { margin: .18rem 0; }
+        .gaps { color: #9a3412; }
+        details {
+            margin-top: 1rem;
+            border-top: 1px solid var(--line);
+            padding-top: .8rem;
+        }
+        summary { cursor: pointer; color: var(--muted); font-size: .82rem; font-weight: 700; }
+        table { width: 100%; margin-top: .6rem; border-collapse: collapse; font-size: .8rem; }
+        th, td { padding: .38rem .3rem; border-bottom: 1px solid #f1f5f9; text-align: left; vertical-align: top; }
+        th { color: var(--muted); font-weight: 700; }
+        td.num { text-align: right; white-space: nowrap; }
+        .card-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+        .pill {
+            display: inline-block;
+            margin: .15rem .2rem .15rem 0;
+            padding: .18rem .5rem;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+        .pill.verified { background: var(--good-soft); color: var(--good); }
+        .empty {
+            padding: 2rem;
+            border: 1px dashed #cbd5e1;
+            border-radius: 1rem;
+            background: #fff;
+            text-align: center;
+            color: var(--muted);
+        }
+        .note {
+            margin-top: 1.4rem;
+            color: var(--muted);
+            font-size: .78rem;
+        }
+        .job-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .job-row h2 { margin-bottom: .2rem; }
+        .status {
+            display: inline-block;
+            padding: .15rem .45rem;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: var(--muted);
+            font-size: .7rem;
+            font-weight: 700;
+        }
+        .status.approved { background: var(--good-soft); color: var(--good); }
+        @media (max-width: 760px) {
+            .hero, .job-row { flex-direction: column; align-items: stretch; }
+            .job-grid, .two-col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="{% url 'jobs:home' %}">Ethiogen <span>Matches</span></a>
+        <nav class="site-nav" aria-label="Primary">
+            <a href="{% url 'jobs:list_jobs' %}">Browse jobs</a>
+            <a href="{% url 'ai_engine:job_matches' %}">My matches</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'jobs:job_seeker_dashboard' %}">Dashboard</a>
+            {% else %}
+                <a href="{% url 'jobs:home' %}">Sign in</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

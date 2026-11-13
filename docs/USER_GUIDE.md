@@ -77,6 +77,17 @@ Verification (`is_verified`) is granted by staff and improves trust.
 
 Formal application forms live in the recruitment module (`/recruitment/<id>/apply/`) and in the Telegram channel (**Apply Now** on a published post, which requires an active subscription). The job seeker dashboard currently shows profile completion and navigation; it does not yet provide a full application tracker.
 
+### Recommended jobs
+
+Open `/matches/` or use **Recommended** on the dashboard. The page ranks approved jobs against your profile and shows:
+
+- a 0–100 match score,
+- reasons such as matching skills, location, and experience,
+- gaps such as missing skills or an unverified profile,
+- a score breakdown by signal.
+
+Scores are generated from your profile data. They are a matching aid, not a guarantee of shortlisting. Keep your title, skills, city, experience, and CV up to date to improve results.
+
 ### Reviews
 
 After a completed job, reviews can be created at `/jobs/<job_id>/review/<provider_id>/`. Ratings contribute to a professional's average rating.
@@ -108,6 +119,12 @@ Employer job posting requires:
 - `/admin/applications/` (staff dashboard) shows `PostApplication` rows.
 - Employer API: `/billing/api/employer/applications/`.
 - Update status to `reviewing`, `shortlisted`, or `rejected`; the applicant is notified by Telegram/email when possible.
+
+### Rank candidates
+
+Open `/matches/candidates/` or use **AI Candidates** in the employer dashboard. Choose one of your jobs to see active job seekers ordered by match score. Each candidate card explains the score and shows gaps. Only the job owner and staff can view this page; other users receive `403`.
+
+Candidate rankings are decision support. Review applications, interviews, and references before hiring. The JSON equivalent is `/matches/api/jobs/<job_id>/candidates/`.
 
 ### Workspaces
 

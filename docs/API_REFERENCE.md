@@ -371,7 +371,87 @@ Most require a session and membership; write operations also check roles. The HT
 
 The webhook always returns `{"ok": true}` and logs errors, so Telegram does not retry indefinitely. It requires the bot application to be importable and Django configured.
 
-## 10. Error handling and testing
+## 10. AI matching
+
+The matching endpoints are session-authenticated and return `ok` rather than `success` for consistency with the new module.
+
+### `GET /matches/api/jobs/`
+
+Returns the top approved, open jobs for the signed-in job seeker.
+
+- Requires a `JobSeekerProfile`.
+- Returns `400` with `{"ok": false, "error": "Create a job seeker profile first.", "profile_url": "/profile/create/"}` when the profile is missing.
+- Returns up to 20 matches, ordered by score.
+
+```json
+{
+  "ok": true,
+  "generated_at": "2026-11-13T10:30:00+00:00",
+  "count": 1,
+  "matches": [
+    {
+      "job_id": 42,
+      "title": "Senior Django Developer",
+      "company": "Acme Systems",
+      "location": "Addis Ababa, Ethiopia",
+      "employment_type": "Full-time",
+      "salary": "45000.00",
+      "posted_date": "2026-11-12T09:00:00+00:00",
+      "url": "/jobs/42/",
+      "score": 91,
+      "reasons": ["Matches 4 of 4 required skills: Python, Django, PostgreSQL, REST APIs."],
+      "gaps": ["Profile is not verified yet."],
+      "breakdown": [
+        {"key": "skills", "label": "Skills", "points": 40.0, "weight": 40, "detail": "4/4 required skills matched."}
+      ]
+    }
+  ]
+}
+```
+
+### `GET /matches/api/jobs/<job_id>/candidates/`
+
+Returns up to 20 active candidates ranked for one job.
+
+- Visible to staff and the job owner (`Job.client.user`).
+- Other authenticated users receive `403`.
+- Candidate payloads exclude email addresses, phone numbers, and uploaded documents.
+
+```json
+{
+  "ok": true,
+  "generated_at": "2026-11-13T10:31:00+00:00",
+  "job": {
+    "id": 42,
+    "title": "Senior Django Developer",
+    "company": "Acme Systems",
+    "location": "Addis Ababa, Ethiopia",
+    "url": "/jobs/42/"
+  },
+  "count": 1,
+  "matches": [
+    {
+      "profile_id": 7,
+      "name": "Sara Kebede",
+      "title": "Django Developer",
+      "location": "Addis Ababa",
+      "experience_years": 5,
+      "skills": ["Python", "Django", "PostgreSQL"],
+      "hourly_rate": "500.00",
+      "verified": true,
+      "url": "/profile/7/",
+      "score": 91,
+      "reasons": ["Matches 3 of 3 required skills: Python, Django, PostgreSQL."],
+      "gaps": [],
+      "breakdown": []
+    }
+  ]
+}
+```
+
+The scoring model, weights, and permission rules are documented in [AI_MATCHING.md](AI_MATCHING.md).
+
+## 11. Error handling and testing
 
 Example with `curl` (session cookie required for protected endpoints):
 
@@ -391,7 +471,7 @@ Recommended checks:
 4. Invalid JSON returns `400`, not a traceback.
 5. Chapa webhook always returns HTTP 200.
 
-## 11. Known API gaps
+## 12. Known API gaps
 
 - No DRF serializers or schema (OpenAPI) yet.
 - Some admin-sensitive endpoints (`toggle-verify`, `add-job-seeker`, `verify-job-seeker`) are `csrf_exempt` and lack staff guards.
