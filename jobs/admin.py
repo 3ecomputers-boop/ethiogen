@@ -10,7 +10,8 @@ from django.utils.html import format_html, mark_safe
 from .models import (
     JobSeekerProfile, ClientProfile, Talent, HireRequest,
     PostNeedRequest, Job, Message, Review, Profession,
-    Category, SubCategory, Booking, WorkerRating, ProfessionalRate
+    Category, SubCategory, Booking, WorkerRating, ProfessionalRate,
+    VerificationEvent,
 )
 
 User = get_user_model()
@@ -519,6 +520,43 @@ class ProfessionalRateAdmin(admin.ModelAdmin):
             obj.weekly_client_rate(), obj.effective_client_rate_daily(),
             obj.working_days_per_week, obj.weekly_worker_wage(), margin,
         )
+
+
+# ============================================================================
+# VERIFICATION AUDIT
+# ============================================================================
+
+@admin.register(VerificationEvent)
+class VerificationEventAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'action', 'target_name', 'actor', 'note')
+    list_filter = ('action', 'created_at')
+    search_fields = (
+        'job_seeker__user__username',
+        'job_seeker__user__email',
+        'client__user__username',
+        'client__company_name',
+        'note',
+    )
+    date_hierarchy = 'created_at'
+    list_select_related = (
+        'job_seeker__user',
+        'client__user',
+        'actor',
+    )
+    readonly_fields = (
+        'job_seeker',
+        'client',
+        'actor',
+        'action',
+        'note',
+        'created_at',
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 # ============================================================================

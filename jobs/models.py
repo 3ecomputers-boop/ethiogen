@@ -765,6 +765,78 @@ class WorkerVerification(models.Model):
         return f"{self.job_seeker.user.username} - {'Verified' if self.is_verified else 'Unverified'}"
 
 
+class VerificationEvent(models.Model):
+    """Audit trail for staff verification decisions.
+
+    A decision targets exactly one profile: either a job seeker or a client.
+    """
+
+    ACTION_APPROVED = 'approved'
+    ACTION_REJECTED = 'rejected'
+    ACTION_RESET = 'reset'
+    ACTION_CHOICES = [
+        (ACTION_APPROVED, 'Approved'),
+        (ACTION_REJECTED, 'Rejected'),
+        (ACTION_RESET, 'Reset'),
+    ]
+
+    job_seeker = models.ForeignKey(
+        JobSeekerProfile,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='verification_events',
+    )
+    client = models.ForeignKey(
+        ClientProfile,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='verification_events',
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verification_events',
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(job_seeker__isnull=False, client__isnull=True)
+                    | models.Q(job_seeker__isnull=True, client__isnull=False)
+                ),
+                name='verification_event_exactly_one_target',
+            ),
+        ]
+
+    @property
+    def target_type(self):
+        return 'job_seeker' if self.job_seeker_id else 'client'
+
+    @property
+    def target_name(self):
+        if self.job_seeker_id:
+            return self.job_seeker.get_full_name()
+        if self.client_id:
+            return (
+                self.client.company_name
+                or self.client.user.get_full_name()
+                or self.client.user.username
+            )
+        return 'Unknown'
+
+    def __str__(self):
+        return f"{self.get_action_display()} - {self.target_name}"
+
+
 class WorkerAvailability(models.Model):
     """Availability schedule for a job seeker."""
     job_seeker = models.OneToOneField(JobSeekerProfile, on_delete=models.CASCADE, related_name='availability')

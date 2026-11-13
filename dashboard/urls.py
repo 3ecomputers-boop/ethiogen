@@ -13,6 +13,12 @@ urlpatterns = [
     path('users/', views.users, name='users'),
     path('organizations/', views.organizations, name='organizations'),
     path('job-seekers/', views.job_seekers, name='job_seekers'),
+    path('verifications/', views.verifications, name='verifications'),
+    path(
+        'verifications/<str:kind>/<int:pk>/',
+        views.verification_action,
+        name='verification_action',
+    ),
     path('applications/', views.applications, name='applications'),
     path('settings/', views.settings_view, name='settings'),
     path('settings/save/', views.settings_save, name='settings_save'),

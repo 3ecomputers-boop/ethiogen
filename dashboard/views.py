@@ -3,17 +3,25 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from billing.models import ChannelPost, Subscription, PostApplication
 from billing import services
-from jobs.models import JobPost, JobSeekerProfile, ClientProfile
+from jobs.models import (
+    ClientProfile,
+    JobPost,
+    JobSeekerProfile,
+    VerificationEvent,
+    WorkerVerification,
+)
 from tenants.models import Organization
 
 
@@ -46,6 +54,12 @@ def _ctx(request, **extra):
         'active_subs': Subscription.objects.filter(status=Subscription.STATUS_ACTIVE).count(),
         'pending_subs': Subscription.objects.filter(status=Subscription.STATUS_PENDING_REVIEW).count(),
         'applications': PostApplication.objects.count(),
+        'pending_verifications': (
+            JobSeekerProfile.objects.filter(
+                is_verified=False, is_active=True
+            ).count()
+            + ClientProfile.objects.filter(is_verified=False).count()
+        ),
     }
     try:
         counts['revenue'] = Subscription.objects.filter(
@@ -166,6 +180,147 @@ def job_seekers(request: HttpRequest) -> HttpResponse:
     paginator = Paginator(qs, 25)
     page = paginator.get_page(request.GET.get('page'))
     return render(request, 'dashboard/job_seekers.html', _ctx(request, page=page, q=q))
+
+
+@_wrap
+def verifications(request: HttpRequest) -> HttpResponse:
+    """Staff review queue for unverified job-seeker and employer profiles."""
+    kind = request.GET.get('type', 'seeker').strip()
+    if kind not in ('seeker', 'client'):
+        kind = 'seeker'
+    q = request.GET.get('q', '').strip()
+
+    seeker_qs = JobSeekerProfile.objects.select_related(
+        'user', 'profession', 'category'
+    ).filter(is_verified=False, is_active=True)
+    client_qs = ClientProfile.objects.select_related('user').filter(
+        is_verified=False
+    )
+
+    if q:
+        seeker_qs = seeker_qs.filter(
+            Q(user__username__icontains=q)
+            | Q(user__email__icontains=q)
+            | Q(title__icontains=q)
+            | Q(city__icontains=q)
+        )
+        client_qs = client_qs.filter(
+            Q(user__username__icontains=q)
+            | Q(user__email__icontains=q)
+            | Q(company_name__icontains=q)
+            | Q(location__icontains=q)
+        )
+
+    selected_qs = client_qs if kind == 'client' else seeker_qs
+    paginator = Paginator(selected_qs.order_by('-created_at'), 20)
+    page = paginator.get_page(request.GET.get('page'))
+
+    recent_events = (
+        VerificationEvent.objects
+        .select_related('actor', 'job_seeker__user', 'client__user')
+        .order_by('-created_at')[:10]
+    )
+
+    return render(
+        request,
+        'dashboard/verifications.html',
+        _ctx(
+            request,
+            page=page,
+            kind=kind,
+            q=q,
+            seeker_pending=JobSeekerProfile.objects.filter(
+                is_verified=False, is_active=True
+            ).count(),
+            client_pending=ClientProfile.objects.filter(
+                is_verified=False
+            ).count(),
+            recent_events=recent_events,
+        ),
+    )
+
+
+@_wrap
+@require_POST
+def verification_action(request: HttpRequest, kind: str, pk: int) -> HttpResponse:
+    if kind not in ('seeker', 'client'):
+        messages.error(request, 'Unknown verification target.')
+        return redirect('dashboard:verifications')
+
+    decision = request.POST.get('decision', '')
+    if decision not in ('approve', 'reject'):
+        messages.error(request, 'Choose approve or reject.')
+        return redirect(f"{reverse('dashboard:verifications')}?type={kind}")
+
+    approved = decision == 'approve'
+    note = request.POST.get('note', '').strip()[:2000]
+    action = (
+        VerificationEvent.ACTION_APPROVED
+        if approved
+        else VerificationEvent.ACTION_REJECTED
+    )
+
+    if kind == 'seeker':
+        profile = get_object_or_404(
+            JobSeekerProfile.objects.select_related('user'),
+            pk=pk,
+        )
+        if profile.is_verified == approved:
+            messages.info(
+                request,
+                f'{profile.get_full_name()} is already '
+                f'{"verified" if approved else "unverified"}.',
+            )
+            return redirect(f"{reverse('dashboard:verifications')}?type=seeker")
+
+        profile.is_verified = approved
+        profile.save(update_fields=['is_verified', 'updated_at'])
+        profile.user.is_verified = approved
+        profile.user.save(update_fields=['is_verified'])
+        WorkerVerification.objects.update_or_create(
+            job_seeker=profile,
+            defaults={
+                'is_verified': approved,
+                'verified_at': timezone.now() if approved else None,
+            },
+        )
+        VerificationEvent.objects.create(
+            job_seeker=profile,
+            actor=request.user,
+            action=action,
+            note=note,
+        )
+        label = profile.get_full_name()
+    else:
+        client = get_object_or_404(
+            ClientProfile.objects.select_related('user'),
+            pk=pk,
+        )
+        if client.is_verified == approved:
+            messages.info(
+                request,
+                f'{client.company_name or client.user.username} is already '
+                f'{"verified" if approved else "unverified"}.',
+            )
+            return redirect(f"{reverse('dashboard:verifications')}?type=client")
+
+        client.is_verified = approved
+        client.save(update_fields=['is_verified', 'updated_at'])
+        client.user.is_verified = approved
+        client.user.save(update_fields=['is_verified'])
+        VerificationEvent.objects.create(
+            client=client,
+            actor=request.user,
+            action=action,
+            note=note,
+        )
+        label = client.company_name or client.user.username
+
+    messages.success(
+        request,
+        f'{label} was {"approved" if approved else "rejected"}.',
+    )
+    return redirect(f"{reverse('dashboard:verifications')}?type={kind}")
 
 
 @_wrap

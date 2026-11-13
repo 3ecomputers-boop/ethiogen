@@ -106,6 +106,7 @@
         <div class="nav-group-title">People</div>
         <a href="{% url 'dashboard:users' %}" class="nav-link {% if request.resolver_match.url_name == 'users' %}active{% endif %}"><i class="bi bi-people"></i> Users</a>
         <a href="{% url 'dashboard:job_seekers' %}" class="nav-link {% if request.resolver_match.url_name == 'job_seekers' %}active{% endif %}"><i class="bi bi-person-badge"></i> Job Seekers</a>
+        <a href="{% url 'dashboard:verifications' %}" class="nav-link {% if request.resolver_match.url_name == 'verifications' %}active{% endif %}"><i class="bi bi-check-circle"></i> Verification Queue</a>
         <a href="{% url 'dashboard:organizations' %}" class="nav-link {% if request.resolver_match.url_name == 'organizations' %}active{% endif %}"><i class="bi bi-buildings"></i> Organizations</a>
 
         <div class="nav-group-title">Content</div>

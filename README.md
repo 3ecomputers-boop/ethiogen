@@ -45,7 +45,8 @@ On Linux/macOS use `source venv/bin/activate` and `cp .env.example .env`.
 - **Employer workspaces** — multi-tenant organizations, memberships, invitations, plans, quotas, audit log, and an operator console.
 - **Recruitment and freelancing** — job postings/applications and a separate freelancer bidding module.
 - **Explainable job matching** — rules-based, transparent seeker/job and employer/candidate scores with reasons, gaps, and JSON endpoints; no external AI provider required.
-- **Applicant tracking (ATS)** — employer pipeline from submitted to hired, internal notes, audit timeline, and a candidate status tracker.
+- **Applicant tracking (ATS)** - employer pipeline from submitted to hired, internal notes, audit timeline, and a candidate status tracker.
+- **Verification review queue** - staff approve/reject pending job-seeker and employer profiles, with an audit trail of every decision.
 - **Broker network** — brokers, deals, payouts, and tasks (scaffolding/legacy module).
 - **Management commands** — seeding, verification resets, scraping, Telegram verification, bot simulation, digests, reminders, and PostgreSQL migration tooling.
 
@@ -66,6 +67,7 @@ Full documentation lives in [`docs/`](docs/README.md).
 | [docs/SOCIAL_FEATURES.md](docs/SOCIAL_FEATURES.md) | Feed, connections, saved jobs, notifications, messaging |
 | [docs/AI_MATCHING.md](docs/AI_MATCHING.md) | Explainable matching, weights, permissions, JSON endpoints |
 | [docs/ATS.md](docs/ATS.md) | Applicant pipeline, statuses, timeline, tests |
+| [docs/VERIFICATION.md](docs/VERIFICATION.md) | Staff approve/reject queue and audit events |
 | [docs/BILLING_AND_TELEGRAM.md](docs/BILLING_AND_TELEGRAM.md) | Subscription flow, Chapa, manual payments, bot commands, alerts |
 | [docs/API_REFERENCE.md](docs/API_REFERENCE.md) | JSON endpoints, Telegram auth, employer API, analytics |
 | [docs/MANAGEMENT_COMMANDS.md](docs/MANAGEMENT_COMMANDS.md) | All custom `manage.py` commands with usage |

@@ -1,0 +1,121 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Verification Queue | Admin{% endblock %}
+{% block page_title %}Verification Queue{% endblock %}
+{% block page_subtitle %}Review and approve pending job-seeker and employer profiles{% endblock %}
+{% block content %}
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+  <div>
+    <span class="badge
+      {% if kind == 'seeker' %}badge-blue{% else %}badge-green{% endif %}">
+      {{ kind|title }} profiles
+    </span>
+    <span class="text-xs text-slate-500 ml-2">
+      {{ page.paginator.count }} pending
+    </span>
+  </div>
+  <form method="get" class="flex gap-2">
+    <select name="type" class="border rounded-lg px-3 py-2 text-sm" onchange="this.form.submit()">
+      <option value="seeker" {% if kind == 'seeker' %}selected{% endif %}>Job Seekers</option>
+      <option value="client" {% if kind == 'client' %}selected{% endif %}>Employers / Clients</option>
+    </select>
+  </form>
+  <form method="get" class="flex-1 ml-2 flex gap-2">
+    <input name="type" value="{{ kind }}" type="hidden">
+    <input name="q" value="{{ q }}" placeholder="Search username, email, company..." class="border rounded-lg px-3 py-2 text-sm flex-1 max-w-md">
+    <button class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm">Search</button>
+  </form>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="dash-card p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-medium text-slate-700">Pending job seekers</span>
+      <span class="badge badge-amber">{{ seeker_pending }}</span>
+    </div>
+    <a href="{% url 'dashboard:verifications' %}?type=seeker" class="block text-sm text-indigo-600 hover:underline mt-1">Review queue</a>
+  </div>
+  <div class="dash-card p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-sm font-medium text-slate-700">Pending employers</span>
+      <span class="badge badge-amber">{{ client_pending }}</span>
+    </div>
+    <a href="{% url 'dashboard:verifications' %}?type=client" class="block text-sm text-indigo-600 hover:underline mt-1">Review queue</a>
+  </div>
+</div>
+
+<div class="dash-card overflow-hidden">
+  <table class="w-full text-sm dash-table">
+    <thead class="bg-slate-50"><tr class="text-left text-slate-500">
+      <th>Profile</th><th>Details</th><th>Status</th><th>Decision</th>
+    </tr></thead>
+    <tbody>
+    {% for profile in page %}
+    <tr class="border-b border-slate-100">
+      <td class="font-medium">
+        {% if kind == 'seeker' %}
+          {{ profile.get_full_name }}
+          <div class="text-xs text-slate-500">{{ profile.user.username }} · {{ profile.city }} {{ profile.country }}</div>
+        {% else %}
+          {{ profile.company_name|default:profile.user.username }}
+          <div class="text-xs text-slate-500">{{ profile.user.username }} · {{ profile.location|default:"-" }}</div>
+        {% endif %}
+      </td>
+      <td>
+        {% if kind == 'seeker' %}
+          {{ profile.title|default:"Job Seeker" }}
+          <br><span class="text-xs text-slate-400">{{ profile.years_of_experience }} years · {{ profile.skills|join:", "|default:"-" }}</span>
+        {% else %}
+          <span class="text-xs text-slate-400">{{ profile.company_name }}</span><br>
+          {{ profile.location|default:"-" }}
+        {% endif %}
+      </td>
+      <td><span class="badge badge-gray">pending</span></td>
+      <td class="flex gap-2">
+        <form method="post" action="{% url 'dashboard:verification_action' kind profile.pk %}" class="inline" onsubmit="return confirm('Mark this profile as approved?')">
+          {% csrf_token %}
+          <input name="type" value="{{ kind }}" type="hidden">
+          <input name="decision" value="approve" type="hidden">
+          <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-sm">Approve</button>
+        </form>
+        <form method="post" action="{% url 'dashboard:verification_action' kind profile.pk %}" class="inline" onsubmit="return confirm('Mark this profile as rejected?')">
+          {% csrf_token %}
+          <input name="type" value="{{ kind }}" type="hidden">
+          <input name="decision" value="reject" type="hidden">
+          <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm">Reject</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="text-center py-6 text-slate-400">No pending {{ kind }} profiles.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4 flex justify-center gap-2 text-sm">
+  {% if page.has_previous %}<a href="?type={{ kind }}&q={{ q }}&page={{ page.previous_page_number }}" class="px-3 py-1 border rounded">Prev</a>{% endif %}
+  <span class="px-3 py-1">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a href="?type={{ kind }}&q={{ q }}&page={{ page.next_page_number }}" class="px-3 py-1 border rounded">Next</a>{% endif %}
+</div>
+
+<div class="mt-8 dash-card p-4">
+  <h3 class="text-sm font-semibold mb-3">Recent decisions</h3>
+  <table class="w-full text-sm dash-table">
+    <thead class="bg-slate-50"><tr class="text-left text-slate-500">
+      <th>When</th><th>Action</th><th>Profile</th><th>By</th>
+    </tr></thead>
+    <tbody>
+    {% for event in recent_events %}
+    <tr class="border-b border-slate-100">
+      <td class="text-xs text-slate-500">{{ event.created_at|date:"d M Y H:i" }}</td>
+      <td><span class="badge {% if event.action == 'approved' %}badge-green{% elif event.action == 'rejected' %}badge-red{% else %}badge-gray{% endif %}">{{ event.get_action_display }}</span></td>
+      <td class="text-sm">{{ event.target_name }}</td>
+      <td class="text-xs text-slate-500">{{ event.actor.username|default:"-" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="text-center py-4 text-slate-400">No recent decisions.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

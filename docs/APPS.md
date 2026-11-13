@@ -211,6 +211,8 @@ See [BILLING_AND_TELEGRAM.md](BILLING_AND_TELEGRAM.md) for flows.
 | `/admin/users/` | `users` | User list and search |
 | `/admin/organizations/` | `organizations` | Organization list and filters |
 | `/admin/job-seekers/` | `job_seekers` | Job seeker list and search |
+| `/admin/verifications/` | `verifications` | Verification review queue |
+| `/admin/verifications/<kind>/<pk>/` | `verification_action` | Approve or reject a profile (POST) |
 | `/admin/applications/` | `applications` | Post applications and status filter |
 | `/admin/settings/` | `settings_view` | Integration configuration UI |
 | `/admin/settings/save/` | `settings_save` | Save one section (POST) |
