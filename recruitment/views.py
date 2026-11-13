@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import csv
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -37,6 +39,19 @@ def _require_job_access(user, job: Job) -> None:
     client = _client_profile(user)
     if client is None or job.client_id != client.pk:
         raise PermissionDenied('Only the job owner or staff can manage this pipeline.')
+
+
+def _set_stage(application: Application, new_status: str, actor) -> bool:
+    """Move an application to a stage and record the audit event.
+
+    Returns True when the stage actually changed.
+    """
+    if new_status == application.status:
+        return False
+    application._event_actor = actor
+    application.status = new_status
+    application.save(update_fields=['status', 'updated_at'])
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -262,12 +277,105 @@ def update_application_status(request, application_id: int):
     if new_status == application.status:
         messages.info(request, 'The application is already in that stage.')
     else:
-        application._event_actor = request.user
-        application.status = new_status
-        application.save(update_fields=['status', 'updated_at'])
-        messages.success(request, 'Pipeline stage updated.')
+        changed = _set_stage(application, new_status, request.user)
+        if changed:
+            messages.success(request, 'Pipeline stage updated.')
 
     return redirect('recruitment:ats_application_detail', application_id=application.pk)
+
+
+@login_required
+@require_POST
+def bulk_update_application_status(request: HttpRequest):
+    """Move several applications for jobs the user owns to one stage."""
+    application_ids = request.POST.getlist('application_ids')
+    new_status = request.POST.get('status', '')
+
+    if new_status not in dict(Application.STATUS_CHOICES):
+        messages.error(request, 'Choose a valid pipeline status.')
+        return redirect('recruitment:ats_dashboard')
+
+    if not application_ids:
+        messages.error(request, 'Select at least one application.')
+        return redirect('recruitment:ats_dashboard')
+
+    updated = 0
+    skipped = 0
+    for application in Application.objects.select_related('job', 'job__client').filter(
+        pk__in=application_ids
+    ):
+        try:
+            _require_job_access(request.user, application.job)
+        except PermissionDenied:
+            skipped += 1
+            continue
+        if _set_stage(application, new_status, request.user):
+            updated += 1
+
+    if updated:
+        messages.success(
+            request,
+            f'Updated {updated} application{"" if updated == 1 else "s"} to '
+            f'{dict(Application.STATUS_CHOICES)[new_status]}.',
+        )
+    if skipped:
+        messages.warning(
+            request,
+            f'Skipped {skipped} application{"" if skipped == 1 else "s"} you do not own.',
+        )
+    if not updated and not skipped:
+        messages.error(request, 'No applications were updated.')
+
+    return redirect('recruitment:ats_dashboard')
+
+
+@login_required
+def export_applications_csv(request: HttpRequest, job_id: int):
+    """Export a job's applications as CSV for the job owner or staff."""
+    job = get_object_or_404(Job.objects.select_related('client'), pk=job_id)
+    _require_job_access(request.user, job)
+
+    applications = (
+        job.applications
+        .select_related('applicant')
+        .order_by('-applied_at')
+    )
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = (
+        f'attachment; filename="applications_job_{job_id}.csv"'
+    )
+
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            'Application ID',
+            'Applicant',
+            'Email',
+            'Status',
+            'Applied At',
+            'Updated At',
+            'Cover Letter',
+            'Resume',
+        ]
+    )
+    for application in applications:
+        resume_url = application.resume.url if application.resume else ''
+        writer.writerow(
+            [
+                application.pk,
+                application.applicant.get_full_name()
+                or application.applicant.username,
+                application.applicant.email,
+                application.get_status_display(),
+                application.applied_at,
+                application.updated_at,
+                application.cover_letter,
+                resume_url,
+            ]
+        )
+
+    return response
 
 
 @login_required

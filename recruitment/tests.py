@@ -279,3 +279,117 @@ class RecruitmentATSTests(TestCase):
         response = self.client.get(reverse('recruitment:create_job_posting'))
 
         self.assertRedirects(response, reverse('jobs:client_profile'))
+
+    def test_bulk_update_status_moves_selected(self):
+        job2 = Job.objects.create(
+            title='Second Role',
+            company_name='Acme Systems',
+            description='More work.',
+            location='Addis Ababa',
+            client=self.client_profile,
+            is_approved=True,
+        )
+        app2 = Application.objects.create(
+            applicant=self.seeker_user,
+            job=job2,
+            cover_letter='Another application.',
+        )
+        self.client.force_login(self.employer_user)
+
+        response = self.client.post(
+            reverse('recruitment:bulk_update_application_status'),
+            {
+                'application_ids': [self.application.pk, app2.pk],
+                'status': Application.STATUS_SHORTLISTED,
+            },
+        )
+
+        self.assertRedirects(response, reverse('recruitment:ats_dashboard'))
+        self.application.refresh_from_db()
+        app2.refresh_from_db()
+        self.assertEqual(self.application.status, Application.STATUS_SHORTLISTED)
+        self.assertEqual(app2.status, Application.STATUS_SHORTLISTED)
+        self.assertTrue(
+            self.application.events.filter(
+                event_type=ApplicationEvent.EVENT_STATUS,
+                to_status=Application.STATUS_SHORTLISTED,
+            ).exists()
+        )
+
+    def test_bulk_update_skips_applications_not_owned(self):
+        other_job = Job.objects.create(
+            title='Other Role',
+            company_name='Other Co',
+            description='Other work.',
+            location='Addis Ababa',
+            client=self.other_client,
+            is_approved=True,
+        )
+        other_app = Application.objects.create(
+            applicant=self.seeker_user,
+            job=other_job,
+            cover_letter='Other app.',
+        )
+        self.client.force_login(self.employer_user)
+
+        response = self.client.post(
+            reverse('recruitment:bulk_update_application_status'),
+            {
+                'application_ids': [self.application.pk, other_app.pk],
+                'status': Application.STATUS_HIRED,
+            },
+        )
+
+        self.assertRedirects(response, reverse('recruitment:ats_dashboard'))
+        self.application.refresh_from_db()
+        other_app.refresh_from_db()
+        self.assertEqual(self.application.status, Application.STATUS_HIRED)
+        self.assertEqual(other_app.status, Application.STATUS_SUBMITTED)
+
+    def test_bulk_update_rejects_invalid_status(self):
+        self.client.force_login(self.employer_user)
+
+        response = self.client.post(
+            reverse('recruitment:bulk_update_application_status'),
+            {
+                'application_ids': [self.application.pk],
+                'status': 'not-a-stage',
+            },
+        )
+
+        self.assertRedirects(response, reverse('recruitment:ats_dashboard'))
+        self.application.refresh_from_db()
+        self.assertEqual(self.application.status, Application.STATUS_SUBMITTED)
+
+    def test_export_applications_csv(self):
+        self.client.force_login(self.employer_user)
+
+        response = self.client.get(
+            reverse('recruitment:export_applications_csv', args=[self.job.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+        self.assertIn('attachment; filename=', response['Content-Disposition'])
+        content = response.content.decode('utf-8')
+        self.assertIn('Application ID', content)
+        self.assertIn(self.seeker_user.get_full_name(), content)
+        self.assertIn('Submitted', content)
+
+    def test_export_csv_requires_job_access(self):
+        other_job = Job.objects.create(
+            title='Other Role',
+            company_name='Other Co',
+            description='Other work.',
+            location='Addis Ababa',
+            client=self.other_client,
+            is_approved=True,
+        )
+        self.client.force_login(self.employer_user)
+
+        response = self.client.get(
+            reverse('recruitment:export_applications_csv', args=[other_job.pk])
+        )
+
+        self.assertEqual(response.status_code, 403)
+

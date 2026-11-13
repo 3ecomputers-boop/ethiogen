@@ -33,6 +33,8 @@ in the timeline.
 | `/recruitment/employer/applications/<id>/` | Job owner/staff | Candidate detail and timeline |
 | `/recruitment/employer/applications/<id>/status/` | Job owner/staff | POST stage change |
 | `/recruitment/employer/applications/<id>/notes/` | Job owner/staff | POST internal note |
+| `/recruitment/employer/applications/bulk-status/` | Job owner/staff | POST bulk stage change |
+| `/recruitment/employer/jobs/<job_id>/export-csv/` | Job owner/staff | Download applications as CSV |
 
 The employer dashboard links to `/recruitment/employer/`, and the job-seeker
 dashboard links to `/recruitment/my-applications/`.
@@ -91,6 +93,15 @@ Stage changes made in Django admin are also recorded, with `actor` left blank.
    candidates by stage.
 6. The employer changes stages and adds internal notes.
 7. The applicant sees status updates in their tracker.
+
+## Bulk actions and CSV export
+
+From a job's pipeline board (`/recruitment/employer/jobs/<job_id>/`), employers can:
+
+- **Select multiple candidates** and move them to one stage at once with **Update selected**. Ownership is checked per application, so an employer can never touch another job's candidates.
+- **Export CSV** (`Export CSV`) to download every application for the job: ID, applicant name, email, status, applied/updated timestamps, cover letter, and resume URL.
+
+Both actions are recorded in the application timeline just like individual stage changes.
 
 ## Tests
 

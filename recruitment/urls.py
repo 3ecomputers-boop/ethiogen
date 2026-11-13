@@ -25,5 +25,15 @@ urlpatterns = [
         views.add_application_note,
         name='add_application_note',
     ),
+    path(
+        'employer/applications/bulk-status/',
+        views.bulk_update_application_status,
+        name='bulk_update_application_status',
+    ),
+    path(
+        'employer/jobs/<int:job_id>/export-csv/',
+        views.export_applications_csv,
+        name='export_applications_csv',
+    ),
     path('<int:job_posting_id>/apply/', views.apply_for_job, name='apply_for_job'),
 ]

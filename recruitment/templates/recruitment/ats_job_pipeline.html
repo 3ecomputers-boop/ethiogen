@@ -13,8 +13,27 @@
     <div class="actions">
         <a class="btn ghost" href="{% url 'recruitment:ats_dashboard' %}">All jobs</a>
         <a class="btn ghost" href="{% url 'jobs:job_details' job.pk %}">View job</a>
+        <a class="btn" href="{% url 'recruitment:export_applications_csv' job.pk %}">Export CSV</a>
     </div>
 </section>
+
+<form method="post" action="{% url 'recruitment:bulk_update_application_status' %}" id="bulk-stage-form">
+    {% csrf_token %}
+    <div class="card" style="margin-bottom: 1rem;">
+        <div class="actions" style="flex-wrap: wrap; align-items: center; gap: .6rem;">
+            <label class="btn ghost small" for="select-all">Select all</label>
+            <input type="checkbox" id="select-all" style="display:none;">
+            <select name="status" class="border rounded-lg px-3 py-2 text-sm flex-1 max-w-xs" required>
+                <option value="">Move selected to&hellip;</option>
+                {% for value, label in Application.STATUS_CHOICES %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn small" type="submit">Update selected</button>
+            <span class="text-xs text-slate-500" id="bulk-count">0 selected</span>
+        </div>
+    </div>
+</form>
 
 <div class="pipeline">
     {% for stage in stage_groups %}
@@ -25,17 +44,22 @@
             </div>
             <div class="stage-list">
                 {% for application in stage.items %}
-                    <a class="mini-card" href="{% url 'recruitment:ats_application_detail' application.pk %}">
-                        <strong>{{ application.applicant.get_full_name|default:application.applicant.username }}</strong>
-                        <span>
-                            {% if application.seeker_profile and application.seeker_profile.title %}
-                                {{ application.seeker_profile.title }}
-                            {% else %}
-                                Job seeker
-                            {% endif %}
-                        </span>
-                        <span> · {{ application.applied_at|date:"M j, Y" }}</span>
-                    </a>
+                    <label class="mini-card block cursor-pointer" style="display:flex;align-items:flex-start;gap:.6rem;padding:.6rem;border:1px solid var(--line);border-radius:.65rem;background:#fbfcfe;text-decoration:none;color:inherit;">
+                        <input type="checkbox" name="application_ids" value="{{ application.pk }}" style="margin-top:.25rem;width:1rem;height:1rem;flex-shrink:0;" class="stage-checkbox">
+                        <div class="flex-1">
+                            <strong class="block">{{ application.applicant.get_full_name|default:application.applicant.username }}</strong>
+                            <span class="text-xs text-slate-500 block">
+                                {% if application.seeker_profile and application.seeker_profile.title %}
+                                    {{ application.seeker_profile.title }}
+                                {% else %}
+                                    Job seeker
+                                {% endif %}
+                                · {{ application.applied_at|date:"M j, Y" }}
+                            </span>
+                            <span class="badge {{ application.status }} mt-1 inline-block">{{ application.get_status_display }}</span>
+                        </div>
+                        <a href="{% url 'recruitment:ats_application_detail' application.pk %}" class="ml-auto" style="margin-left:.75rem;color:var(--brand);font-weight:700;text-decoration:underline;">Open →</a>
+                    </label>
                 {% empty %}
                     <p class="meta">No candidates.</p>
                 {% endfor %}
@@ -45,6 +69,32 @@
 </div>
 
 <p class="note">
-    Click a candidate to review their cover letter and CV, change their stage, or add an internal note.
+    Select candidates, choose a stage, and click <strong>Update selected</strong> to move them in bulk.
+    Individual changes and notes are recorded on each candidate's timeline.
 </p>
+
+<script>
+(function () {
+    var selectAll = document.getElementById('select-all');
+    var boxes = document.querySelectorAll('.stage-checkbox');
+    var countEl = document.getElementById('bulk-count');
+
+    function refresh() {
+        var checked = document.querySelectorAll('.stage-checkbox:checked').length;
+        countEl.textContent = checked + ' selected';
+        selectAll.checked = checked > 0 && checked === boxes.length;
+    }
+
+    selectAll.addEventListener('change', function () {
+        boxes.forEach(function (b) { b.checked = selectAll.checked; });
+        refresh();
+    });
+
+    boxes.forEach(function (b) {
+        b.addEventListener('change', refresh);
+    });
+
+    refresh();
+})();
+</script>
 {% endblock %}
